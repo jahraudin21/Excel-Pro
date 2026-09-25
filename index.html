@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini Excel — Spreadsheet</title>
+<link rel="stylesheet" href="css/styles.css">
+<!-- Google Sign-In: paste an OAuth 2.0 Web client ID into content below (see GOOGLE_SIGNIN.md).
+     Leave content empty to keep the "Sign in with Google" option hidden. -->
+<meta name="google-client-id" content="">
+<script src="https://accounts.google.com/gsi/client" async></script>
+</head>
+<body>
+<div id="app">
+<div class="titlebar">
+  <span class="appTitle">📊 मिनी Excel</span><span class="bookName" id="bookName">Book1</span>
+  <span style="flex:1"></span>
+  <button class="qbtn" id="bUndo" title="Undo (Ctrl+Z)">↩</button>
+  <button class="qbtn" id="bRedo" title="Redo (Ctrl+Y)">↪</button>
+  <button class="qbtn" id="bSave" title="Save (Ctrl+S)">💾</button>
+  <span class="tsep"></span>
+  <button class="qbtn" id="bExport" data-i18n="exp" title="Export CSV">💾</button>
+  <button class="qbtn" id="bXlsx" data-i18n="bXlsx" title="All sheets as Excel (.xlsx)">📥</button>
+  <button class="qbtn" id="bAllCsv" data-i18n="bAllCsv" title="All sheets as CSV (zip)">📦</button>
+  <span class="tsep"></span>
+  <button class="qbtn" id="bAI" title="AI Assistant">🤖 AI</button>
+  <button class="qbtn userChip" id="userChip" title="Account" aria-haspopup="dialog">
+   <span class="userAvatar" id="userAvatar">👤</span><span class="userName" id="userName" data-i18n="signIn">Sign in</span>
+  </button>
+  <select id="lang" title="भाषा / Language">
+   <option value="en" selected>English</option><option value="hi">हिन्दी</option>
+   <option value="np">नेपाली</option>
+   
+  </select>
+  <input type="file" id="fileIn" accept=".csv,.txt" style="display:none">
+ </div>
+ <div class="ribbon">
+  <div class="rtabs">
+   <button class="rtfile" id="rFile" data-i18n="rFile">File</button>
+    <button class="rtab on" data-tab="home" data-i18n="rHome">Home</button>
+   <button class="rtab" data-tab="insert" data-i18n="rInsert">Insert</button>
+   <button class="rtab" data-tab="pagelayout" data-i18n="rPageLayout">Page Layout</button>
+    <button class="rtab" data-tab="formulas" data-i18n="rFormulas">Formulas</button>
+   <button class="rtab" data-tab="data" data-i18n="rData">Data</button>
+   <button class="rtab" data-tab="review" data-i18n="rReview">Review</button>
+    <button class="rtab" data-tab="view" data-i18n="rView">View</button>
+    <button class="rtab" data-tab="draw" data-i18n="rDraw">Draw</button>
+    <button class="rtab" data-tab="help" data-i18n="rHelp">Help</button>
+
+    <span class="rtell">💡 <input id="rtTellMe" data-i18n-ph="rTellMe" placeholder="Tell me what you want to do"></span>
+  </div>
+  <div class="rbody">
+   <div class="rpage on" data-page="home">
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bPaste"><span class="bi">📋</span>Paste</button>
+      <button class="rbtn" id="bCut" title="Cut (Ctrl+X)">✂</button>
+      <button class="rbtn" id="bCopy" title="Copy (Ctrl+C)">⧉</button>
+      <button class="rbtn" id="bFPainter" title="Format Painter">🖌</button>
+    </div><div class="rlabel" data-i18n="gClip">Clipboard</div></div>
+    <div class="rgrp"><div class="rrow">
+      <select class="rsel" id="fontFam" title="Font"></select>
+      <select class="rsel" id="fontSize" style="max-width:64px" title="Font size"></select>
+      <button class="rbtn" id="bGrowFont" title="Grow font">A↑</button>
+      <button class="rbtn" id="bShrinkFont" title="Shrink font">A↓</button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bB" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button class="rbtn" id="bI" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button class="rbtn" id="bU" title="Underline (Ctrl+U)"><u>U</u></button>
+      <button class="rbtn" id="bStrike" title="Strikethrough"><s>S</s></button>
+      <button class="rbtn" id="bBorder" title="Borders">⊞▾</button>
+      <input type="color" id="colBg" value="#ffffff" title="Fill color">
+      <input type="color" id="colFont" value="#000000" title="Font color">
+    </div><div class="rlabel" data-i18n="gFont">Font</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" data-va="top" title="Align top">⤒</button>
+      <button class="rbtn" data-va="mid" title="Align middle">⇕</button>
+      <button class="rbtn" data-va="bot" title="Align bottom">⤓</button>
+      <span class="rsep"></span>
+      <button class="rbtn" data-al="left" title="Align left">⯇</button>
+      <button class="rbtn" data-al="center" title="Align center">≡</button>
+      <button class="rbtn" data-al="right" title="Align right">⯈</button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bWrap" title="Wrap text">↵ Text</button>
+      <button class="rbtn" id="bMerge" title="Merge &amp; Center">⧉ Merge</button>
+    </div><div class="rlabel" data-i18n="gAlign">Alignment</div></div>
+    <div class="rgrp"><div class="rrow">
+      <select class="rsel" id="numfmt" title="Number format">
+       <option value="gen" data-i18n="nf_gen">सामान्य</option>
+       <option value="dec2" data-i18n="nf_dec2">123.45</option>
+       <option value="inr" data-i18n="nf_inr">₹ (INR)</option>
+       <option value="npr" data-i18n="nf_npr">रु (NPR)</option>
+       <option value="usd" data-i18n="nf_usd">$ (USD)</option>
+       <option value="pct" data-i18n="nf_pct">% प्रतिशत</option>
+       <option value="comma" data-i18n="nf_comma">1,234</option>
+      </select>
+    </div><div class="rrow">
+      <button class="rbtn" id="bPct" title="Percent style">%</button>
+      <button class="rbtn" id="bComma" title="Comma style">,</button>
+      <button class="rbtn" id="bDecInc" title="Increase decimal">.00→</button>
+      <button class="rbtn" id="bDecDec" title="Decrease decimal">←.00</button>
+    </div><div class="rlabel" data-i18n="gNumber">Number</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bStyles" title="Cell styles">🎨 Styles</button>
+      <button class="rbtn" id="bCond" title="Conditional formatting">▤ Rules</button>
+      <button class="rbtn" id="bFmtTable" title="Format as Table">▦ Table ▾</button>
+
+    </div><div class="rlabel" data-i18n="gStyles">Styles</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bInsRow" title="Insert row">＋Row</button>
+      <button class="rbtn" id="bInsCol" title="Insert column">＋Col</button>
+      <button class="rbtn" id="bDel" title="Delete row / column">🗑 Del</button>
+      <button class="rbtn" id="bFormat" title="Format">▤ Format ▾</button>
+
+    </div><div class="rlabel" data-i18n="gCells">Cells</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bAutoSum"><span class="bi">Σ</span>AutoSum</button>
+      <button class="rbtn" id="bAutoTotal" title="Auto-calculating total row for the selected data columns">Σ Total Row</button>
+      <button class="rbtn" id="bFill" title="Fill down">⤓ Fill</button>
+      <button class="rbtn" id="bClear" title="Clear contents">🧹 Clear</button>
+      <button class="rbtn" id="bSort" title="Sort &amp; Filter">⇅ Sort</button>
+      <button class="rbtn" id="bFind" data-i18n="bFind" title="Find &amp; Replace (Ctrl+F)">🔍</button>
+    </div><div class="rlabel" data-i18n="gEditing">Editing</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bAddinAI"><span class="bi">🤖</span>AI Assistant</button>
+      <button class="rbtn" id="bAddins" title="Add-ins">🧩 Add-ins ▾</button>
+     </div><div class="rlabel" data-i18n="gAddins">Add-ins</div></div>
+
+   </div>
+
+<div class="rpage" data-page="insert">
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bChart"><span class="bi">📊</span>Chart</button>
+      <button class="rbtn" id="bChartType" title="Chart type">Type ▾</button>
+    </div><div class="rlabel" data-i18n="gCharts">Charts</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bTable"><span class="bi">▦</span><span data-i18n="bTable">Table</span></button>
+      <button class="rbtn big" id="bRecTbl"><span class="bi">✨</span><span data-i18n="bRecTbl">Recommended</span></button>
+      <button class="rbtn big" id="bPivot"><span class="bi">◫</span><span data-i18n="bPivot">PivotTable</span></button>
+      <button class="rbtn" id="bRecPiv" title="Recommended PivotTables">◫▾</button>
+    </div><div class="rlabel" data-i18n="gTables">Tables</div></div>
+        <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bShape"><span class="bi">⬠</span><span data-i18n="bShape">Shapes</span></button>
+      <button class="rbtn" id="bSmartArt"><span class="bi">▤</span><span data-i18n="bSmartArt">SmartArt</span></button>
+      <button class="rbtn" id="bSShot"><span class="bi">📷</span><span data-i18n="bSShot">Screenshot</span></button>
+    </div><div class="rlabel" data-i18n="gIllus">Illustrations</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bSparklines" title="Insert sparklines"><span class="bi">📈</span>Sparklines</button>
+    </div><div class="rlabel" data-i18n="gSpark">Sparklines</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bIFilter" title="Insert filter"><span class="bi">🔽</span>Filter</button>
+    </div><div class="rlabel" data-i18n="gFilters">Filters</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bIInsRow" title="Insert sheet row">＋Row</button>
+      <button class="rbtn" id="bIInsCol" title="Insert sheet column">＋Col</button>
+      <button class="rbtn" id="bNewSheet" title="New sheet">＋Sheet</button>
+    </div><div class="rlabel" data-i18n="gSheets">Sheets / Cells</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bILink" title="Insert hyperlink"><span class="bi">🔗</span>Link</button>
+      </div><div class="rlabel" data-i18n="gLinks">Links</div></div>
+        <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bIComment" title="Insert comment">💬 Note</button>
+    </div><div class="rlabel" data-i18n="gText">Notes</div></div>
+        <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bISymbol"><span class="bi">Ω</span>Symbol</button>
+      <button class="rbtn" id="bISymMore" title="More symbols">⋮</button>
+    </div><div class="rlabel" data-i18n="gSymbols">Symbols</div></div>
+   </div>
+   <div class="rpage" data-page="pagelayout">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bTheme" data-i18n-t="bTheme"><span class="bi">🎨</span><span data-i18n="bTheme">Themes</span></button>
+      <button class="rbtn big" id="bAccent" data-i18n-t="bAccent"><span class="bi">🌈</span><span data-i18n="bAccent">Colors</span></button>
+     </div><div class="rrow">
+      <button class="rbtn big" id="bThemeFonts" data-i18n-t="bThemeFonts"><span class="bi">Aa</span><span data-i18n="bThemeFonts">Fonts</span></button>
+      <button class="rbtn big" id="bThemeFx" data-i18n-t="bThemeFx"><span class="bi">✦</span><span data-i18n="bThemeFx">Effects</span></button>
+     </div><div class="rlabel" data-i18n="gThemes">Themes</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bMargins" data-i18n-t="bMargins"><span class="bi">⬜</span><span data-i18n="bMargins">Margins</span></button>
+      <button class="rbtn big" id="bOrient" data-i18n-t="bOrient"><span class="bi">⟳</span><span id="bOrientTxt">Portrait</span></button>
+      <button class="rbtn big" id="bSize" data-i18n-t="bSize"><span class="bi">📄</span><span data-i18n="bSize">Size</span></button>
+      <button class="rbtn big" id="bPrintArea" data-i18n-t="bPrintArea"><span class="bi">⬚</span><span data-i18n="bPrintArea">Print Area</span></button>
+     </div><div class="rrow">
+      <button class="rbtn" id="bBreaks" data-i18n-t="bBreaks">⋯ <span data-i18n="bBreaks">Breaks</span> ▾</button>
+      <button class="rbtn" id="bBgPic" data-i18n-t="bBgPic">🖼 <span data-i18n="bBgPic">Background</span> ▾</button>
+      <button class="rbtn" id="bPrintTitles" data-i18n-t="bPrintTitles">🔖 <span data-i18n="bPrintTitles">Print Titles</span> ▾</button>
+      <span class="rsep"></span>
+      <button class="rbtn" id="bPlPage" data-i18n-t="bPlPage">▥ <span data-i18n="bPlPage">Page View</span></button>
+      <button class="rbtn" id="bPlPrint" data-i18n-t="bPrint">🖨 <span data-i18n="bPrint">Print</span></button>
+     </div>
+     <button type="button" class="rlaunch" id="bPgSetup" data-i18n-t="bPgSetupDlg" aria-label="Page Setup">⌟</button>
+     <div class="rlabel" data-i18n="gPageSetup">Page Setup</div></div>
+     <div class="rgrp">
+      <div class="rrow2"><span class="rmini" data-i18n="lblWidth">Width:</span>
+       <select class="rsel" id="fitW" data-i18n-t="tipFitW"><option value="auto" data-i18n="fitAuto">Automatic</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option></select></div>
+      <div class="rrow2"><span class="rmini" data-i18n="lblHeight">Height:</span>
+       <select class="rsel" id="fitH" data-i18n-t="tipFitH"><option value="auto" data-i18n="fitAuto">Automatic</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option></select></div>
+      <div class="rrow2"><span class="rmini" data-i18n="lblScale">Scale:</span>
+       <select class="rsel" id="scScale" data-i18n-t="tipScale"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option><option value="400">400%</option></select></div>
+      <div class="rlabel" data-i18n="gScaleFit">Scale to Fit</div></div>
+     <div class="rgrp"><div class="ropts">
+      <span></span><span class="rmicro" data-i18n="lblView">View</span><span class="rmicro" data-i18n="lblPrint">Print</span>
+      <span class="rmini2" data-i18n="bPlGrid">Gridlines</span>
+      <label class="rchk" data-i18n-t="bPlGrid"><input type="checkbox" id="bPlGrid"><span class="sr" data-i18n="bPlGrid">Gridlines</span></label>
+      <label class="rchk" data-i18n-t="bPlGridPrint"><input type="checkbox" id="bPlGridP"><span class="sr" data-i18n="bPlGridPrint">Print gridlines</span></label>
+      <span class="rmini2" data-i18n="bPlHead">Headings</span>
+      <label class="rchk" data-i18n-t="bPlHead"><input type="checkbox" id="bPlHead"><span class="sr" data-i18n="bPlHead">Headings</span></label>
+      <label class="rchk" data-i18n-t="bPlHeadPrint"><input type="checkbox" id="bPlHeadP"><span class="sr" data-i18n="bPlHeadPrint">Print headings</span></label>
+     </div><div class="rlabel" data-i18n="gSheetOpt">Sheet Options</div></div>
+    </div>
+<div class="rpage" data-page="formulas">
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bAutoSum2"><span class="bi">Σ</span>AutoSum</button>
+      <button class="rbtn" id="bFnRecent" title="Recent functions">🕘 Recent</button>
+    </div><div class="rlabel" data-i18n="gFnLib">Function Library</div></div>
+    <div class="rgrp"><div class="rrow">
+      <select class="rsel" id="fnCat" title="Category"></select>
+      <button class="rbtn" id="bFnInsert" title="Insert function">fx Insert</button>
+    </div><div class="rlabel" data-i18n="gFnCat">Category</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bFnAll" title="All functions">📚 All</button>
+      <button class="rbtn" id="bExplain" title="Explain this formula">💡 Explain</button>
+    </div><div class="rlabel" data-i18n="gFnHelp">Formula Auditing</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bNameMgr" title="Named ranges">🏷 Names</button>
+      <button class="rbtn" id="bCalcNow" title="Recalculate now">⟳ Calc</button>
+    </div><div class="rlabel" data-i18n="gFnTools">Calculation</div></div>
+   </div><div class="rpage" data-page="data">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bGetData"><span class="bi">⤓</span>Get Data ▾</button>
+     </div><div class="rlabel" data-i18n="gGetData">Get &amp; Transform</div></div>
+
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bSortAz"><span class="bi">A↓Z</span>Sort A→Z</button>
+      <button class="rbtn big" id="bSortZa"><span class="bi">Z↓A</span>Sort Z→A</button>
+      <button class="rbtn" id="bSortMore" title="Sort by column">⇅ Custom</button>
+    </div><div class="rrow">
+      <button class="rbtn big" id="bFilter"><span class="bi">▽</span>Filter</button>
+      <button class="rbtn" id="bFilterClear" title="Clear all filters">✖ Clear</button>
+    </div><div class="rlabel" data-i18n="gSortF">Sort &amp; Filter</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bDup" title="Remove duplicate rows"> Remove Dup</button>
+      <button class="rbtn" id="bTxtCol" title="Text to columns (comma)"> Text→Cols</button>
+    </div><div class="rlabel" data-i18n="gDataTools">Data Tools</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bSubtotal" title="Subtotal of selection">Σ Subtotal</button>
+      <button class="rbtn" id="bCountA" title="Count non-empty cells"># Count</button>
+    </div><div class="rlabel" data-i18n="gSubtotal">Outline</div></div>
+   </div>
+   <div class="rpage" data-page="review">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bSpell" title="Check spelling"><span class="bi">✓</span>Spelling</button>
+      <button class="rbtn" id="bA11yCheck" title="Check accessibility / formula errors">♿ Check</button>
+     </div><div class="rlabel" data-i18n="gProofing">Proofing</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bSmart" title="Smart Lookup (AI)"><span class="bi">🔍</span>Smart Lookup</button>
+     </div><div class="rlabel" data-i18n="gInsights">Insights</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bRComment" title="New comment">💬 New</button>
+      <button class="rbtn" id="bRDelCmt" title="Delete comment">🗑 Del</button>
+      <button class="rbtn" id="bShowNotes" title="Show / hide comments">👁 Show</button>
+     </div><div class="rlabel" data-i18n="gComments">Comments</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bProtect" title="Protect / unprotect sheet"><span class="bi">🔒</span><span id="bProtTxt">Protect Sheet</span></button>
+     </div><div class="rlabel" data-i18n="gProtect">Protect</div></div>
+    </div>
+    <div class="rpage" data-page="view">
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bFreeze"><span class="bi">❄</span>Freeze</button>
+      <button class="rbtn" id="bUnfreeze" title="Unfreeze panes">✖ Off</button>
+    </div><div class="rlabel" data-i18n="gFreeze">Freeze Panes</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bVwN" title="Normal view">⊞ Normal</button>
+      <button class="rbtn" id="bVwP" title="Page Layout view">▥ Page Layout</button>
+      <button class="rbtn" id="bVwB" title="Page Break Preview">⊟ Break</button>
+      </div><div class="rlabel" data-i18n="gWbViews">Workbook Views</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bTglGrid" title="Show gridlines">▦ Gridlines</button>
+      <button class="rbtn" id="bTglHead" title="Show headings"># Headings</button>
+    </div><div class="rlabel" data-i18n="gShow">Show</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bZoomIn" title="Zoom in">＋</button>
+      <button class="rbtn" id="bZoomOut" title="Zoom out">－</button>
+      <button class="rbtn" id="bZoom100" title="Zoom 100%">100%</button>
+    </div><div class="rlabel" data-i18n="gZoom">Zoom</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bPrint2" data-i18n="bPrint" title="Print"></button>
+      <button class="rbtn" id="bPageView" title="Page break preview">📄 Page</button>
+    </div><div class="rlabel" data-i18n="gPrint">Print</div></div>
+   </div>
+    <div class="rpage" data-page="draw">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bInkDraw"><span class="bi">✏</span><span data-i18n="bInkDraw">Draw</span></button>
+      <button class="rbtn" id="bInkSelect" data-i18n-t="bInkSelect" title="Select / move shapes">▤ <span data-i18n="bInkSelect">Select</span></button>
+
+      <button class="rbtn" id="bInkErase" data-i18n-t="bInkErase" title="Eraser">🧽 <span data-i18n="bInkErase">Erase</span></button>
+      <button class="rbtn" id="bInkClear" data-i18n-t="bInkClear" title="Remove all drawings">🧹 <span data-i18n="bInkClear">Clear</span></button>
+     </div><div class="rlabel" data-i18n="gDrawTools">Tools</div></div>
+     <div class="rgrp"><div class="rrow">
+      <input type="color" id="penColor" value="#217346" data-i18n-t="penColorT" title="Pen color">
+      <select class="rsel" id="penWidth" data-i18n-t="penWidthT" title="Pen width"><option value="2" data-i18n="pwThin">Thin</option><option value="4" selected data-i18n="pwMed">Medium</option><option value="8" data-i18n="pwThick">Thick</option></select>
+     </div><div class="rlabel" data-i18n="gPens">Pens</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bShRect">▭ <span data-i18n="bShRect">Box</span></button>
+      <button class="rbtn" id="bShEllipse">◯ <span data-i18n="bShEllipse">Oval</span></button>
+      <button class="rbtn" id="bShLine">╱ <span data-i18n="bShLine">Line</span></button>
+      <button class="rbtn" id="bShArrow">→ <span data-i18n="bShArrow">Arrow</span></button>
+      <button class="rbtn" id="bShTri">△ <span data-i18n="bShTri">Tri</span></button>
+      <button class="rbtn" id="bShText">🅣 <span data-i18n="bShText">Text</span></button>
+     </div><div class="rlabel" data-i18n="gShapes">Shapes</div></div>
+    </div>
+    <div class="rpage" data-page="help">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bHelpOpen"><span class="bi">❓</span><span data-i18n="bHelpOpen">Help</span></button>
+      <button class="rbtn" id="bShortcuts">⌨ <span data-i18n="bShortcuts">Shortcuts</span></button>
+      <button class="rbtn" id="bFnRef">📚 <span data-i18n="bFnRef">Functions</span></button>
+     </div><div class="rlabel" data-i18n="gHelpHelp">Support</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bFeedback"><span class="bi">💬</span><span data-i18n="bFeedback">Feedback</span></button>
+      <button class="rbtn" id="bAbout">ℹ <span data-i18n="bAbout">About</span></button>
+     </div><div class="rlabel" data-i18n="gHelpTools">Community</div></div>
+    </div>
+
+   <button id="ribbonMin" data-i18n-t="ribbonMin" title="Collapse the Ribbon (Ctrl+F1)">▴</button>
+  </div>
+ </div>
+ <div class="formula">
+  <div id="refbox" data-i18n-t="nameBox" title="Name Box">A1</div><button class="fbBtn" id="fbCancel" data-i18n-t="fbCancel" title="Cancel (Esc)">✕</button><button class="fbBtn" id="fbEnter" data-i18n-t="fbEnter" title="Enter">✓</button><button class="fx" id="fbFx" data-i18n-t="fbFx" title="Insert Function">fx</button>
+  <input id="fbar" placeholder="Enter a value or =formula (e.g. =SUM(B2:B6))">
+ </div>
+ <div id="gridwrap"><table id="grid"></table></div>
+ <div id="tabs"></div>
+ <div id="aiPanel">
+  <div id="aiHead"><span data-i18n="aiTitle">🤖 AI सहायक</span><button id="aiClose">✕</button></div>
+  <div id="aiLog"></div>
+  <div id="aiBar"><input id="aiInput" data-i18n-ph="aiPh" placeholder="कमांड लिखें…"><button id="aiMic" type="button" data-i18n-t="aiMic" title="Speak a command" aria-label="Speak a command" aria-pressed="false">🎙</button><button id="aiSend" type="button" aria-label="Send command">➤</button></div>
+ </div>
+ <div id="findDlg">
+  <div class="frow"><input id="findTxt" data-i18n-ph="findPh"><button id="fNext" data-i18n="fNext">अगला</button></div>
+  <div class="frow"><input id="replTxt" data-i18n-ph="replPh"><button id="fRepl" data-i18n="fRepl">बदलें</button></div>
+  <div class="frow"><button id="fAll" data-i18n="fAll">सब बदलें</button><span style="flex:1"></span><button id="fClose">✕</button></div>
+  <div id="fStat"></div>
+ </div>
+ <div id="chartDlg">
+  <div class="frow"><span id="chartTitle"></span><span style="flex:1"></span><button id="chartClose">✕</button></div>
+  <div id="chartTypes"><button data-ct="bar" class="on">Bar</button><button data-ct="line">Line</button><button data-ct="pie">Pie</button></div>
+  <canvas id="chartCv" width="600" height="340"></canvas>
+ </div>
+  <div id="pivotDlg">
+   <div class="frow"><span id="pivotTitle"></span><span style="flex:1"></span><button id="pivotClose">✕</button></div>
+   <div id="pivotDesc"></div>
+   <div class="frow"><span>Rows</span><span style="flex:1"></span><span id="pivotRowLbl"></span></div>
+   <div class="frow"><span>Values</span><span style="flex:1"></span><span id="pivotValLbl"></span></div>
+   <div id="pivotBody"><div id="pivotFields"></div><div id="pivotDrop"></div></div>
+   <div class="frow"><span style="flex:1"></span><button id="pivotGo"></button></div>
+  </div>
+  <div id="recDlg">
+   <div class="frow"><span id="recTitle"></span><span style="flex:1"></span><button id="recClose">✕</button></div>
+   <div id="pivotList" style="max-height:300px;overflow:auto"></div>
+  </div>
+  <div id="picDlg">
+   <div class="frow"><span id="picTitle"></span><span style="flex:1"></span><button id="picClose">✕</button></div>
+   <div class="frow"><span id="picLbl"></span></div>
+   <div class="frow"><span style="flex:1"></span><button id="picBrowse"></button><button id="picShot"></button></div>
+  </div>
+  <input type="file" id="picIn" accept="image/*" style="display:none">
+  <div id="helpDlg">
+   <div class="frow"><span data-i18n="helpTitle">Help &amp; Keyboard Shortcuts</span><span style="flex:1"></span><button id="helpClose">✕</button></div>
+   <div id="helpBody">
+    <h3 data-i18n="helpStart">Getting started</h3>
+    <p data-i18n="helpStartTxt">Type a value or an =formula (e.g. =SUM(B2:B6)) into a cell or the formula bar. Everything auto-saves in your browser.</p>
+    <h3 data-i18n="helpKeys">Keyboard shortcuts</h3>
+    <table>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>C / X / V</kbd></td><td data-i18n="helpKC">Copy / Cut / Paste</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>B / I / U</kbd></td><td data-i18n="helpKF">Bold / Italic / Underline</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>Z / Y</kbd></td><td data-i18n="helpKU">Undo / Redo</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td><td data-i18n="helpKR">Find &amp; Replace</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td data-i18n="helpKP">Print</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>F1</kbd></td><td data-i18n="helpKR2">Collapse the Ribbon</td></tr>
+     <tr><td><kbd>F2</kbd> · <kbd>Enter</kbd> · <kbd>Esc</kbd></td><td data-i18n="helpKE">Edit cell · Confirm · Cancel</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>←↑↓→</kbd></td><td data-i18n="helpKJ">Jump to the edge of the data block</td></tr>
+     <tr><td><kbd>Delete</kbd></td><td data-i18n="helpKD">Clear selected cells</td></tr>
+    </table>
+    <h3 data-i18n="helpFn">Formulas</h3>
+    <p data-i18n="helpFnTxt">Try SUM, AVERAGE, MIN, MAX, COUNT, IF, ROUND, UPPER, LEN, RANDBETWEEN, SUBTOTAL… see the full list under Formulas ▸ Category.</p>
+   </div>
+  </div>
+
+   <div id="psDlg">
+   <div class="frow"><span data-i18n="psTitle">Page Setup</span><span style="flex:1"></span><button type="button" id="psClose" aria-label="Close">✕</button></div>
+   <div class="psGrid">
+    <label for="psOrient" data-i18n="pgOrient">Orientation</label>
+    <select id="psOrient"><option value="portrait" data-i18n="orientP">Portrait</option><option value="landscape" data-i18n="orientL">Landscape</option></select>
+    <label for="psSize" data-i18n="pgSize">Paper size</label>
+    <select id="psSize"></select>
+    <label for="psTop" data-i18n="margTop">Top (cm)</label><input type="number" id="psTop" min="0" max="10" step="0.1">
+    <label for="psBottom" data-i18n="margBottom">Bottom (cm)</label><input type="number" id="psBottom" min="0" max="10" step="0.1">
+    <label for="psLeft" data-i18n="margLeft">Left (cm)</label><input type="number" id="psLeft" min="0" max="10" step="0.1">
+    <label for="psRight" data-i18n="margRight">Right (cm)</label><input type="number" id="psRight" min="0" max="10" step="0.1">
+    <label data-i18n="margCenter">Center on page</label>
+    <div class="psChk">
+     <label><input type="checkbox" id="psCenterH"><span data-i18n="chkHoriz">Horizontally</span></label>
+     <label><input type="checkbox" id="psCenterV"><span data-i18n="chkVert">Vertically</span></label>
+    </div>
+    <label for="psScale" data-i18n="lblScale">Scale</label>
+    <div class="psChk"><input type="number" id="psScale" min="10" max="400" step="5" aria-label="Scale percent"><span>%</span></div>
+    <label data-i18n="lblFitTo">Fit to</label>
+    <div class="psChk"><input type="number" id="psFitW" min="1" max="9" aria-label="Pages wide"><span data-i18n="lblPagesWide">page(s) wide</span><input type="number" id="psFitH" min="1" max="9" aria-label="Pages tall"><span data-i18n="lblPagesTall">page(s) tall</span></div>
+    <label for="psTitleRows" data-i18n="ptRows">Rows to repeat at top</label><input type="text" id="psTitleRows" placeholder="$1:$1">
+    <label for="psTitleCols" data-i18n="ptCols">Columns to repeat at left</label><input type="text" id="psTitleCols" placeholder="$A:$A">
+   </div>
+   <div class="frow"><span style="flex:1"></span>
+    <button type="button" id="psReset" data-i18n="psReset">Reset</button>
+    <button type="button" id="psOk" data-i18n="psOk">OK</button>
+    <button type="button" id="psCancel" data-i18n="psCancel">Cancel</button></div>
+  </div>
+<div id="backstage" aria-hidden="true">
+  <aside class="bsRail">
+   <div class="bsHead">
+    <button type="button" class="bsBack" id="bsBack" title="Back">←</button>
+    <span class="bsBrand" data-i18n="rFile">File</span>
+   </div>
+   <button type="button" class="bsItem on" data-bs-page="info" data-i18n="bsInfo">ℹ️ Info</button>
+   <button type="button" class="bsItem" data-bs-page="new" data-i18n="bsNew">🆕 New</button>
+   <button type="button" class="bsItem" data-bs-page="open" data-i18n="bsOpen">📂 Open</button>
+   <button type="button" class="bsItem" data-bs-page="save" data-i18n="bsSave">💾 Save</button>
+   <button type="button" class="bsItem" data-bs-page="export" data-i18n="bsExport">⬇ Export</button>
+   <button type="button" class="bsItem" data-bs-page="print" data-i18n="bsPrintPage">🖨 Print</button>
+   <button type="button" class="bsItem" data-bs-page="account" data-i18n="signIn">Sign in</button>
+  </aside>
+  <section class="bsPane">
+   <div class="bsPage on" data-bspane="info">
+    <h1 data-i18n="bsWorkbook">Workbook</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsCardSave"><div class="bsIco">💾</div><div class="bsT" data-i18n="bsSaveBrowser">Save in browser</div><div class="bsD" data-i18n="bsSavedHint">Auto-saves in your browser</div></div>
+     <div class="bsCard" id="bsCardCsv"><div class="bsIco">⬇</div><div class="bsT" data-i18n="exp">💾 CSV Export</div><div class="bsD" data-i18n="bsCsvHint">Current sheet as .csv</div></div>
+     <div class="bsCard" id="bsCardXlsx"><div class="bsIco">📗</div><div class="bsT" data-i18n="bXlsx">📥 Excel (.xlsx)</div><div class="bsD" data-i18n="bsXlsxHint">Whole workbook</div></div>
+     <div class="bsCard" id="bsCardZip"><div class="bsIco">📦</div><div class="bsT" data-i18n="bAllCsv">📦 All CSV (zip)</div><div class="bsD" data-i18n="bsZipHint">Every sheet, zipped</div></div>
+     <div class="bsCard" id="bsCardPrint"><div class="bsIco">🖨</div><div class="bsT" data-i18n="bPrint">🖨 Print</div><div class="bsD" data-i18n="bsPrintHint">Print or save as PDF</div></div>
+    </div>
+    <div class="bsInfoBox">
+     <div class="bsRow"><span data-i18n="bsSheets">Sheets</span><b id="bsNSheets"></b></div>
+     <div class="bsRow"><span data-i18n="bsActive">Active sheet</span><b id="bsSheetName"></b></div>
+     <div class="bsRow"><span data-i18n="bsCells">Used cells</span><b id="bsNCells"></b></div>
+     <div class="bsRow"><span data-i18n="bsLang">Language</span><b id="bsLang"></b></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="new">
+    <h1 data-i18n="bsNewTitle">New workbook</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsNewBlank"><div class="bsIco">📄</div><div class="bsT" data-i18n="bsBlank">Blank workbook</div><div class="bsD" data-i18n="bsBlankHint">Start fresh (Ctrl+N)</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="open">
+    <h1 data-i18n="bsOpenTitle">Open</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsOpenCsv"><div class="bsIco">📂</div><div class="bsT" data-i18n="fileOpen">📂 Open (CSV)</div><div class="bsD" data-i18n="bsOpenHint">Browse for a .csv file (Ctrl+O)</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="save">
+    <h1 data-i18n="bsSaveTitle">Save</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsSaveBrowser"><div class="bsIco">💾</div><div class="bsT" data-i18n="fileSaveBrowser">💾 Save (browser)</div><div class="bsD" data-i18n="bsSaveHint2">Stored locally in this browser</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="export">
+    <h1 data-i18n="bsExportTitle">Export</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsExpCsv"><div class="bsIco">⬇</div><div class="bsT" data-i18n="exp">💾 CSV Export</div><div class="bsD" data-i18n="bsCsvHint">Current sheet as .csv</div></div>
+     <div class="bsCard" id="bsExpXlsx"><div class="bsIco">📗</div><div class="bsT" data-i18n="bXlsx">📥 Excel (.xlsx)</div><div class="bsD" data-i18n="bsXlsxHint">Whole workbook</div></div>
+     <div class="bsCard" id="bsExpZip"><div class="bsIco">📦</div><div class="bsT" data-i18n="bAllCsv">📦 All CSV (zip)</div><div class="bsD" data-i18n="bsZipHint">Every sheet, zipped</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="print">
+    <h1 data-i18n="gPrint">Print</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsPrintNow"><div class="bsIco">🖨</div><div class="bsT" data-i18n="bPrint">🖨 Print</div><div class="bsD" data-i18n="bsPrintHint">Print or save as PDF</div></div>
+     <div class="bsCard" id="bsPrintSetup"><div class="bsIco">⚙️</div><div class="bsT" data-i18n="bPgSetup">Page Setup</div><div class="bsD" data-i18n="bsSetupHint">Margins, paper size, scale</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="account">
+    <h1 data-i18n="myAccount" id="bsUserTitle">My account</h1>
+     <div class="bsProfile" id="bsUserProfile" style="display:none">
+      <span class="userAvatar big" id="bsUserAvatar">?</span>
+      <div class="bsProfileWho">
+       <div class="bsProfileName" id="bsUserProfileName"></div>
+       <div class="bsProfileEmail" id="bsUserProfileEmail"></div>
+       <div class="bsProfileAddr"><span class="bsProfileAddrLbl" data-i18n="addressLabel">Address</span><b id="bsUserProfileAddr">—</b></div>
+      </div>
+     </div>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsUserOpen"><div class="bsIco">👤</div><div class="bsT" data-i18n="signIn">Sign in</div><div class="bsD" data-i18n="backstageHint">Sync spreadsheets to the cloud</div></div>
+     <div class="bsCard" id="bsUserCloudOpen"><div class="bsIco">☁️</div><div class="bsT" data-i18n="cloudSaves">Cloud saves</div><div class="bsD" data-i18n="bsCsvHint">Current sheet as .csv</div></div>
+    </div>
+    <div class="bsInfoBox" id="bsUserBox">
+     <div class="bsRow"><span data-i18n="userName">Name</span><b id="bsUserName"></b></div>
+     <div class="bsRow"><span data-i18n="emailLabel">Email</span><b id="bsUserEmail"></b></div>
+     <div class="bsRow"><span data-i18n="cloudSaves">Cloud saves</span><b id="bsUserBooks"></b></div>
+     <div class="bsRow"><span data-i18n="lastUpdated">Last updated</span><b id="bsUserUpdated"></b></div>
+    </div>
+    <div class="bsGrid" style="margin-top:12px">
+     <div class="bsCard" id="bsUserSave"><div class="bsIco">⬆</div><div class="bsT" data-i18n="saveToCloud">Save to cloud</div><div class="bsD" data-i18n="bsSaveHint2">Stored locally in this browser</div></div>
+     <div class="bsCard" id="bsUserSignOut"><div class="bsIco">⎋</div><div class="bsT" data-i18n="signOut">Sign out</div><div class="bsD" data-i18n="signedOutMsg">Signed out</div></div>
+    </div>
+    <div id="bsUserList" class="cloudList"></div>
+   </div>
+  </section>
+ </div>
+<div id="popMenu"></div>
+ <div id="authDialog" role="dialog" aria-modal="false" aria-labelledby="authTitle">
+  <form id="authForm" autocomplete="off">
+   <div class="frow"><span id="authTitle" style="font-weight:600">Sign in</span><span style="flex:1"></span><button type="button" id="authClose" class="qbtn" title="Close">✕</button></div>
+   <div class="authSub" data-i18n="authSub">Sync spreadsheets across devices</div>
+  <label class="fieldLabel" for="emailField" data-i18n="emailLabel">Email</label>
+  <input type="email" id="emailField" autocomplete="email" placeholder="you@example.com">
+  <label class="fieldLabel" for="nameField" data-i18n="userName">Name</label>
+  <input type="text" id="nameField" autocomplete="name">
+  <label class="fieldLabel" for="passwordField" data-i18n="passwordLabel">Password</label>
+  <input type="password" id="passwordField" autocomplete="current-password">
+  <label class="fieldLabel signupOnly" for="confirmPasswordField" data-i18n="newPasswordField">New password</label>
+  <input type="password" id="confirmPasswordField" class="signupOnly" autocomplete="new-password">
+  <div id="formError" class="formError" style="display:none"></div>
+  <div class="frow"><span style="flex:1"></span>
+   <button type="submit" id="authSubmit" class="btnPrimary" data-i18n="signIn">Sign in</button></div>
+   <div class="googleRow" id="googleRow" style="display:none">
+    <div class="googleDivider"><span data-i18n="orLabel">or</span></div>
+    <div class="googleBtn" id="googleBtn"></div>
+   </div>
+  <div class="authMeta">
+   <button type="button" id="authSwitchMode" class="linkBtn" data-i18n="noAccount">No account? Sign up</button>
+  </div>
+  </form>
+ </div>
+ <div id="profilePanel" role="dialog" aria-label="My account">
+  <div class="panelHead">
+   <span class="userAvatar big" id="profileAvatar">?</span>
+   <div class="whoBlock">
+    <div id="profileName" style="font-weight:600"></div>
+    <div id="profileEmail" class="emailText"></div>
+   </div>
+   <span style="flex:1"></span>
+   <button type="button" id="profileClose" class="qbtn" title="Close">✕</button>
+  </div>
+  <div class="panelBody">
+   <div class="panelSection">
+    <div class="sectionTitle" data-i18n="profileTitle">Profile</div>
+    <div class="frow"><input type="text" id="profileNameField" data-i18n-ph="userName" placeholder="Name"><button type="button" id="profileSave" class="btnPrimary" data-i18n="saveNow">Save now</button></div>
+    <div class="frow"><input type="text" id="profileAddressField" data-i18n-ph="addressLabel" placeholder="Address"><button type="button" id="profileAddressSave" class="btnPrimary" data-i18n="saveNow">Save now</button></div>
+    <form id="passwordForm" autocomplete="off">
+     <div class="frow"><input type="password" id="currentPasswordField" data-i18n-ph="currentPasswordLabel" placeholder="Current password" autocomplete="current-password">
+      <input type="password" id="newPasswordField" data-i18n-ph="newPasswordField" placeholder="New password" autocomplete="new-password">
+      <button type="submit" id="passwordSave" class="btnPrimary" data-i18n="changePassword">Change password</button></div>
+     <div class="googleNote" id="googlePasswordNote" style="display:none" data-i18n="googleNoPasswordNote">Google accounts sign in with their Google password</div>
+    </form>
+   </div>
+   <div class="panelSection">
+    <div class="sectionTitle" data-i18n="cloudSaves">Cloud saves</div>
+    <div class="frow storagePrefRow" role="radiogroup" aria-label="Storage preference">
+     <span class="storagePrefTitle" data-i18n="storagePref">Storage preference</span>
+     <label class="storageOpt"><input type="radio" name="storagePref" value="browser"><span data-i18n="storageBrowser">Browser (this device)</span></label>
+     <label class="storageOpt"><input type="radio" name="storagePref" value="cloud"><span data-i18n="storageCloud">App cloud</span></label>
+     <label class="storageOpt"><input type="radio" name="storagePref" value="drive"><span data-i18n="storageDrive">Google Drive</span></label>
+     <button type="button" id="driveConnectBtn" class="btnSecondary" data-i18n="connectDrive">Connect Drive</button>
+    </div>
+    <div class="frow"><span style="flex:1"></span>
+     <button type="button" id="saveCloudBtn" class="btnPrimary" data-i18n="saveToCloud">Save to cloud</button>
+     <button type="button" id="saveAsNewBtn" data-i18n="saveAsNewLabel">Save as new</button></div>
+    <div id="cloudList"></div>
+    <div class="panelSection">
+     <div class="sectionTitle" data-i18n="apiKeyTitle">API key</div>
+     <div class="frow">
+      <input type="text" id="apiKeyField" readonly class="apiKeyField" placeholder="Click regenerate...">
+      <button type="button" id="apiKeyShowBtn" class="btnSecondary" data-i18n="showLabel">Show</button>
+      <button type="button" id="apiKeyRegenBtn" class="btnPrimary" data-i18n="regenerateLabel">Regenerate</button>
+     </div>
+     <div class="apiKeyHint" data-i18n="apiKeyHint">Auto-rotates every month. Use for cloud API access.</div>
+    </div>
+   </div>
+   <div class="panelSection">
+    <button type="button" id="signOut" class="btnDanger" data-i18n="signOut">Sign out</button>
+   </div>
+  </div>
+ </div>
+ <div id="ctxMenu"></div>
+ <div id="statusbar">
+  <span id="sbMode">Ready</span><span class="sbA11y" id="sbA11y" data-i18n="sbA11y" title="Accessibility: Good to go">♿ Accessibility: Good to go</span><span id="sbInfo"></span>
+  <span class="sright">
+   <span id="stSum"></span><span id="stAvg"></span><span id="stCnt"></span>
+   <button class="sbView on" id="sbViewN" title="Normal view">⊞</button>
+    <button class="sbView" id="sbViewP" title="Page Layout view">▥</button>
+    <button class="sbView" id="sbViewB" title="Page Break Preview">⊟</button>
+    <span class="sbSep"></span>
+    <button class="sbBtn" id="sbGrid" title="Gridlines">▦</button>
+   <button class="sbBtn" id="sbHead" title="Headings">#</button>
+   <button class="sbBtn" id="sbZoomOut" title="Zoom out">－</button>
+   <input type="range" id="sbZoom" min="50" max="200" step="10" value="100">
+   <button class="sbBtn" id="sbZoomIn" title="Zoom in">＋</button>
+   <span id="sbZoomTxt">100%</span>
+  </span>
+ </div>
+</div>
+<textarea id="clip" spellcheck="false"></textarea>
+<script src="js/account.js" defer></script>
+<script src="js/drive.js" defer></script>
+<script src="js/script.js" defer></script>
+<script src="js/drawDesign.js" defer></script>
+<script src="js/account-ui.js" defer></script>
+</body>
+</html>

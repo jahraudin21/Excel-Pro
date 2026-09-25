@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mini Excel — Sign in</title>
+<link rel="stylesheet" href="/static/auth.css" />
+</head>
+<body>
+<div class="page">
+
+  <main class="card" id="authCard">
+    <header class="card-head">
+      <div class="brand">
+        <span class="brand-mark">MX</span>
+        <span class="brand-text">Mini&nbsp;Excel</span>
+      </div>
+      <h1 id="authTitle">Sign in</h1>
+      <p class="sub" id="authSubtitle">Welcome back. Sign in to reach your workbooks.</p>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <button class="tab is-active" id="tabLogin" role="tab" aria-selected="true" type="button">Sign in</button>
+      <button class="tab" id="tabSignup" role="tab" aria-selected="false" type="button">Create account</button>
+    </div>
+
+    <div class="alert" id="alertBox" hidden role="alert"></div>
+    {% if oauth_error %}
+    <div class="alert is-error" role="alert">{{ oauth_error }}</div>
+    {% endif %}
+
+    <section class="pane is-active" id="paneLogin" role="tabpanel">
+      <form class="form" id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" name="email" type="email" autocomplete="email"
+                 placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <div class="input-wrap">
+            <input id="loginPassword" name="password" type="password"
+                   autocomplete="current-password" placeholder="Your password" required />
+            <button class="reveal" type="button" data-target="loginPassword">Show</button>
+          </div>
+        </div>
+        <div class="row">
+          <label class="check"><input type="checkbox" id="rememberMe" checked /> Remember me</label>
+          <button class="link" type="button" id="forgotLink">Forgot password?</button>
+        </div>
+        <button class="btn primary" type="submit" id="loginSubmit">Sign in</button>
+      </form>
+    </section>
+
+    <section class="pane" id="paneSignup" role="tabpanel">
+      <form class="form" id="signupForm" novalidate>
+        <div class="field">
+          <label for="signupName">Name</label>
+          <input id="signupName" name="name" type="text" autocomplete="name"
+                 placeholder="Ada Lovelace" required />
+        </div>
+        <div class="field">
+          <label for="signupEmail">Email</label>
+          <input id="signupEmail" name="email" type="email" autocomplete="email"
+                 placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label for="signupPassword">Password</label>
+          <div class="input-wrap">
+            <input id="signupPassword" name="password" type="password"
+                   autocomplete="new-password" placeholder="At least 8 characters" required />
+            <button class="reveal" type="button" data-target="signupPassword">Show</button>
+          </div>
+          <div class="meter" aria-hidden="true"><span id="pwMeter"></span></div>
+          <p class="hint" id="pwHint">Use 8+ characters with at least one letter and one number.</p>
+        </div>
+        <button class="btn primary" type="submit" id="signupSubmit">Create account</button>
+      </form>
+    </section>
+
+    <section class="pane" id="paneOtp" role="tabpanel">
+      <form class="form" id="otpForm" novalidate>
+        <p class="otp-copy">
+          We emailed a 6-digit code to <strong id="otpEmailLabel">your address</strong>.
+          It expires in 10 minutes.
+        </p>
+        <div class="field">
+          <label for="otpCode">Verification code</label>
+          <input id="otpCode" class="otp-input" type="text" inputmode="numeric"
+                 autocomplete="one-time-code" maxlength="6" placeholder="000000" required />
+        </div>
+        <button class="btn primary" type="submit" id="otpSubmit">Verify code</button>
+        <button class="btn ghost" type="button" id="otpResend">Resend code</button>
+        <button class="link center" type="button" id="otpBack">Back to sign in</button>
+      </form>
+    </section>
+
+    <section class="pane" id="paneReset" role="tabpanel">
+      <form class="form" id="resetForm" novalidate>
+        <div class="field">
+          <label for="resetEmail">Account email</label>
+          <input id="resetEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+        </div>
+        <button class="btn primary" type="button" id="resetSend">Email me a reset code</button>
+        <div class="field">
+          <label for="resetCode">Reset code</label>
+          <input id="resetCode" class="otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" />
+        </div>
+        <div class="field">
+          <label for="resetPassword">New password</label>
+          <input id="resetPassword" type="password" autocomplete="new-password" placeholder="New password" />
+        </div>
+        <button class="btn primary" type="button" id="resetApply">Set new password</button>
+        <button class="link center" type="button" id="resetBack">Back to sign in</button>
+      </form>
+    </section>
+
+    <div class="divider"><span>or continue with</span></div>
+    <div class="oauth-grid">
+      {% for pid, spec in providers.items() %}
+      <a class="oauth-btn" data-provider="{{ pid }}" href="/auth/start/{{ pid }}">
+        <span class="oauth-icon" data-icon="{{ pid }}" aria-hidden="true"></span>
+        <span class="oauth-label">{{ spec.label }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="provider-note" id="providerNote" hidden></p>
+
+  <aside class="card dashboard" id="dashboard" hidden>
+    <header class="card-head">
+      <h2>Your account</h2>
+      <p class="sub" id="dashEmail">—</p>
+    </header>
+
+    <div class="dash-block">
+      <h3>Storage preference</h3>
+      <p class="hint">Where new workbooks are saved automatically.</p>
+      <div class="storage-grid" id="storageGrid">
+        <label class="storage-opt">
+          <input type="radio" name="storage_pref" value="browser" />
+          <span class="storage-card"><strong>Browser</strong><small>This device only</small></span>
+        </label>
+        <label class="storage-opt">
+          <input type="radio" name="storage_pref" value="cloud" />
+          <span class="storage-card"><strong>App Cloud</strong><small>Synced across devices</small></span>
+        </label>
+        <label class="storage-opt">
+          <input type="radio" name="storage_pref" value="drive" />
+          <span class="storage-card"><strong>Google Drive</strong><small>Your own Drive folder</small></span>
+        </label>
+      </div>
+      <button class="btn primary small" type="button" id="saveStorage">Save preference</button>
+    </div>
+
+    <div class="dash-block">
+      <h3>License key</h3>
+      <p class="hint">Validated locally with no network round-trip; expiry is checked on every launch.</p>
+      <div class="field">
+        <label for="licenseInput">License key</label>
+        <textarea id="licenseInput" rows="3" spellcheck="false" placeholder="Paste your license key"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary small" type="button" id="activateLicense">Activate</button>
+        <button class="btn ghost small" type="button" id="trialLicense">Get 14-day trial</button>
+      </div>
+      <div class="badge" id="licenseBadge" hidden></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn ghost small" type="button" id="refreshSession">Refresh</button>
+      <button class="btn danger small" type="button" id="logoutBtn">Sign out</button>
+    </div>
+  </aside>
+
+  </main>
+</div>
+
+<script src="/static/auth.js"></script>
+</body>
+</html>
