@@ -1,1 +1,6 @@
 Flask>=3.1,<4.0
+
+# WSGI server for the Heroku `web` process.
+# NOTE: gunicorn is Unix-only; it is declared for Linux dynos and is not
+# usable for local development on Windows.
+gunicorn>=23.0,<27.0
