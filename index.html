@@ -8,6 +8,15 @@
 <!-- Google Sign-In: paste an OAuth 2.0 Web client ID into content below (see GOOGLE_SIGNIN.md).
      Leave content empty to keep the "Sign in with Google" option hidden. -->
 <meta name="google-client-id" content="">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[Mini Excel] Service Worker registered:', reg.scope))
+      .catch(err => console.warn('[Mini Excel] Service Worker registration failed:', err));
+  });
+}
+</script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
@@ -529,6 +538,15 @@
   </div>
   </form>
  </div>
+  <div id="authLock" role="dialog" aria-modal="true" aria-labelledby="authLockTitle">
+   <div class="lockCard">
+    <div class="lockIco" aria-hidden="true">🔒</div>
+    <h2 class="lockTitle" id="authLockTitle" data-i18n="lockTitle">Registration required</h2>
+    <p class="lockBody" data-i18n="lockBody">Create a free account to unlock editing, formulas, charts and cloud saves.</p>
+    <button type="button" class="lockCta" id="authLockCta" data-i18n="lockCta">Create account</button>
+    <button type="button" class="lockAlt" id="authLockSignIn" data-i18n="lockAlt">Already registered? Sign in</button>
+   </div>
+  </div>
  <div id="profilePanel" role="dialog" aria-label="My account">
   <div class="panelHead">
    <span class="userAvatar big" id="profileAvatar">?</span>
@@ -603,5 +621,6 @@
 <script src="js/script.js" defer></script>
 <script src="js/drawDesign.js" defer></script>
 <script src="js/account-ui.js" defer></script>
+<script src="js/auth-guard.js" defer></script>
 </body>
 </html>

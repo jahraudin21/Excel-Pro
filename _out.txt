@@ -1,0 +1,73 @@
+========================================
+ Service Worker + Auth Guard tests
+========================================
+
+[sw.js - install / activate]
+  FAIL sw.js threw: sw.js:88
+globalThis.__sw={STATIC_ASSETS,CACHE_NAME,listeners,store,net,self};
+                                          ^
+
+ReferenceError: listeners is not defined
+    at sw.js:88:43
+    at Script.runInContext (node:vm:149:12)
+    at Object.runInContext (node:vm:301:6)
+    at makeSwSandbox (C:\Users\zedi\OneDrive\ドキュメント\GitHub\Excel-Pro\_test_auth_guard.js:110:6)
+    at testServiceWorker (C:\Users\zedi\OneDrive\ドキュメント\GitHub\Excel-Pro\_test_auth_guard.js:128:13)
+    at main (C:\Users\zedi\OneDrive\ドキュメント\GitHub\Excel-Pro\_test_auth_guard.js:357:15)
+    at Object.<anonymous> (C:\Users\zedi\OneDrive\ドキュメント\GitHub\Excel-Pro\_test_auth_guard.js:370:1)
+    at Module._compile (node:internal/modules/cjs/loader:1929:14)
+    at Object..js (node:internal/modules/cjs/loader:2060:10)
+    at Module.load (node:internal/modules/cjs/loader:1651:32)
+
+[auth-guard.js - boot state]
+  PASS auth-guard.js evaluates and exposes AuthGuard
+  PASS lock UI strings are added to STR
+  PASS app starts locked when nobody is registered
+  PASS lock overlay #authLock is shown
+  PASS body.auth-locked is set (drives the CSS inertness)
+
+[auth-guard.js - gating features]
+  PASS require() blocks a feature while locked
+  PASS blocked feature does not run
+  PASS status bar explains why
+  PASS require() does not spam the auth dialog
+  FAIL the queued feature is replayed once the user registers
+  PASS app unlocks after registration
+  PASS lock overlay is hidden after registration
+  PASS body.auth-locked is cleared
+  PASS require() passes through when registered
+  FAIL feature runs immediately when registered
+
+[auth-guard.js - cannot be dismissed while locked]
+  PASS auth dialog is dismissible when registered
+  PASS auth dialog is NOT dismissible while locked
+
+[auth-guard.js - event interception]
+  PASS clicks on the app surface are swallowed while locked
+  PASS click interceptor leaves unrelated listeners alone
+  PASS the auth dialog stays clickable while locked
+  PASS the lock overlay stays clickable
+  PASS keyboard shortcuts are blocked while locked
+  PASS script.js document shortcuts never fire while locked
+  PASS typing inside the auth dialog is not blocked
+  PASS Tab is allowed so focus can cycle in the dialog
+
+[auth-guard.js - lock card wiring & sign-out]
+  PASS lock CTA opens the sign-up form
+  PASS lock secondary button opens the sign-in form
+  PASS signing out re-locks the app
+  PASS lock overlay returns after sign-out
+  PASS shortcuts are blocked again after sign-out
+
+[index.html / styles.css wiring]
+  PASS index.html registers ./sw.js
+  PASS service worker registration lives in the <head>
+  PASS auth-guard.js is loaded by index.html
+  PASS lock overlay markup is present
+  PASS styles.css has body.auth-locked rules
+  PASS styles.css styles the lock overlay
+  PASS locked CSS makes app surfaces inert without disabling the auth dialog
+
+========================================
+ 35 passed, 3 failed
+========================================

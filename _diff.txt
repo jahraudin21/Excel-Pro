@@ -1,0 +1,52 @@
+﻿diff --git a/index.html b/index.html
+index 1a5c997..aaf8b9b 100644
+--- a/index.html
++++ b/index.html
+@@ -9,4 +9,13 @@
+      Leave content empty to keep the "Sign in with Google" option hidden. -->
+ <meta name="google-client-id" content="">
++<script>
++if ('serviceWorker' in navigator) {
++  window.addEventListener('load', () => {
++    navigator.serviceWorker.register('./sw.js')
++      .then(reg => console.log('[Mini Excel] Service Worker registered:', reg.scope))
++      .catch(err => console.warn('[Mini Excel] Service Worker registration failed:', err));
++  });
++}
++</script>
+ <script src="https://accounts.google.com/gsi/client" async></script>
+ </head>
+@@ -530,4 +539,13 @@
+   </form>
+  </div>
++  <div id="authLock" role="dialog" aria-modal="true" aria-labelledby="authLockTitle">
++   <div class="lockCard">
++    <div class="lockIco" aria-hidden="true">≡ƒöÆ</div>
++    <h2 class="lockTitle" id="authLockTitle" data-i18n="lockTitle">Registration required</h2>
++    <p class="lockBody" data-i18n="lockBody">Create a free account to unlock editing, formulas, charts and cloud saves.</p>
++    <button type="button" class="lockCta" id="authLockCta" data-i18n="lockCta">Create account</button>
++    <button type="button" class="lockAlt" id="authLockSignIn" data-i18n="lockAlt">Already registered? Sign in</button>
++   </div>
++  </div>
+  <div id="profilePanel" role="dialog" aria-label="My account">
+   <div class="panelHead">
+@@ -604,4 +622,5 @@
+ <script src="js/drawDesign.js" defer></script>
+ <script src="js/account-ui.js" defer></script>
++<script src="js/auth-guard.js" defer></script>
+ </body>
+ </html>
+diff --git a/js/account-ui.js b/js/account-ui.js
+index edf8b1d..58bdffc 100644
+--- a/js/account-ui.js
++++ b/js/account-ui.js
+@@ -104,5 +104,8 @@ function openAuthDialog(mode){const d=$('#authDialog');if(!d)return;
+  try{const em=$('#emailField');if(em)setTimeout(()=>{try{em.focus();}catch(e){}},0);}catch(e){}
+  try{if(typeof googleRenderButton==='function')googleRenderButton();}catch(e){}}
+-function closeAuthDialog(){const d=$('#authDialog');if(d)d.classList.remove('open');showAuthError('');}
++function closeAuthDialog(){const d=$('#authDialog');
++ /* While the auth guard is locked the dialog is the only route into the app. */
++ if(typeof AuthGuard!=='undefined'&&AuthGuard.canCloseAuthDialog&&!AuthGuard.canCloseAuthDialog())return;
++ if(d)d.classList.remove('open');showAuthError('');}
+ function authSubmit(){
+  const dlg=$('#authDialog');if(!dlg)return;

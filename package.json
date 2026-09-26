@@ -1,0 +1,25 @@
+{
+  "name": "excel-pro",
+  "version": "1.0.0",
+  "description": "Mini Excel — a spreadsheet app (Electron shell + browser UI)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node _test_auth_guard.js && node _test_google_signin.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jahraudin21/Excel-Pro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jahraudin21/Excel-Pro/issues"
+  },
+  "homepage": "https://github.com/jahraudin21/Excel-Pro#readme",
+  "devDependencies": {
+    "electron": "^44.4.5"
+  }
+}

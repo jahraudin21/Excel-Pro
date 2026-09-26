@@ -103,7 +103,10 @@ function openAuthDialog(mode){const d=$('#authDialog');if(!d)return;
  authSwitchMode(mode||'signin');
  try{const em=$('#emailField');if(em)setTimeout(()=>{try{em.focus();}catch(e){}},0);}catch(e){}
  try{if(typeof googleRenderButton==='function')googleRenderButton();}catch(e){}}
-function closeAuthDialog(){const d=$('#authDialog');if(d)d.classList.remove('open');showAuthError('');}
+function closeAuthDialog(){const d=$('#authDialog');
+ /* While the auth guard is locked the dialog is the only route into the app. */
+ if(typeof AuthGuard!=='undefined'&&AuthGuard.canCloseAuthDialog&&!AuthGuard.canCloseAuthDialog())return;
+ if(d)d.classList.remove('open');showAuthError('');}
 function authSubmit(){
  const dlg=$('#authDialog');if(!dlg)return;
  const signup=dlg.classList.contains('mode-signup');
