@@ -53,7 +53,29 @@ import auth_app.security as security  # noqa: E402
 from auth_app.license import generate_license, validate_license  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
-SECRET_KEY = os.environ.get("AUTH_SECRET", "dev-auth-secret-change-me")
+
+# ``AUTH_ENV=production`` switches on the deployment-safe behaviour: the signing
+# secret must be supplied explicitly, cookies are marked Secure, and internal
+# error text is never echoed to the browser. Any other value (including unset)
+# keeps the convenient defaults that local development and the test suite rely
+# on, so ``python auth_app/app.py`` still works with zero configuration.
+AUTH_ENV = os.environ.get("AUTH_ENV", "development").strip().lower()
+IS_PROD = AUTH_ENV == "production"
+
+# AUTH_SECRET signs both the session cookies and the license keys, so the
+# placeholder below is a publicly known string and must never reach a real
+# deployment. Refuse to boot rather than hand out forgeable sessions.
+_PLACEHOLDER_SECRET = "dev-auth-secret-change-me"
+SECRET_KEY = os.environ.get("AUTH_SECRET", "").strip()
+if not SECRET_KEY or SECRET_KEY == _PLACEHOLDER_SECRET:
+    if IS_PROD:
+        raise RuntimeError(
+            "AUTH_SECRET must be set to a unique random value when "
+            "AUTH_ENV=production. Generate one with: "
+            'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+        )
+    SECRET_KEY = SECRET_KEY or _PLACEHOLDER_SECRET
+
 # Name of our own HMAC auth token cookie (separate from Flask's session cookie).
 SESSION_COOKIE = "mx-session"
 
@@ -70,6 +92,8 @@ app.config.update(
     SESSION_COOKIE_NAME="mx-flow",
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
+    # Only trust HTTPS for cookies once a real deployment is behind TLS.
+    SESSION_COOKIE_SECURE=IS_PROD,
     MAX_CONTENT_LENGTH=2 * 1024 * 1024,
 )
 
@@ -117,6 +141,8 @@ def login_user(response, user_id: str):
         max_age=security.SESSION_TTL_SECONDS,
         httponly=True,
         samesite="Lax",
+        # Without this the auth token would also travel over plain HTTP.
+        secure=IS_PROD,
     )
     return response
 
@@ -626,6 +652,55 @@ def auth_callback(provider: str):
 # --------------------------------------------------------------------------- #
 # Static assets + entry point
 # --------------------------------------------------------------------------- #
+@app.after_request
+def apply_response_headers(response):
+    """Apply security and caching headers to every response.
+
+    ``setdefault`` is used throughout so an individual view can still opt out by
+    setting the header itself.
+    """
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+
+    if IS_PROD:
+        # Tell browsers to only ever reach this deployment over HTTPS.
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+        # auth.html pulls in /static/auth.css and /static/auth.js only, so a
+        # strict policy is safe. https: is allowed for images because OAuth
+        # avatars are hosted by Google/GitHub/Microsoft.
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self'; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self'; "
+            "form-action 'self'; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "object-src 'none'",
+        )
+
+    # API replies carry session and profile data and must never be stored by a
+    # shared cache or a browser disk cache.
+    if request.path.startswith("/api/"):
+        response.headers.setdefault("Cache-Control", "no-store")
+    elif request.path.startswith("/static/"):
+        # Assigned rather than defaulted: Flask's send_from_directory already
+        # sets no-cache, and auth.css/auth.js are not content-hashed, so they
+        # must be revalidated rather than risk a stale copy after a deploy.
+        response.headers["Cache-Control"] = "no-cache"
+    else:
+        # The sign-in page itself must be revalidated so a deploy is picked up.
+        response.headers.setdefault("Cache-Control", "no-cache")
+
+    return response
+
+
 @app.get("/static/<path:filename>")
 def static_files(filename: str):
     return send_from_directory(BASE_DIR / "static", filename)
@@ -641,7 +716,10 @@ def not_found(_error):
 @app.errorhandler(500)
 def server_error(error):  # pragma: no cover - safety net
     if request.path.startswith("/api/"):
-        return fail(f"Internal error: {error}", 500)
+        # Exception text can leak file paths, SQL and row data, so it is only
+        # echoed back in development. The real cause stays in the server log.
+        detail = str(error) if not IS_PROD else "Internal server error."
+        return fail(detail, 500)
     return render_template("auth.html", providers=oauth.PROVIDERS), 500
 
 

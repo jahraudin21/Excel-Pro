@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node / Electron
+node_modules/
+
+# electron-builder output
+release/
+dist/
+*.blockmap
+latest.yml
+latest-mac.yml
+latest-linux.yml
+
+# Logs / temp
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

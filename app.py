@@ -10,9 +10,43 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 app = Flask(__name__, static_folder=None)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
+# Upper bound on retained workbooks. The store is an in-memory dict, so without
+# a cap a long-running server grows until the process is killed. Once the limit
+# is reached the oldest entry is evicted first.
+MAX_SPREADSHEETS = 500
+
 # Development-only storage. Replace this with a database or object store before
 # deploying the application across multiple processes or machines.
 spreadsheet_store: dict[str, dict] = {}
+
+
+def store_spreadsheet(spreadsheet_id: str, workbook: dict) -> None:
+    """Record a workbook, evicting the oldest entries past the cap."""
+    while len(spreadsheet_store) >= MAX_SPREADSHEETS:
+        spreadsheet_store.pop(next(iter(spreadsheet_store)), None)
+    spreadsheet_store[spreadsheet_id] = workbook
+
+
+@app.after_request
+def apply_response_headers(response):
+    """Add security and caching headers to the static asset responses."""
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+
+    if request.path.startswith("/api/"):
+        response.headers.setdefault("Cache-Control", "no-store")
+    elif request.path in ("/js/sw.js", "/sw.js"):
+        # A service worker must always be revalidated, otherwise clients stay
+        # pinned to a stale worker (and therefore a stale app) indefinitely.
+        response.headers.setdefault("Cache-Control", "no-cache")
+    elif request.path == "/" or request.path.endswith((".html", ".js")):
+        # index.html and the app scripts are not content-hashed, so a long
+        # max-age would pin users to an old build after a deploy.
+        response.headers.setdefault("Cache-Control", "no-cache")
+    elif request.path.endswith(".css"):
+        response.headers.setdefault("Cache-Control", "public, max-age=3600")
+
+    return response
 
 
 def validate_workbook(workbook: object) -> str | None:
@@ -53,6 +87,18 @@ def javascript(filename: str):
     return send_from_directory(PROJECT_ROOT / "js", filename)
 
 
+@app.get("/sw.js")
+def service_worker():
+    """Serve the service worker from the site root.
+
+    A service worker is only allowed to control a scope at or below its own
+    path, so it must be served from "/" rather than "/js/sw.js". Without this
+    route the registration in index.html 404s and the offline build silently
+    never activates.
+    """
+    return send_from_directory(PROJECT_ROOT, "sw.js")
+
+
 @app.get("/api/health")
 def health():
     """Provide a lightweight backend health check for the web client."""
@@ -80,7 +126,7 @@ def create_spreadsheet():
         return jsonify(error=validation_error), 400
 
     spreadsheet_id = str(uuid4())
-    spreadsheet_store[spreadsheet_id] = workbook
+    store_spreadsheet(spreadsheet_id, workbook)
     return jsonify(
         id=spreadsheet_id,
         message="Spreadsheet data accepted.",

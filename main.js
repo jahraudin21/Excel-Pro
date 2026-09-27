@@ -15,12 +15,17 @@
         sign-in is unaffected. To enable Google, set USE_DEV_SERVER (below). */
 
 const path = require('path');
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell } = require('electron');
 
 /* Set to 5000 to load from the Flask dev server instead of disk, which is what
-   Google Sign-In and the service worker both need. */
+   Google Sign-In and the service worker both need. Ignored in packaged builds:
+   a shipped app must never depend on a locally running dev server. */
 const USE_DEV_SERVER = false;
 const DEV_SERVER_URL = 'http://127.0.0.1:5000';
+
+/* The renderer is locked down in every build; these extra restrictions only
+   apply to a packaged app so that development keeps its devtools shortcuts. */
+const IS_PROD = app.isPackaged;
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -43,7 +48,7 @@ function createWindow() {
   /* Avoid the white flash while the first paint is still loading. */
   win.once('ready-to-show', () => win.show());
 
-  if (USE_DEV_SERVER) {
+  if (USE_DEV_SERVER && !IS_PROD) {
     win.loadURL(DEV_SERVER_URL);
   } else {
     win.loadFile(path.join(__dirname, 'index.html'));
@@ -65,6 +70,12 @@ function createWindow() {
     }
   });
 
+  /* Shipped builds get no developer tooling. The renderer has no Node access
+     and is sandboxed, so this is defence in depth rather than the only guard. */
+  if (IS_PROD) {
+    win.webContents.on('devtools-opened', () => win.webContents.closeDevTools());
+  }
+
   return win;
 }
 
@@ -82,6 +93,10 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
+    /* The stock menu (View > Reload, Developer Tools, ...) is a development
+       affordance. A packaged build ships without it. */
+    if (IS_PROD) Menu.setApplicationMenu(null);
+
     createWindow();
 
     /* macOS keeps the process alive with no windows open; re-create on dock click. */
