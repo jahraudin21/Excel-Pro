@@ -11,7 +11,9 @@ const STATIC_ASSETS = [
   './js/script.js',
   './js/drawDesign.js',
   './js/account-ui.js',
-  './js/auth-guard.js'
+  './js/auth-guard.js',
+  './js/start-screen.js',
+  './js/ribbon-display.js'
 ];
 
 self.addEventListener('install', event => {

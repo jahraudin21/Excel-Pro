@@ -410,11 +410,14 @@
       window.history.replaceState({}, "", "/");
     }
 
-    [".oauth-icon[data-icon=google]", ".oauth-icon[data-icon=github]", ".oauth-icon[data-icon=microsoft]"]
-      .forEach(function (selector) {
-        var node = document.querySelector(selector);
-        if (node) { node.textContent = node.dataset.icon.charAt(0).toUpperCase(); }
-      });
+    /* Providers without a dedicated logo get their initial as a tile. Icons
+       that already contain a logo (e.g. the inlined Google "G") are left
+       alone, since assigning textContent here would wipe out the SVG. */
+    Array.prototype.forEach.call(document.querySelectorAll(".oauth-icon"), function (node) {
+      if (!node.firstElementChild) {
+        node.textContent = node.dataset.icon.charAt(0).toUpperCase();
+      }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", function () {

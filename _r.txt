@@ -1,0 +1,7 @@
+﻿exec policy: RemoteSigned
+npm: 11.19.0
+ribbon markup: True
+rtabs: True
+rtab count: 10
+ribbon display options existing: False
+titlebar: True

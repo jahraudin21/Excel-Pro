@@ -10,6 +10,30 @@ body{background:#217346;padding:10px;height:100vh;display:flex}
 .qbtn:hover{background:rgba(255,255,255,.2)}
 .tsep{width:1px;height:16px;background:rgba(255,255,255,.35);margin:0 3px}
 .titlebar select{background:#1a5c38;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:3px;font-size:12px;padding:2px 4px}
+/* ---------- Ribbon Display Options (Excel parity) ---------- */
+#ribbonDispBtn{position:absolute;right:5px;bottom:0;border:none;background:transparent;
+  color:#6b6b6b;cursor:pointer;font-size:12px;line-height:1;padding:2px 7px;border-radius:3px;z-index:4}
+#ribbonDispBtn:hover,#ribbonDispBtn[aria-expanded="true"]{background:#e0dedd;color:#217346}
+#ribbonMin{right:26px}
+
+.rdMenu{display:none;position:absolute;right:4px;top:100%;z-index:60;min-width:224px;
+  background:#fff;border:1px solid #d4d4d4;border-radius:6px;padding:4px 0;
+  box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.rdMenu.open{display:block}
+.rdMenuTitle{padding:6px 12px 6px;font-size:11px;font-weight:600;color:#5a5a5a;
+  text-transform:uppercase;letter-spacing:.4px}
+.rdItem{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;
+  text-align:left;font:inherit;font-size:12.5px;color:#333;padding:6px 12px;cursor:pointer}
+.rdItem:hover{background:#eef3ef}
+.rdItem.on{color:#217346;font-weight:600}
+.rdCheck{width:14px;flex:0 0 14px;text-align:center;font-size:12px;line-height:1;color:#217346}
+.rdItem.on .rdCheck::before{content:"✓"}
+
+/* Auto-hide leaves only the tab strip; the grid keeps the full height. */
+.ribbon.rd-tabs .rbody,.ribbon.rd-auto .rbody{display:none!important}
+.ribbon.rd-tabs .rtabs,.ribbon.rd-auto .rtabs{padding-bottom:0}
+.ribbon.rd-tabs{min-height:0}
+
 /* ---------- ribbon ---------- */
 .ribbon{background:#f3f2f1;border-bottom:1px solid #d0d0d0;flex:none;position:relative}
 #ribbonMin{position:absolute;right:5px;bottom:0;border:none;background:transparent;color:#6b6b6b;cursor:pointer;font-size:12px;line-height:1;padding:2px 7px;border-radius:3px;z-index:3}
@@ -399,6 +423,58 @@ body[data-theme='dark'] #psDlg{background:#2b2b2b;border-color:#555;color:#e8e8e
 body[data-theme='dark'] .psGrid>label,body[data-theme='dark'] .psChk{color:#ccc}
 body[data-theme='dark'] .psGrid select,body[data-theme='dark'] .psGrid input{background:#1f1f1f;color:#e8e8e8;border-color:#555}
 
+
+/* ---------- Start screen ---------- */
+#startScreen{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;
+  background:rgba(15,32,23,.55);backdrop-filter:blur(2px)}
+#startScreen.open{display:flex}
+.ssCard{width:min(680px,94vw);max-height:88vh;overflow:auto;background:#fff;border-radius:16px;
+  padding:22px 24px 24px;box-shadow:0 24px 60px rgba(0,0,0,.3);color:#1f2933}
+.ssHead{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.ssBrandRow{display:flex;align-items:center;gap:12px;flex:1}
+.ssBrandMark{width:38px;height:38px;border-radius:10px;background:#217346;color:#fff;display:grid;
+  place-items:center;font-weight:700;letter-spacing:.5px}
+.ssTitle{margin:0;font-size:20px}
+.ssSub{margin:3px 0 0;font-size:13px;color:#5a6b7b}
+.ssTabs{display:flex;gap:6px;border-bottom:1px solid #e2e8ee;margin-bottom:12px}
+.ssTab{appearance:none;border:0;background:transparent;padding:9px 14px;font-size:14px;font-weight:600;
+  color:#5a6b7b;cursor:pointer;border-bottom:2px solid transparent}
+.ssTab.on{color:#217346;border-bottom-color:#217346}
+.ssPane{min-height:76px}
+.ssEmpty{margin:18px 0;text-align:center;color:#8a97a5;font-size:13px}
+.ssList{display:flex;flex-direction:column;gap:6px}
+.ssItem{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #e2e8ee;
+  border-radius:10px;background:#fff}
+.ssItem:hover{background:#f6f9f7;border-color:#cfe0d6}
+.ssItemMain{display:flex;flex-direction:column;flex:1;min-width:0}
+.ssItemName{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ssItemTime{font-size:11.5px;color:#8a97a5}
+.ssStar,.ssX{appearance:none;border:0;background:transparent;cursor:pointer;font-size:15px;
+  color:#9aa7b4;padding:4px 6px;border-radius:6px;line-height:1}
+.ssStar.on{color:#f0a500}
+.ssStar:hover,.ssX:hover{background:#eef2f5}
+.ssSectionTitle{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#8a97a5;
+  margin:18px 0 8px}
+.ssTplGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ssTpl{display:flex;flex-direction:column;gap:3px;align-items:flex-start;padding:12px;cursor:pointer;
+  border:1px solid #e2e8ee;border-radius:12px;background:#fff;text-align:left;font:inherit}
+.ssTpl:hover{border-color:#217346;background:#f4f9f6;transform:translateY(-1px)}
+.ssTplIcon{font-size:20px}
+.ssTplName{font-size:13.5px;font-weight:600;color:#1f2933}
+.ssTplDesc{font-size:11.5px;color:#7b8794}
+
+/* ---------- Google sign-in button (in-app auth dialog) ---------- */
+.gsignBtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  min-height:40px;margin:2px 0 10px;padding:10px 14px;cursor:pointer;font:inherit;
+  font-size:13.5px;font-weight:500;color:#3c4043;background:#fff;
+  border:1px solid #dadce0;border-radius:11px;transition:background .15s ease,border-color .15s ease}
+.gsignBtn:hover{background:#f7f8f8;border-color:#c9ccd1}
+.gsignBtn:active{background:#f1f3f4}
+.gsignLogo{display:grid;place-items:center;width:18px;height:18px;flex:0 0 18px}
+.gsignLogo svg{display:block;width:18px;height:18px}
+.authHead{margin-bottom:12px}
+.authHeadRow{display:flex;align-items:center;gap:8px}
+.authHeadTitle{font-weight:600;font-size:15px}
 
 /* ---------- Google Sign-In ---------- */
 .googleRow{display:flex;flex-direction:column;gap:8px;align-items:center;margin-top:4px}

@@ -27,6 +27,7 @@ if ('serviceWorker' in navigator) {
   <button class="qbtn" id="bUndo" title="Undo (Ctrl+Z)">↩</button>
   <button class="qbtn" id="bRedo" title="Redo (Ctrl+Y)">↪</button>
   <button class="qbtn" id="bSave" title="Save (Ctrl+S)">💾</button>
+  <button class="qbtn" id="ssOpen" title="Start screen">🏠</button>
   <span class="tsep"></span>
   <button class="qbtn" id="bExport" data-i18n="exp" title="Export CSV">💾</button>
   <button class="qbtn" id="bXlsx" data-i18n="bXlsx" title="All sheets as Excel (.xlsx)">📥</button>
@@ -329,6 +330,13 @@ if ('serviceWorker' in navigator) {
     </div>
 
    <button id="ribbonMin" data-i18n-t="ribbonMin" title="Collapse the Ribbon (Ctrl+F1)">▴</button>
+   <button id="ribbonDispBtn" title="Ribbon Display Options" aria-label="Ribbon Display Options" aria-haspopup="menu" aria-expanded="false">&#9662;</button>
+   <div id="ribbonDispMenu" class="rdMenu" role="menu" aria-label="Ribbon Display Options">
+    <div class="rdMenuTitle" data-i18n="ribbonDisplay">Ribbon Display Options</div>
+    <button type="button" class="rdItem" data-rd="auto" role="menuitemradio" aria-checked="false"><span class="rdCheck"></span><span data-i18n="rdAuto">Auto-hide the Ribbon</span></button>
+    <button type="button" class="rdItem" data-rd="tabs" role="menuitemradio" aria-checked="false"><span class="rdCheck"></span><span data-i18n="rdTabs">Show Tabs Only</span></button>
+    <button type="button" class="rdItem" data-rd="full" role="menuitemradio" aria-checked="false"><span class="rdCheck"></span><span data-i18n="rdFull">Show Tabs and Commands</span></button>
+   </div>
   </div>
  </div>
  <div class="formula">
@@ -514,10 +522,50 @@ if ('serviceWorker' in navigator) {
   </section>
  </div>
 <div id="popMenu"></div>
+ <div id="startScreen" role="dialog" aria-modal="true" aria-labelledby="ssTitle">
+  <div class="ssCard">
+   <div class="ssHead">
+    <div class="ssBrandRow">
+     <span class="ssBrandMark">MX</span>
+     <div>
+      <h1 class="ssTitle" id="ssTitle" data-i18n="ssTitle">Welcome to Mini Excel</h1>
+      <p class="ssSub" data-i18n="ssSubtitle">Open a recent file or start from a template.</p>
+     </div>
+    </div>
+    <button type="button" id="ssClose" class="qbtn" data-ss-close title="Close">&times;</button>
+   </div>
+   <div class="ssTabs">
+    <button type="button" class="ssTab on" data-ss-tab="recent" data-i18n="ssRecent">Recent</button>
+    <button type="button" class="ssTab" data-ss-tab="favorites" data-i18n="ssFavorites">Favorites</button>
+   </div>
+   <div class="ssPane" id="ssPaneRecent"><div class="ssList" id="ssList"></div></div>
+   <div class="ssPane" id="ssPaneFavorites" hidden><div class="ssList"></div></div>
+   <h2 class="ssSectionTitle" data-i18n="ssTemplates">Templates</h2>
+   <div class="ssTplGrid" id="ssTemplates"></div>
+  </div>
+ </div>
  <div id="authDialog" role="dialog" aria-modal="false" aria-labelledby="authTitle">
   <form id="authForm" autocomplete="off">
-   <div class="frow"><span id="authTitle" style="font-weight:600">Sign in</span><span style="flex:1"></span><button type="button" id="authClose" class="qbtn" title="Close">✕</button></div>
-   <div class="authSub" data-i18n="authSub">Sync spreadsheets across devices</div>
+   <div class="authHead">
+    <div class="authHeadRow">
+     <span id="authTitle" class="authHeadTitle" data-i18n="signIn">Sign in</span>
+     <span style="flex:1"></span>
+     <button type="button" id="authClose" class="qbtn" title="Close">&times;</button>
+    </div>
+    <div class="authSub" data-i18n="authSub">Sync spreadsheets across devices</div>
+   </div>
+   <button type="button" class="gsignBtn" id="gsignBtn">
+    <span class="gsignLogo" aria-hidden="true">
+     <svg viewBox="0 0 48 48" width="18" height="18" focusable="false">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+     </svg>
+    </span>
+    <span class="gsignLabel" data-i18n="gsignLabel">Sign in with Google</span>
+   </button>
+   <div class="googleDivider"><span data-i18n="orLabel">or</span></div>
   <label class="fieldLabel" for="emailField" data-i18n="emailLabel">Email</label>
   <input type="email" id="emailField" autocomplete="email" placeholder="you@example.com">
   <label class="fieldLabel" for="nameField" data-i18n="userName">Name</label>
@@ -620,6 +668,8 @@ if ('serviceWorker' in navigator) {
 <script src="js/drive.js" defer></script>
 <script src="js/script.js" defer></script>
 <script src="js/drawDesign.js" defer></script>
+<script src="js/start-screen.js" defer></script>
+<script src="js/ribbon-display.js" defer></script>
 <script src="js/account-ui.js" defer></script>
 <script src="js/auth-guard.js" defer></script>
 </body>

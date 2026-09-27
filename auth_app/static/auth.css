@@ -307,9 +307,17 @@ body {
 .oauth-btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
 
 .oauth-icon { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
-.oauth-icon[data-icon="google"] { background: #ea4335; }
 .oauth-icon[data-icon="github"] { background: #24292f; }
 .oauth-icon[data-icon="microsoft"] { background: #0f6cbd; }
+
+/* Google supplies its own multi-colour mark, so the solid brand-red tile used
+   for the letter fallback is dropped and the logo is used directly. */
+.oauth-icon[data-icon="google"] { background: transparent; }
+.oauth-icon .g-logo { width: 18px; height: 18px; display: block; }
+
+/* Google's sign-in button guidelines: dark-grey label text on a light button. */
+.oauth-btn-google { color: #3c4043; font-weight: 500; }
+.oauth-btn-google:hover { background: #f7f8f8; border-color: #dadce0; }
 
 .provider-note { margin: 12px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
 

@@ -15,7 +15,61 @@
         sign-in is unaffected. To enable Google, set USE_DEV_SERVER (below). */
 
 const path = require('path');
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const fs = require('fs');
+const { app, BrowserWindow, Menu, protocol, shell } = require('electron');
+
+/* The app is loaded over a custom ``app://`` scheme rather than ``file://``.
+   Chromium's own file:// reader cannot open files from this repository's path
+   (it lives under OneDrive and contains non-ASCII characters), which made every
+   launch fail with ERR_FAILED. Serving the files through Node's fs sidesteps
+   that and behaves identically on any machine. */
+const APP_SCHEME = 'app';
+const APP_ORIGIN = `${APP_SCHEME}://mini-excel`;
+const APP_ROOT = __dirname;
+
+/* Content types for the asset kinds this app ships. A wrong type here would
+   make the browser refuse to run the script or apply the stylesheet. */
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2'
+};
+
+/* Must run before app.whenReady(). */
+protocol.registerSchemesAsPrivileged([
+  { scheme: APP_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }
+]);
+
+function registerAppProtocol() {
+  protocol.handle(APP_SCHEME, async (request) => {
+    const { pathname } = new URL(request.url);
+    let relative = decodeURIComponent(pathname).replace(/^\/+/, '') || 'index.html';
+    /* Directory requests resolve to index.html, matching static hosting. */
+    if (relative.endsWith('/')) relative += 'index.html';
+
+    const filePath = path.resolve(APP_ROOT, relative);
+    /* Refuse anything that escapes the app directory (../ traversal). */
+    if (filePath !== APP_ROOT && !filePath.startsWith(APP_ROOT + path.sep)) {
+      return new Response('Forbidden', { status: 403 });
+    }
+    try {
+      const body = await fs.promises.readFile(filePath);
+      const type = MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
+      return new Response(body, { status: 200, headers: { 'content-type': type } });
+    } catch (err) {
+      return new Response('Not found', { status: 404 });
+    }
+  });
+}
 
 /* Set to 5000 to load from the Flask dev server instead of disk, which is what
    Google Sign-In and the service worker both need. Ignored in packaged builds:
@@ -51,7 +105,7 @@ function createWindow() {
   if (USE_DEV_SERVER && !IS_PROD) {
     win.loadURL(DEV_SERVER_URL);
   } else {
-    win.loadFile(path.join(__dirname, 'index.html'));
+    win.loadURL(`${APP_ORIGIN}/index.html`);
   }
 
   /* Any link that wants a new window (the app has no in-app router) opens in
@@ -64,7 +118,7 @@ function createWindow() {
   /* Block in-page navigation away from the app; external URLs go to the browser. */
   win.webContents.on('will-navigate', (event, url) => {
     const current = win.webContents.getURL();
-    if (url !== current && !url.startsWith('file://')) {
+    if (url !== current && !url.startsWith(APP_ORIGIN + '/') && url !== APP_ORIGIN) {
       event.preventDefault();
       if (/^https?:\/\//i.test(url)) shell.openExternal(url);
     }
@@ -93,6 +147,8 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
+    registerAppProtocol();
+
     /* The stock menu (View > Reload, Developer Tools, ...) is a development
        affordance. A packaged build ships without it. */
     if (IS_PROD) Menu.setApplicationMenu(null);

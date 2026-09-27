@@ -10,7 +10,7 @@
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
     "test": "node _test_auth_guard.js && node _test_google_signin.js",
-    "test:auth": "python _test_entrypoint.py && python _test_live_server.py && python _test_prod_hardening.py"
+    "test:auth": "python _test_entrypoint.py && python _test_live_server.py && python _test_prod_hardening.py && python _test_google_button.py"
   },
   "repository": {
     "type": "git",

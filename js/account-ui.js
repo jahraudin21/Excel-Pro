@@ -70,6 +70,66 @@ Object.assign(STR,{
   lastUpdated:{np:'अन्तिम अपडेट',hi:'अंतिम अपडेट',en:'Last updated'}
 });
 
+/* ---------- strings for the start screen + redesigned auth dialog ---------- */
+Object.assign(STR,{
+  gsignLabel:{np:'Google मा साइन इन गर्नुहोस्',hi:'Google से साइन इन करें',en:'Sign in with Google'},
+  newAccountReset:{np:'नयाँ खाताका लागि स्प्रेडसिट खाली गरियो',hi:'नए खाते के लिए स्प्रेडशीट खाली कर दी गई',en:'Started a fresh sheet for the new account'}
+});
+
+/* ---------- "Sign in with Google" button in the redesigned dialog ----------
+   The official Google button is rendered by Google Identity Services into
+   #googleBtn when a client id is configured. This visible button is the
+   always-present entry point: it opens the GIS prompt when available, and
+   explains the problem when it is not, rather than silently doing nothing. */
+function gsignClick(){
+  try{
+    if(typeof Account!=='undefined'&&Account.isGoogleConfigured&&Account.isGoogleConfigured()){
+      if(typeof googleSignInInit==='function'){googleSignInInit();return;}
+      if(typeof googleRenderButton==='function'){googleRenderButton();return;}
+    }
+  }catch(e){}
+  showAuthError('googleUnavailable');
+}
+
+/* ---------- clear grid + headers when the signed-in account changes ----------
+   The workbook lives under a single global localStorage key, so without this a
+   second account would inherit the previous account's cells and column headers.
+   Only fires when the account id actually differs, so a returning user keeps
+   their own sheet. */
+const LAST_ACCOUNT_KEY='mx-last-account-v1';
+function clearHeadersForNewAccount(user){
+  try{
+    if(!user||!user.id)return false;
+    let prev=null;
+    try{prev=localStorage.getItem(LAST_ACCOUNT_KEY);}catch(e){}
+    if(prev===user.id)return false;
+    try{localStorage.setItem(LAST_ACCOUNT_KEY,user.id);}catch(e){}
+
+    if(typeof wb!=='undefined'){
+      wb={cur:0,sheets:[{name:'Sheet1',cells:{}}]};
+      /* Column widths are the header layout; reset them to the default. */
+      if(typeof COLS!=='undefined'){
+        colW=new Array(COLS).fill(88);
+        wb.colW=colW;
+      }
+    }
+    if(typeof hist!=='undefined')hist.length=0;
+    if(typeof fut!=='undefined')fut.length=0;
+    if(typeof vals!=='undefined')vals={};
+    if(typeof cache!=='undefined')cache={};
+    active=selA=selB='A1';
+
+    if(typeof saveLS==='function')saveLS();
+    if(typeof renderAll==='function')renderAll();
+    if(typeof renderTabs==='function')renderTabs();
+    if(typeof applyColW==='function')applyColW();
+    if(typeof setBookName==='function')setBookName();
+    if(typeof StartScreen!=='undefined'&&StartScreen&&StartScreen.rememberCurrent)StartScreen.rememberCurrent();
+    if(typeof setStatusMode==='function')setStatusMode(T('newAccountReset'));
+    return true;
+  }catch(e){return false;}
+}
+
 /* ---------- account chip in the titlebar ---------- */
 function paintAvatar(el,u,fb){if(!el)return;
  if(u&&u.picture){el.style.backgroundImage='url("'+u.picture+'")';
@@ -357,7 +417,7 @@ function initProfilePanel(){
  card('#bsUserCloudOpen',()=>{renderCloudList();showAccountPage();});
  card('#bsUserSave',()=>{try{saveCloudBook((typeof wb!=='undefined'&&wb&&wb.cloudId)?wb.cloudId:null);}catch(e){}});
  card('#bsUserSignOut',()=>{Account.signOut();renderUserChip();showAccountPage();setStatusMode(T('signedOutMsg'));});
- Account.onChange(()=>{renderUserChip();showAccountPage();});
+ Account.onChange(()=>{renderUserChip();showAccountPage();clearHeadersForNewAccount(Account.currentUser());});
  on('#profileSave',()=>{
   const ne=$('#profileNameField');const v=ne?ne.value:'';
   if(!Account.updateName)return;
@@ -404,7 +464,10 @@ function initProfilePanel(){
 
 /* ---------- boot (called from script.js init, after DOM ready) ---------- */
 let accountUiBooted=false;
-function initAllAccountUI(){if(accountUiBooted)return;accountUiBooted=true;try{initAuthUi();}catch(e){}try{initProfilePanel();}catch(e){}}
+function initAllAccountUI(){if(accountUiBooted)return;accountUiBooted=true;try{initAuthUi();}catch(e){}try{initProfilePanel();}catch(e){}/* StartScreen is defined by an earlier deferred script. The readyState check
+   above runs while deferred scripts execute, which the HTML spec puts at
+   "interactive", so this boots before later scripts are evaluated. */
+try{if(typeof StartScreen!=='undefined')StartScreen.init();}catch(e){}try{if(typeof RibbonDisplay!=='undefined'){RibbonDisplay.init();setTimeout(function(){try{RibbonDisplay.apply();}catch(e){}},0);}}catch(e){}try{on('#gsignBtn',()=>gsignClick());}catch(e){}try{on('#ssOpen',()=>StartScreen.open());}catch(e){}}
 /* Self-boot: with <script defer>, script.js runs init() BEFORE this file defines
    initAllAccountUI, so script.js's `typeof initAllAccountUI==='function'` guard is false
    and the account UI would never initialise. Booting here (DOM is parsed by now)

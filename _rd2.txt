@@ -1,0 +1,6 @@
+﻿
+C:\Users\zedi\OneDrive\πâëπé¡πâÑπâíπâ│πâê\GitHub\Excel-Pro\js\ribbon-display.js:180
+SyntaxError: Unexpected token ')'
+
+
+
