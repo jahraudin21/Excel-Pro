@@ -393,6 +393,17 @@ const STR={
  thmReset:{np:'पूर्वनिर्धारितमा फर्काउनु',hi:'डिफ़ॉल्ट पर लौटाएँ',en:'Reset to default'},
  customColor:{np:'आफ्नै रङ…',hi:'कस्टम रंग…',en:'Custom color…'},
  /* --- File backstage view --- */
+ bsHome:{np:'गृह',hi:'होम',en:'Home'},
+ bsRecent:{np:'हालका',hi:'हाल की',en:'Recent'},
+ bsRecentTitle:{np:'हालका कार्यपुस्तिकाहरू',hi:'हाल की वर्कबुक',en:'Recent workbooks'},
+ bsStartNew:{np:'नयाँ',hi:'नया',en:'New'},
+ bsOneDrive:{np:'OneDrive',hi:'OneDrive',en:'OneDrive'},
+ bsOneDriveHint:{np:'क्लाउडबाट खोल्नुहोस्',hi:'क्लाउड से खोलें',en:'Open from the cloud'},
+ bsCloudHint:{np:'खातामा सुरक्षित वर्कबुक',hi:'खाते में सहेजी गई वर्कबुक',en:'Workbooks saved to your account'},
+ bsDrive:{np:'Google Drive',hi:'Google Drive',en:'Google Drive'},
+ bsDriveHint:{np:'Google खाता जोड्नुहोस्',hi:'Google खाता जोड़ें',en:'Connect a Google account'},
+ bsStoragePref:{np:'स्टोरेज',hi:'स्टोरेज',en:'Storage'},
+ bsNoRecentBs:{np:'अहिलेसम्म कुनै फाइल खोलिएको छैन।',hi:'अभी तक कोई फ़ाइल नहीं खोली गई।',en:'No recent workbooks yet.'},
  bsInfo:{np:'ℹ️ जानकारी',hi:'ℹ️ जानकारी',en:'ℹ️ Info'},
  bsNew:{np:'🆕 नयाँ',hi:'🆕 नई',en:'🆕 New'},
  bsOpen:{np:'📂 खोल्नुहोस्',hi:'📂 खोलें',en:'📂 Open'},
@@ -1604,7 +1615,7 @@ function closeMenus(){$('#popMenu').classList.remove('open');$('#ctxMenu').class
 let backstageOpen=false;
 function openBackstage(){const bs=$('#backstage');if(!bs)return;closeMenus();
  backstageOpen=true;bs.classList.add('open');bs.setAttribute('aria-hidden','false');
- showBsPage('info');bsInfoRefresh();}
+ showBsPage('home');bsInfoRefresh();bsRenderRecent();}
 function closeBackstage(){const bs=$('#backstage');if(!bs)return;
  backstageOpen=false;bs.classList.remove('open');bs.setAttribute('aria-hidden','true');}
 function showBsPage(page){const bs=$('#backstage');if(!bs)return;
@@ -1613,6 +1624,24 @@ function showBsPage(page){const bs=$('#backstage');if(!bs)return;
 function bsOpenAccount(){const bs=$('#backstage');if(!bs)return;
  if(Account.currentUser()){showBsPage('account');showAccountPage();}
  else openAuthDialog('signin');}
+/* Recent workbooks on the Home and Recent pages. start-screen.js owns the
+   list, so this only renders what it already knows about; the two list hosts
+   are filled together because the Home page shows the same list. */
+function bsRenderRecent(){
+ const hosts=['#bsRecentList','#bsRecentOnly'];
+ if(typeof StartScreen==='undefined'||!StartScreen.recent)return;
+ let items=[];
+ try{items=StartScreen.recent()||[];}catch(e){items=[];}
+ const rows=items.length?items.map(function(it){
+   const id=String(it.id||''),name=String(it.name||'');
+   return '<div class="bsRecentItem" data-bs-recent="'+escHtml(id)+'">'
+     +'<span class="bsRecentIco" aria-hidden="true">&#128196;</span>'
+     +'<span class="bsRecentName">'+escHtml(name)+'</span></div>';}).join(''):
+   '<p class="bsEmpty">'+escHtml(T('bsNoRecentBs'))+'</p>';
+ hosts.forEach(function(sel){
+  const host=$(sel);if(host)host.innerHTML=rows;});
+}
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function bsInfoRefresh(){
  const set=(id,v)=>{const el=$(id);if(el)el.textContent=v;};
  const s=sheet();
@@ -1629,7 +1658,7 @@ function initBackstage(){
  const bs=$('#backstage');if(!bs)return;
  bs.querySelectorAll('.bsItem').forEach(b=>{b.onclick=()=>{
   if(b.dataset.bsPage==='account'){bsOpenAccount();return;}
-  showBsPage(b.dataset.bsPage);bsInfoRefresh();};});
+  showBsPage(b.dataset.bsPage);bsInfoRefresh();bsRenderRecent();};});
  const act=(id,fn)=>{const el=$(id);if(el)el.onclick=fn;};
  act('#bsBack',closeBackstage);
  act('#bsNewBlank',startNewWorkbook);
@@ -1639,9 +1668,27 @@ function initBackstage(){
  act('#bsCardXlsx',()=>$('#bXlsx').click());act('#bsExpXlsx',()=>$('#bXlsx').click());
  act('#bsCardZip',()=>$('#bAllCsv').click());act('#bsExpZip',()=>$('#bAllCsv').click());
  act('#bsCardPrint',triggerPrint);act('#bsPrintNow',triggerPrint);
+ act('#bsHomeBlank',startNewWorkbook);
+ act('#bsHomeOpen',triggerImport);
+ act('#bsHomeOneDrive',()=>showBsPage('onedrive'));
+ act('#bsCloudSignIn',bsOpenAccount);
+ act('#bsCloudBooks',bsOpenAccount);
+ act('#bsCloudDrive',bsOpenAccount);
  act('#bsPrintSetup',openPageSetup);
+ /* Clicking a recent row re-opens it. A cloud book is fetched through the same
+    helper the start screen uses; a local one is already in memory, so closing
+    the backstage is all that is needed either way. */
+ bs.addEventListener('click',e=>{
+  const row=e.target.closest?e.target.closest('[data-bs-recent]'):null;
+  if(!row)return;
+  const id=row.getAttribute('data-bs-recent')||'';
+  closeBackstage();
+  if(id.indexOf('cloud:')===0&&typeof StartScreen!=='undefined'&&StartScreen.openCloudBook)
+   StartScreen.openCloudBook(id.slice(6));
+ });
  document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&backstageOpen){e.preventDefault();closeBackstage();}});}
+
 function mergesOf(){const s=sheet();if(!s.merges)s.merges=[];return s.merges;}
 function applyMerges(){
  const list=mergesOf();

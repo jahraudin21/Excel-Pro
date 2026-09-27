@@ -117,6 +117,59 @@ app.whenReady().then(() => {
     ok(JSON.stringify(tpl.active) === JSON.stringify(['templates']), 'templates tab is marked active');
     ok(JSON.stringify(tpl.railOn) === JSON.stringify(['templates']), 'left rail mirrors the active tab');
 
+    /* ---- File backstage: rail contents and page switching ----
+       The app boots auth-locked, and the guard deliberately swallows clicks on
+       the app surface (including #backstage) until somebody registers. So the
+       backstage is exercised the way a signed-in user reaches it: drop the lock
+       first, then drive the rail with real clicks. */
+    await win.webContents.executeJavaScript(
+      `document.body.classList.remove('auth-locked');AuthGuard.locked=false;`);
+    await win.webContents.executeJavaScript(`openBackstage()`);
+    await new Promise(r => setTimeout(r, 200));
+    const bs = await win.webContents.executeJavaScript(`(() => ({
+      open: document.getElementById('backstage').classList.contains('open'),
+      rail: [...document.querySelectorAll('.bsItem')].map(b => b.dataset.bsPage),
+      pane: [...document.querySelectorAll('.bsPage.on')].map(p => p.dataset.bspane),
+      recentHost: document.getElementById('bsRecentList').innerHTML.length > 0
+    }))()`);
+    ok(bs.open, 'File opens the backstage');
+    ok(JSON.stringify(bs.rail) ===
+      JSON.stringify(['home', 'new', 'open', 'recent', 'save', 'export', 'print', 'onedrive', 'info', 'account']),
+      'File rail is Home/Open/Recent/OneDrive/Info in Excel order -> ' + JSON.stringify(bs.rail));
+    ok(JSON.stringify(bs.pane) === JSON.stringify(['home']), 'File opens on the Home page -> ' + JSON.stringify(bs.pane));
+    ok(bs.recentHost, 'Home page renders the recent list');
+
+    for (const page of ['recent', 'onedrive', 'info', 'new', 'open', 'save', 'export', 'print']) {
+      await win.webContents.executeJavaScript(
+        `document.querySelector('.bsItem[data-bs-page="${page}"]').click()`);
+      await new Promise(r => setTimeout(r, 90));
+      const shown = await win.webContents.executeJavaScript(
+        `[...document.querySelectorAll('.bsPage.on')].map(p => p.dataset.bspane)`);
+      ok(JSON.stringify(shown) === JSON.stringify([page]),
+        'rail item "' + page + '" shows its own page -> ' + JSON.stringify(shown));
+    }
+
+    await win.webContents.executeJavaScript(`closeBackstage()`);
+    await new Promise(r => setTimeout(r, 120));
+    ok(!(await win.webContents.executeJavaScript(
+      `document.getElementById('backstage').classList.contains('open')`)), 'back arrow closes the backstage');
+
+    /* ---- Google sign-in button on the login page ---- */
+    const gs = await win.webContents.executeJavaScript(`(() => {
+      const b = document.getElementById('gsignBtn');
+      if (!b) return null;
+      return {
+        label: b.querySelector('.gsignLabel').textContent.trim(),
+        colours: [...b.querySelectorAll('.gsignLogo path')].map(p => p.getAttribute('fill'))
+      };
+    })()`);
+    ok(!!gs, 'Sign in with Google button is present on the login page');
+    if (gs) {
+      ok(gs.label === 'Sign in with Google', 'button reads "Sign in with Google" -> ' + gs.label);
+      ok(JSON.stringify(gs.colours) === JSON.stringify(['#EA4335', '#4285F4', '#FBBC05', '#34A853']),
+        'button carries the 4-colour Google logo -> ' + gs.colours.join(','));
+    }
+
     console.log('\n' + pass + ' passed, ' + fail + ' failed');
     app.exit(fail ? 1 : 0);
   });

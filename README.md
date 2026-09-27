@@ -17,8 +17,38 @@ and no runtime dependencies. There is nothing to transpile.
 ```bash
 npm install          # install Electron + electron-builder
 npm start            # run unpacked during development
-npm test             # JavaScript test suite (50 assertions)
+npm test             # JavaScript test suite
 ```
+
+### Starting on Windows: the PowerShell execution-policy error
+
+If `npm start` fails with
+
+```
+npm.ps1 cannot be loaded because running scripts is disabled on this machine.
+```
+
+that is **PowerShell's execution policy, not a problem with this project**.
+PowerShell resolves the bare name `npm` to `npm.ps1` — a PowerShell script — in
+preference to `npm.cmd`, and refuses to run it when the policy is `Restricted`
+(the Windows default, and still common on managed machines). npm never starts.
+
+Three ways round it, in order of preference:
+
+```bash
+.\start.cmd          # recommended: plain cmd.exe, ignores the policy entirely
+npm.cmd start        # call the cmd shim explicitly
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned   # one-off, per user
+```
+
+`start.cmd` is the one to reach for: it is cmd.exe, so the execution policy does
+not apply, and it works unchanged from PowerShell, cmd.exe, Explorer double-click
+and Task Scheduler. It also accepts `start.cmd --test` to run the suite.
+
+> **Editing `start.cmd`:** use `::` for comments, never `REM`. A `REM` line
+> holding a URL with a query string (`fwlink/?LinkID=…`) makes cmd fail with
+> `... was unexpected at this time`, because the `?` is parsed as part of the
+> command line rather than as comment text. Keep the file ASCII, CRLF, no BOM.
 
 ### Producing installers
 

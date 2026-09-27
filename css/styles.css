@@ -80,12 +80,16 @@ body{background:var(--xl-ribbon);padding:0;height:100vh;display:flex;overflow:hi
    with the command area below it. */
 .rtab.on{background:#fff;border-bottom-color:var(--accent);color:var(--accent);font-weight:600}
 .rbody{background:var(--xl-ribbon);border-top:1px solid var(--xl-line);display:flex;overflow-x:auto}
-.rpage{display:none;padding:2px 2px 1px;align-items:stretch}
+/* Command area: Excel gives each group a little air and separates them with a
+   full-height hairline, with the group name centred underneath. */
+.rpage{display:none;padding:2px 0 1px;align-items:stretch}
 .rpage.on{display:flex}
-.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--xl-line);padding:1px 5px;flex:none}
+.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--xl-line);padding:1px 6px 0;flex:none}
 .rgrp:last-child{border-right:none}
 .rrow{display:flex;align-items:center;gap:1px;flex:1;flex-wrap:wrap;justify-content:center}
-.rlabel{font-size:9.5px;color:var(--xl-text-2);margin-top:1px;white-space:nowrap}
+.rlabel{font-size:9.5px;color:var(--xl-text-2);margin-top:2px;line-height:1.2;white-space:nowrap}
+/* 22px controls with a 1px transparent border keep the hover/pressed surface
+   exactly the size of the button, as in Excel (no visible frame at rest). */
 .rbtn{background:transparent;border:1px solid transparent;border-radius:2px;min-width:24px;height:22px;padding:0 4px;cursor:pointer;font-size:11.5px;color:var(--xl-text);display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
 .rbtn:hover{background:var(--xl-hover);border-color:var(--xl-line)}
 .rbtn:active{background:var(--xl-press)}
@@ -93,7 +97,7 @@ body{background:var(--xl-ribbon);padding:0;height:100vh;display:flex;overflow:hi
 .rbtn.big{flex-direction:column;height:46px;width:54px;font-size:10px;line-height:1.15;gap:0;padding:0 2px}
 .rbtn.big .bi{font-size:16px}
 .rsel{border:1px solid var(--xl-line);border-radius:2px;height:22px;font-size:11.5px;background:#fff;color:var(--xl-text);max-width:132px;padding:0 2px}
-.rsep{width:1px;background:var(--xl-line);margin:1px 1px;align-self:stretch}
+.rsep{width:1px;background:var(--xl-line);margin:1px 2px;align-self:stretch}
 /* ---------- name box / formula bar ---------- */
 .formula{display:flex;align-items:center;background:#fff;border-bottom:1px solid #d0d0d0;padding:3px 6px;flex:none}
 #refbox{width:110px;border:1px solid #c8c8c8;padding:0 6px;font-size:12px;background:#fff;height:22px;line-height:20px}
@@ -273,6 +277,18 @@ body[data-theme='solar'] td.act{outline-color:#b58900}
 .bsT{font-size:13px;font-weight:600;margin-bottom:3px}
 .bsD{font-size:11px;color:#666}
 .bsInfoBox{max-width:420px;border:1px solid #e0e0e0;border-radius:6px;background:#fafafa}
+/* Recent workbooks on the Home / Recent pages: flat rows, Excel-style. */
+.bsList{max-width:520px}
+.bsRecentItem{display:flex;align-items:center;gap:10px;padding:8px 8px;cursor:pointer;
+  border-bottom:1px solid #eee;border-radius:3px}
+.bsRecentItem:hover{background:#eef3ef}
+.bsRecentIco{width:22px;flex:0 0 22px;text-align:center;font-size:15px;line-height:1;color:var(--accent)}
+.bsRecentName{font-size:13px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bsEmpty{margin:8px 0;font-size:12.5px;color:#666}
+body[data-theme='dark'] .bsRecentItem{border-bottom-color:#444}
+body[data-theme='dark'] .bsRecentItem:hover{background:#333}
+body[data-theme='dark'] .bsRecentName{color:#e8e8e8}
+body[data-theme='dark'] .bsEmpty{color:#aaa}
 .bsRow{display:flex;justify-content:space-between;gap:14px;padding:8px 12px;font-size:13px;border-bottom:1px solid #eee}
 .bsRow:last-child{border-bottom:none}
 body[data-theme='dark'] #backstage{background:#252525;color:#e8e8e8}

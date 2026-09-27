@@ -438,16 +438,46 @@ if ('serviceWorker' in navigator) {
     <button type="button" class="bsBack" id="bsBack" title="Back">←</button>
     <span class="bsBrand" data-i18n="rFile">File</span>
    </div>
-   <button type="button" class="bsItem on" data-bs-page="info" data-i18n="bsInfo">ℹ️ Info</button>
-   <button type="button" class="bsItem" data-bs-page="new" data-i18n="bsNew">🆕 New</button>
-   <button type="button" class="bsItem" data-bs-page="open" data-i18n="bsOpen">📂 Open</button>
-   <button type="button" class="bsItem" data-bs-page="save" data-i18n="bsSave">💾 Save</button>
-   <button type="button" class="bsItem" data-bs-page="export" data-i18n="bsExport">⬇ Export</button>
-   <button type="button" class="bsItem" data-bs-page="print" data-i18n="bsPrintPage">🖨 Print</button>
-   <button type="button" class="bsItem" data-bs-page="account" data-i18n="signIn">Sign in</button>
-  </aside>
+    <button type="button" class="bsItem on" data-bs-page="home" data-i18n="bsHome">&#127968; Home</button>
+    <button type="button" class="bsItem" data-bs-page="new" data-i18n="bsNew">&#127381; New</button>
+    <button type="button" class="bsItem" data-bs-page="open" data-i18n="bsOpen">&#128193; Open</button>
+    <button type="button" class="bsItem" data-bs-page="recent" data-i18n="bsRecent">&#128339; Recent</button>
+    <button type="button" class="bsItem" data-bs-page="save" data-i18n="bsSave">&#128190; Save</button>
+    <button type="button" class="bsItem" data-bs-page="export" data-i18n="bsExport">&#11015; Export</button>
+    <button type="button" class="bsItem" data-bs-page="print" data-i18n="bsPrintPage">&#128424; Print</button>
+    <button type="button" class="bsItem" data-bs-page="onedrive" data-i18n="bsOneDrive">&#9721;&#65039; OneDrive</button>
+    <button type="button" class="bsItem" data-bs-page="info" data-i18n="bsInfo">&#8505;&#65039; Info</button>
+    <button type="button" class="bsItem" data-bs-page="account" data-i18n="signIn">Sign in</button>
+   </aside>
   <section class="bsPane">
-   <div class="bsPage on" data-bspane="info">
+    <div class="bsPage on" data-bspane="home">
+     <h1 data-i18n="bsStartNew">New</h1>
+     <div class="bsGrid">
+      <div class="bsCard" id="bsHomeBlank"><div class="bsIco">&#128196;</div><div class="bsT" data-i18n="bsBlank">Blank workbook</div><div class="bsD" data-i18n="bsBlankHint">Start fresh (Ctrl+N)</div></div>
+      <div class="bsCard" id="bsHomeOpen"><div class="bsIco">&#128193;</div><div class="bsT" data-i18n="fileOpen">Open (CSV)</div><div class="bsD" data-i18n="bsOpenHint">Browse for a .csv file (Ctrl+O)</div></div>
+      <div class="bsCard" id="bsHomeOneDrive"><div class="bsIco">&#9721;&#65039;</div><div class="bsT" data-i18n="bsOneDrive">OneDrive</div><div class="bsD" data-i18n="bsOneDriveHint">Open from the cloud</div></div>
+     </div>
+     <h1 data-i18n="bsRecentTitle">Recent</h1>
+     <div class="bsList" id="bsRecentList"></div>
+    </div>
+    <div class="bsPage" data-bspane="recent">
+     <h1 data-i18n="bsRecentTitle">Recent</h1>
+     <div class="bsList" id="bsRecentOnly"></div>
+    </div>
+    <div class="bsPage" data-bspane="onedrive">
+     <h1 data-i18n="bsOneDrive">OneDrive</h1>
+     <div class="bsGrid">
+      <div class="bsCard" id="bsCloudSignIn"><div class="bsIco">&#128274;</div><div class="bsT" data-i18n="signIn">Sign in</div><div class="bsD" data-i18n="backstageHint">Sync spreadsheets to the cloud</div></div>
+      <div class="bsCard" id="bsCloudBooks"><div class="bsIco">&#128218;</div><div class="bsT" data-i18n="cloudSaves">Cloud saves</div><div class="bsD" data-i18n="bsCloudHint">Workbooks saved to your account</div></div>
+      <div class="bsCard" id="bsCloudDrive"><div class="bsIco">&#128193;</div><div class="bsT" data-i18n="bsDrive">Google Drive</div><div class="bsD" data-i18n="bsDriveHint">Connect a Google account</div></div>
+     </div>
+     <div class="bsInfoBox">
+      <div class="bsRow"><span data-i18n="myAccount">Account</span><b id="bsCloudUser">&#8212;</b></div>
+      <div class="bsRow"><span data-i18n="bsStoragePref">Storage</span><b id="bsCloudPref">&#8212;</b></div>
+      <div class="bsRow"><span data-i18n="cloudSaves">Cloud saves</span><b id="bsCloudCount">0</b></div>
+     </div>
+    </div>
+    <div class="bsPage" data-bspane="info">
     <h1 data-i18n="bsWorkbook">Workbook</h1>
     <div class="bsGrid">
      <div class="bsCard" id="bsCardSave"><div class="bsIco">💾</div><div class="bsT" data-i18n="bsSaveBrowser">Save in browser</div><div class="bsD" data-i18n="bsSavedHint">Auto-saves in your browser</div></div>

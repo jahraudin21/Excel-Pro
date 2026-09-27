@@ -12,6 +12,8 @@ const ss = read('js/start-screen.js');
 const accountUi = read('js/account-ui.js');
 const account = read('js/account.js');
 const guard = read('js/auth-guard.js');
+/* The ribbon/backstage wiring lives in the engine module, not the UI modules. */
+const jsScript = read('js/script.js');
 
 let pass = 0, fail = 0;
 const chk = (label, cond) => { if (cond) { pass++; console.log('  PASS  ' + label); } else { fail++; console.log('  FAIL  ' + label); } };
@@ -60,6 +62,62 @@ chk('ribbon body uses the Excel #f3f2f1 surface', /\.rbody\{background:var\(--xl
 chk('active tab is white like Excel', /\.rtab\.on\{background:#fff/.test(css));
 chk('compact spacing (22px controls, 9.5px group labels)',
   /\.rbtn\{[^}]*height:22px/.test(css) && /\.rlabel\{[^}]*font-size:9\.5px/.test(css));
+
+// ------------------------------------------------------------- File backstage
+console.log('\n--- File menu (backstage) ---');
+const rail = [...html.matchAll(/data-bs-page="([^"]+)"/g)].map(m => m[1]);
+chk('rail is Home / New / Open / Recent / Save / Export / Print / OneDrive / Info / Account',
+  JSON.stringify(rail) ===
+  JSON.stringify(['home', 'new', 'open', 'recent', 'save', 'export', 'print', 'onedrive', 'info', 'account']));
+chk('Home is the default page, like Excel',
+  /class="bsPage on" data-bspane="home"/.test(html)
+  && /showBsPage\('home'\);bsInfoRefresh\(\);bsRenderRecent\(\);/.test(jsScript));
+chk('every rail entry has a matching page',
+  rail.every(p => new RegExp('data-bspane="' + p + '"').test(html)));
+chk('Home offers blank / open / OneDrive cards',
+  /id="bsHomeBlank"/.test(html) && /id="bsHomeOpen"/.test(html) && /id="bsHomeOneDrive"/.test(html));
+chk('OneDrive page offers sign-in, cloud saves and Drive',
+  /id="bsCloudSignIn"/.test(html) && /id="bsCloudBooks"/.test(html) && /id="bsCloudDrive"/.test(html));
+chk('Recent list is rendered on the Home page',
+  /id="bsRecentList"/.test(html) && /function bsRenderRecent\(\)/.test(jsScript));
+chk('rendering the list escapes workbook names',
+  /function escHtml\(s\)/.test(jsScript) && /escHtml\(name\)/.test(jsScript));
+chk('the new cards are wired to actions',
+  /act\('#bsHomeBlank',startNewWorkbook\)/.test(jsScript)
+  && /act\('#bsHomeOpen',triggerImport\)/.test(jsScript)
+  && /act\('#bsHomeOneDrive'/.test(jsScript));
+chk('clicking a recent row re-opens that workbook',
+  /e\.target\.closest\('\[data-bs-recent\]'\)/.test(jsScript)
+  && /StartScreen\.openCloudBook\(id\.slice\(6\)\)/.test(jsScript));
+chk('openCloudBook is exported for the File menu to reuse',
+  /openCloudBook:openCloudBook/.test(ss));
+chk('recent-list styling is defined',
+  /\.bsRecentItem\{/.test(css) && /\.bsRecentItem:hover\{/.test(css));
+chk('all backstage i18n keys are defined',
+  ['bsHome', 'bsRecent', 'bsRecentTitle', 'bsStartNew', 'bsOneDrive', 'bsOneDriveHint',
+   'bsCloudHint', 'bsDrive', 'bsDriveHint', 'bsStoragePref', 'bsNoRecentBs']
+    .every(k => jsScript.includes(k + ':{')));
+
+// ------------------------------------------------------------------- launcher
+console.log('\n--- Windows launcher (PowerShell execution policy) ---');
+const launcher = fs.existsSync('start.cmd') ? read('start.cmd') : '';
+chk('start.cmd exists', !!launcher);
+chk('it is plain cmd, so the execution policy does not apply',
+  /@echo off/.test(launcher) && !/\.ps1\b.*-ExecutionPolicy\s+(Bypass|Unrestricted)/.test(launcher));
+chk('it calls npm.cmd explicitly, defeating PowerShell ps1-first resolution',
+  /npm\.cmd/.test(launcher) && /%%~\$PATH:I/.test(launcher));
+chk('the root cause is documented in the file',
+  /npm\.ps1 cannot be loaded/.test(launcher) && /about_execution_policies/.test(launcher));
+chk('the REM/? footgun is documented so it is not reintroduced',
+  /Use :: for comments, not REM/.test(launcher));
+chk('it is ASCII with CRLF and no BOM (cmd requirements)',
+  (() => {
+    const b = fs.readFileSync(path.join(root, 'start.cmd'));
+    if (b[0] === 0xEF && b[1] === 0xBB && b[2] === 0xBF) return false;
+    if ([...b].some(x => x > 126)) return false;
+    const s2 = b.toString('latin1');
+    return !/(?<!\r)\n/.test(s2);
+  })());
 
 // -------------------------------------------------------- launch & login flow
 console.log('\n--- launch, sign-in and Google storage ---');

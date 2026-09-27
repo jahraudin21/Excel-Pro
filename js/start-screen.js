@@ -436,6 +436,9 @@ const StartScreen=(function(){
   return {open:open,close:close,isOpen:isOpen,init:init,render:render,
           rememberCurrent:rememberCurrent,applyTemplate:applyTemplate,
           toggleFavorite:toggleFavorite,recent:recent,favorites:favorites,
+          /* Exposed so the File menu's Recent page can re-open a cloud workbook
+             through the same path the start screen uses. */
+          openCloudBook:openCloudBook,
           syncAccount:syncAccount,
           templates:TEMPLATES};
 })();
