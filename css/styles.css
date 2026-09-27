@@ -1,15 +1,33 @@
-:root{--accent:#217346;--accent-dark:#1a5c38}
+/* ---------- Excel design tokens ----------
+   The Office/Fluent palette Excel ships with: green accent, #f3f2f1 ribbon and
+   title surfaces, hairline #d2d0ce separators, #323130 body text. `--accent` is
+   kept because the theme / fx blocks further down this file already reference it. */
+:root{
+  --accent:#217346;--accent-dark:#1a5c38;
+  --xl-ribbon:#f3f2f1;--xl-surface:#fff;--xl-hover:#e1dfdd;--xl-press:#c7c6c4;
+  --xl-line:#d2d0ce;--xl-line-soft:#edebe9;--xl-text:#323130;--xl-text-2:#605e5c;
+}
 *{box-sizing:border-box;margin:0;padding:0;font-family:var(--sheet-font,'Segoe UI'),Calibri,Arial,sans-serif}
-body{background:#217346;padding:10px;height:100vh;display:flex}
-#app{position:relative;background:#fff;flex:1;display:flex;flex-direction:column;border-radius:6px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.35)}
-/* ---------- title bar ---------- */
-.titlebar{display:flex;align-items:center;gap:6px;background:var(--accent);color:#fff;padding:4px 10px;font-size:13px;flex:none}
-.titlebar .appTitle{font-weight:600}
-.titlebar .bookName{opacity:.9;font-size:12px}
-.qbtn{background:transparent;border:none;color:#fff;font-size:14px;padding:3px 7px;border-radius:3px;cursor:pointer}
-.qbtn:hover{background:rgba(255,255,255,.2)}
-.tsep{width:1px;height:16px;background:rgba(255,255,255,.35);margin:0 3px}
-.titlebar select{background:#1a5c38;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:3px;font-size:12px;padding:2px 4px}
+/* Excel is a full-bleed desktop window, not a rounded card on a green page. */
+body{background:var(--xl-ribbon);padding:0;height:100vh;display:flex;overflow:hidden}
+#app{position:relative;background:var(--xl-surface);flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* ---------- title bar (Excel: light strip, quick actions left, account right) ---------- */
+.titlebar{display:flex;align-items:center;gap:1px;background:var(--xl-ribbon);color:var(--xl-text);
+  padding:2px 6px;font-size:12.5px;flex:none;border-bottom:1px solid var(--xl-line)}
+.titlebar .appTitle{font-weight:600;white-space:nowrap;padding-left:2px}
+.titlebar .bookName{color:var(--xl-text-2);font-size:12px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:190px}
+/* Spacer that pushes the language picker and the account pill into the right
+   corner. The pill and picker carry explicit flex `order` so the pill stays
+   right-most no matter where its markup sits in the bar. */
+.tbFlex{order:1;flex:1 1 auto;min-width:8px}
+.titlebar select{order:2;background:#fff;color:var(--xl-text);border:1px solid var(--xl-line);
+  border-radius:2px;font-size:11.5px;height:20px;padding:0 2px;margin:0 1px;flex:none}
+.qbtn{background:transparent;border:1px solid transparent;color:var(--xl-text);font-size:13px;
+  padding:1px 6px;border-radius:2px;cursor:pointer;line-height:1.35;white-space:nowrap;flex:none}
+.qbtn:hover{background:var(--xl-hover);border-color:var(--xl-line)}
+.qbtn:active{background:var(--xl-press)}
+.tsep{width:1px;height:14px;background:var(--xl-line);margin:0 3px;flex:none}
 /* ---------- Ribbon Display Options (Excel parity) ---------- */
 #ribbonDispBtn{position:absolute;right:5px;bottom:0;border:none;background:transparent;
   color:#6b6b6b;cursor:pointer;font-size:12px;line-height:1;padding:2px 7px;border-radius:3px;z-index:4}
@@ -35,14 +53,14 @@ body{background:#217346;padding:10px;height:100vh;display:flex}
 .ribbon.rd-tabs{min-height:0}
 
 /* ---------- ribbon ---------- */
-.ribbon{background:#f3f2f1;border-bottom:1px solid #d0d0d0;flex:none;position:relative}
-#ribbonMin{position:absolute;right:5px;bottom:0;border:none;background:transparent;color:#6b6b6b;cursor:pointer;font-size:12px;line-height:1;padding:2px 7px;border-radius:3px;z-index:3}
-#ribbonMin:hover{background:#e0dedd;color:#217346}
+.ribbon{background:var(--xl-ribbon);border-bottom:1px solid var(--xl-line);flex:none;position:relative}
+#ribbonMin{position:absolute;right:5px;bottom:0;border:none;background:transparent;color:var(--xl-text-2);cursor:pointer;font-size:12px;line-height:1;padding:2px 7px;border-radius:2px;z-index:3}
+#ribbonMin:hover{background:var(--xl-hover);color:var(--accent)}
 .ribbon.min .rbody{display:none!important}
 .ribbon.min{border-bottom:1px solid #d0d0d0}
 .ribbon.min .rtabs{padding-bottom:0}
-.rtabs{display:flex;gap:2px;padding:0 6px;align-items:stretch}
-.rtfile{background:var(--accent);color:#fff;border:none;padding:6px 18px 7px;font-size:13px;cursor:pointer;font-weight:600;margin-right:6px}
+.rtabs{display:flex;gap:1px;padding:0 4px;align-items:stretch}
+.rtfile{background:var(--accent);color:#fff;border:none;padding:4px 14px 5px;font-size:12.5px;cursor:pointer;font-weight:600;margin-right:4px;flex:none}
 .rtfile:hover{background:var(--accent-dark)}
 .file-menu{position:absolute;z-index:50;top:31px;left:6px;width:250px;padding:8px;background:#fff;border:1px solid #c9c9c9;border-radius:0 0 6px 6px;box-shadow:0 8px 22px rgba(0,0,0,.2);display:none;color:#222}
 .file-menu.open{display:block}
@@ -56,22 +74,26 @@ body{background:#217346;padding:10px;height:100vh;display:flex}
 #rtTellMe:focus{border-bottom-color:#217346}
 #grid.pageview{border-left:2px dashed #9ab7d3;border-right:2px dashed #9ab7d3}
 #grid.breakview{border-color:#4f81bd}
-.rtab{background:transparent;border:none;border-bottom:2px solid transparent;padding:6px 14px;font-size:13px;cursor:pointer;color:#444;border-radius:3px 3px 0 0}
-.rtab:hover{background:#e9e7e7}
+.rtab{background:transparent;border:none;border-bottom:2px solid transparent;padding:4px 11px;font-size:12.5px;cursor:pointer;color:var(--xl-text-2);border-radius:0;white-space:nowrap;flex:none}
+.rtab:hover{background:var(--xl-hover)}
+/* The selected tab is white-on-grey, exactly like Excel, so it visually merges
+   with the command area below it. */
 .rtab.on{background:#fff;border-bottom-color:var(--accent);color:var(--accent);font-weight:600}
-.rbody{background:#fff;border-top:1px solid #e3e3e3;display:flex;overflow-x:auto}
-.rpage{display:none;padding:4px 4px;align-items:stretch}
+.rbody{background:var(--xl-ribbon);border-top:1px solid var(--xl-line);display:flex;overflow-x:auto}
+.rpage{display:none;padding:2px 2px 1px;align-items:stretch}
 .rpage.on{display:flex}
-.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid #e6e6e6;padding:2px 6px}
-.rrow{display:flex;align-items:center;gap:2px;flex:1;flex-wrap:wrap}
-.rlabel{font-size:10px;color:#777;margin-top:2px;white-space:nowrap}
-.rbtn{background:transparent;border:1px solid transparent;border-radius:3px;min-width:26px;height:24px;padding:0 5px;cursor:pointer;font-size:12px;color:#222;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
-.rbtn:hover{background:#e8e8e8;border-color:#d0d0d0}
-.rbtn.on{background:#cfe0d5;border-color:#9cc3a8}
-.rbtn.big{flex-direction:column;height:52px;width:58px;font-size:10px;line-height:1.2;gap:1px}
-.rbtn.big .bi{font-size:17px}
-.rsel{border:1px solid #c8c8c8;border-radius:3px;height:24px;font-size:12px;background:#fff;max-width:132px}
-.rsep{width:1px;background:#e6e6e6;margin:2px 2px}
+.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--xl-line);padding:1px 5px;flex:none}
+.rgrp:last-child{border-right:none}
+.rrow{display:flex;align-items:center;gap:1px;flex:1;flex-wrap:wrap;justify-content:center}
+.rlabel{font-size:9.5px;color:var(--xl-text-2);margin-top:1px;white-space:nowrap}
+.rbtn{background:transparent;border:1px solid transparent;border-radius:2px;min-width:24px;height:22px;padding:0 4px;cursor:pointer;font-size:11.5px;color:var(--xl-text);display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
+.rbtn:hover{background:var(--xl-hover);border-color:var(--xl-line)}
+.rbtn:active{background:var(--xl-press)}
+.rbtn.on{background:var(--xl-press);border-color:var(--xl-line)}
+.rbtn.big{flex-direction:column;height:46px;width:54px;font-size:10px;line-height:1.15;gap:0;padding:0 2px}
+.rbtn.big .bi{font-size:16px}
+.rsel{border:1px solid var(--xl-line);border-radius:2px;height:22px;font-size:11.5px;background:#fff;color:var(--xl-text);max-width:132px;padding:0 2px}
+.rsep{width:1px;background:var(--xl-line);margin:1px 1px;align-self:stretch}
 /* ---------- name box / formula bar ---------- */
 .formula{display:flex;align-items:center;background:#fff;border-bottom:1px solid #d0d0d0;padding:3px 6px;flex:none}
 #refbox{width:110px;border:1px solid #c8c8c8;padding:0 6px;font-size:12px;background:#fff;height:22px;line-height:20px}
@@ -168,7 +190,7 @@ td input{width:100%;height:20px;border:none;outline:none;font-size:13px;padding:
 
 
 label.tiny{font-size:11px;color:#666}
-input[type=color]{width:28px;height:24px;padding:0;border:1px solid #ccc;cursor:pointer;background:#fff}
+input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--xl-line);cursor:pointer;background:#fff;border-radius:2px}
 #clip{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
 #aiPanel{position:absolute;right:0;top:0;bottom:0;width:340px;max-width:70%;background:#fdfdfd;border-left:2px solid #217346;display:none;flex-direction:column;z-index:20;box-shadow:-4px 0 12px rgba(0,0,0,.15)}
 #aiPanel.open{display:flex}
@@ -298,10 +320,11 @@ body[data-theme='dark'] .lockTitle{color:#e8e8e8}
 body[data-theme='dark'] .lockBody{color:#a3a3a3}
 body[data-fx='sharp'] .lockCard,body[data-fx='sharp'] .lockCta{border-radius:0}
 /* While locked, the app underneath must not be interactive. */
-/* NOTE: #authDialog is also a direct child of #app, so it MUST be excluded too —
-   otherwise pointer-events:none would disable the very form used to register. */
-body.auth-locked #app>*:not(#authLock):not(#authDialog){pointer-events:none;user-select:none}
-body.auth-locked #app>*:not(#authLock):not(#authDialog){filter:blur(1.5px)}
+/* NOTE: #authDialog and #startScreen are also direct children of #app, so they
+   MUST be excluded too — otherwise pointer-events:none would disable the very
+   form used to register, and blur the start screen we launch into. */
+body.auth-locked #app>*:not(#authLock):not(#authDialog):not(#startScreen){pointer-events:none;user-select:none}
+body.auth-locked #app>*:not(#authLock):not(#authDialog):not(#startScreen){filter:blur(1.5px)}
 /* The sign-in/up card must sit above the lock veil while the user registers. */
 body.auth-locked #authDialog{z-index:80;top:50%;transform:translate(-50%,-50%)}
 .formError{font-size:12.5px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
@@ -316,10 +339,24 @@ body.auth-locked #authDialog{z-index:80;top:50%;transform:translate(-50%,-50%)}
  background:#fff;border:1px solid #e2e2e2;border-radius:999px;padding:4px 10px;cursor:pointer}
 .storageOpt input{accent-color:#217346;margin:0}
 /* ---------- Account system (titlebar chip, auth dialog, panel, cloud list) ---------- */
-.userChip{display:inline-flex;align-items:center;gap:6px}
-.userChip .userAvatar{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#ddd;font-size:12px;line-height:1}
-.userChip.signed-in .userAvatar{background:var(--accent);color:#fff;font-weight:700}
-.userChip .userName{font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ---------- Account profile pill, pinned to the top-right corner ---------- */
+.userChip{order:3;display:inline-flex;align-items:center;gap:6px;padding:1px 4px 1px 2px;
+  background:#fff;border:1px solid var(--xl-line);border-radius:2px;max-width:212px;flex:none}
+.userChip:hover{background:var(--xl-hover);border-color:var(--xl-press)}
+.userChip .userAvatar{display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;
+  width:20px;height:20px;border-radius:50%;background:var(--xl-press);color:#fff;
+  font-size:11px;font-weight:700;line-height:1;overflow:hidden}
+.userChip.signed-in .userAvatar{background:var(--accent)}
+.userMeta{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;min-width:0}
+.userChip .userName{font-size:11.5px;font-weight:600;max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Account details (email) only appear once somebody is actually signed in. */
+.userChip .userMail{font-size:9.5px;color:var(--xl-text-2);max-width:132px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none}
+.userChip.signed-in .userMail{display:block}
+.userChev{font-size:9px;color:var(--xl-text-2);flex:none}
+body[data-theme='dark'] .userChip{background:#333;border-color:#555;color:#e8e8e8}
+body[data-theme='dark'] .userChip:hover{background:#454545}
+body[data-theme='dark'] .userChip .userMail,body[data-theme='dark'] .userChev{color:#b9b9b9}
 #authDialog .fieldLabel{font-size:12px;color:#555;margin-top:2px}
 #authDialog input[type=email],#authDialog input[type=text],#authDialog input[type=password]{width:100%;border:1px solid #ccc;padding:6px 8px;font-size:13px;outline:none;border-radius:3px}
 #authDialog input:focus{border-color:#217346}
@@ -398,7 +435,7 @@ body[data-fx='sharp'] .rbtn,body[data-fx='sharp'] .rsel,body[data-fx='sharp'] #a
 .rchk{display:flex;align-items:center;justify-content:center;margin:0}
 .rchk input{margin:0;accent-color:#217346;cursor:pointer}
 .ropts{display:grid;grid-template-columns:auto 32px 32px;align-items:center;gap:3px 6px;padding:2px 0}
-.rlaunch{position:absolute;right:3px;bottom:17px;width:15px;height:15px;line-height:13px;padding:0;border:none;background:transparent;color:#999;font-size:11px;cursor:pointer}
+.rlaunch{position:absolute;right:3px;bottom:14px;width:14px;height:14px;line-height:12px;padding:0;border:none;background:transparent;color:var(--xl-text-2);font-size:11px;cursor:pointer}
 .rlaunch:hover{color:#217346}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 /* Page Layout view aids: repeated print titles stay pinned, cells outside the print area dim */
@@ -424,44 +461,105 @@ body[data-theme='dark'] .psGrid>label,body[data-theme='dark'] .psChk{color:#ccc}
 body[data-theme='dark'] .psGrid select,body[data-theme='dark'] .psGrid input{background:#1f1f1f;color:#e8e8e8;border-color:#555}
 
 
-/* ---------- Start screen ---------- */
-#startScreen{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;
-  background:rgba(15,32,23,.55);backdrop-filter:blur(2px)}
+/* ---------- Start screen (Excel Backstage: green rail + content pane) ---------- */
+#startScreen{position:fixed;inset:0;z-index:9000;display:none;background:var(--xl-surface);
+  color:var(--xl-text);align-items:stretch}
 #startScreen.open{display:flex}
-.ssCard{width:min(680px,94vw);max-height:88vh;overflow:auto;background:#fff;border-radius:16px;
-  padding:22px 24px 24px;box-shadow:0 24px 60px rgba(0,0,0,.3);color:#1f2933}
-.ssHead{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
-.ssBrandRow{display:flex;align-items:center;gap:12px;flex:1}
-.ssBrandMark{width:38px;height:38px;border-radius:10px;background:#217346;color:#fff;display:grid;
-  place-items:center;font-weight:700;letter-spacing:.5px}
-.ssTitle{margin:0;font-size:20px}
-.ssSub{margin:3px 0 0;font-size:13px;color:#5a6b7b}
-.ssTabs{display:flex;gap:6px;border-bottom:1px solid #e2e8ee;margin-bottom:12px}
-.ssTab{appearance:none;border:0;background:transparent;padding:9px 14px;font-size:14px;font-weight:600;
-  color:#5a6b7b;cursor:pointer;border-bottom:2px solid transparent}
-.ssTab.on{color:#217346;border-bottom-color:#217346}
-.ssPane{min-height:76px}
-.ssEmpty{margin:18px 0;text-align:center;color:#8a97a5;font-size:13px}
-.ssList{display:flex;flex-direction:column;gap:6px}
-.ssItem{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #e2e8ee;
-  border-radius:10px;background:#fff}
-.ssItem:hover{background:#f6f9f7;border-color:#cfe0d6}
+/* While the start screen is up it owns the highest layer, so the auth dialog and
+   the registration lock card have to be lifted above it to stay reachable. */
+body.start-open #authDialog,body.start-open #authLock{z-index:9100}
+
+/* left rail */
+.ssRail{width:196px;flex:none;background:var(--accent);color:#fff;display:flex;
+  flex-direction:column;padding:10px 0 8px}
+.ssRailHead{display:flex;align-items:center;gap:8px;padding:0 14px 12px}
+.ssRailBrand{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ssBrandMark{width:26px;height:26px;flex:0 0 26px;border-radius:2px;background:#fff;color:var(--accent);
+  display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.5px}
+.ssNav{display:flex;flex-direction:column;flex:1}
+.ssNavItem{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;
+  border:none;border-left:3px solid transparent;color:#fff;font:inherit;font-size:12.5px;
+  padding:7px 12px;cursor:pointer;opacity:.95}
+.ssNavItem:hover{background:rgba(255,255,255,.16);opacity:1}
+.ssNavItem.on{background:var(--accent-dark);border-left-color:#fff;font-weight:600;opacity:1}
+.ssNavIco{width:16px;flex:0 0 16px;text-align:center;font-size:12px;line-height:1}
+.ssRailFoot{border-top:1px solid rgba(255,255,255,.25);padding:8px 0 0;margin:0 10px}
+.ssAccount{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;
+  border:none;border-radius:2px;color:#fff;font:inherit;padding:5px 4px;cursor:pointer}
+.ssAccount:hover{background:rgba(255,255,255,.16)}
+.ssAccount .userAvatar{width:26px;height:26px;flex:0 0 26px;border-radius:50%;background:rgba(255,255,255,.3);
+  color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;overflow:hidden}
+.ssAccountMeta{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.ssAccountName{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ssAccountMail{font-size:10px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* content pane */
+.ssCard{flex:1;min-width:0;overflow:auto;background:var(--xl-surface);padding:18px 26px 26px}
+.ssHead{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.ssBrandRow{flex:1;min-width:0}
+.ssTitle{margin:0;font-size:19px;font-weight:600;color:var(--xl-text)}
+.ssSub{margin:3px 0 0;font-size:12.5px;color:var(--xl-text-2)}
+.ssSearch{width:210px;max-width:40%;height:26px;border:1px solid var(--xl-line);border-radius:2px;
+  padding:0 8px;font-size:12px;color:var(--xl-text);background:#fff;outline:none;flex:none}
+.ssSearch:focus{border-color:var(--accent)}
+.ssClose{font-size:18px;line-height:1;padding:2px 8px;color:var(--xl-text-2)}
+.ssClose:hover{color:var(--xl-text)}
+
+/* Recent / Favorites tabs */
+.ssTabs{display:flex;gap:2px;border-bottom:1px solid var(--xl-line);margin-bottom:8px}
+.ssTab{appearance:none;border:0;background:transparent;padding:7px 12px;font-size:12.5px;
+  font-weight:600;color:var(--xl-text-2);cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-1px}
+.ssTab:hover{background:var(--xl-hover)}
+.ssTab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.ssPane{min-height:70px}
+.ssEmpty{margin:16px 0;text-align:center;color:var(--xl-text-2);font-size:12.5px}
+/* flat list rows, like Excel's workbook list */
+.ssList{display:flex;flex-direction:column}
+.ssItem{display:flex;align-items:center;gap:9px;padding:7px 6px;background:transparent;
+  border-bottom:1px solid var(--xl-line-soft);cursor:pointer}
+.ssItem:hover{background:var(--xl-hover)}
+.ssItemIco{width:20px;flex:0 0 20px;text-align:center;font-size:14px;line-height:1;color:var(--accent)}
 .ssItemMain{display:flex;flex-direction:column;flex:1;min-width:0}
-.ssItemName{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ssItemTime{font-size:11.5px;color:#8a97a5}
-.ssStar,.ssX{appearance:none;border:0;background:transparent;cursor:pointer;font-size:15px;
-  color:#9aa7b4;padding:4px 6px;border-radius:6px;line-height:1}
-.ssStar.on{color:#f0a500}
-.ssStar:hover,.ssX:hover{background:#eef2f5}
-.ssSectionTitle{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#8a97a5;
-  margin:18px 0 8px}
-.ssTplGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.ssTpl{display:flex;flex-direction:column;gap:3px;align-items:flex-start;padding:12px;cursor:pointer;
-  border:1px solid #e2e8ee;border-radius:12px;background:#fff;text-align:left;font:inherit}
-.ssTpl:hover{border-color:#217346;background:#f4f9f6;transform:translateY(-1px)}
-.ssTplIcon{font-size:20px}
-.ssTplName{font-size:13.5px;font-weight:600;color:#1f2933}
-.ssTplDesc{font-size:11.5px;color:#7b8794}
+.ssItemName{font-size:12.5px;color:var(--xl-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ssItemTime{font-size:10.5px;color:var(--xl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ssStar,.ssX{appearance:none;border:0;background:transparent;cursor:pointer;font-size:13px;
+  color:var(--xl-text-2);padding:3px 5px;border-radius:2px;line-height:1;flex:none}
+.ssStar.on{color:#c19c00}
+.ssStar:hover,.ssX:hover{background:var(--xl-press)}
+
+/* templates */
+.ssSectionTitle{font-size:12.5px;font-weight:600;color:var(--xl-text);
+  margin:16px 0 8px;scroll-margin-top:12px}
+.ssTplGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.ssTpl{display:flex;flex-direction:column;gap:2px;align-items:stretch;padding:0 0 8px;cursor:pointer;
+  border:1px solid var(--xl-line);border-radius:2px;background:#fff;text-align:left;font:inherit;
+  overflow:hidden}
+.ssTpl:hover{border-color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+/* CSS-drawn spreadsheet thumbnail so each tile reads like an Excel preview. */
+.ssTplPrev{display:block;width:100%;height:54px;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,var(--accent) 0 12px,#fff 12px 100%);
+  border-bottom:1px solid var(--xl-line)}
+.ssTplPrev::before{content:"";position:absolute;left:0;right:0;top:12px;height:42px;
+  background:repeating-linear-gradient(180deg,var(--xl-line-soft) 0 1px,transparent 1px 13px)}
+.ssTplPrev::after{content:"";position:absolute;left:34%;top:12px;bottom:0;width:1px;background:var(--xl-line)}
+.ssTplIcon{position:absolute;top:5px;left:8px;font-size:12px;line-height:1}
+.ssTplBody{display:block;padding:7px 9px 0}
+.ssTplName{display:block;font-size:12.5px;font-weight:600;color:var(--xl-text)}
+.ssTplDesc{display:block;font-size:10.5px;color:var(--xl-text-2)}
+
+body[data-theme='dark'] #startScreen{background:#252525;color:#e8e8e8}
+body[data-theme='dark'] .ssCard{background:#252525}
+body[data-theme='dark'] .ssTitle{color:#e8e8e8}
+body[data-theme='dark'] .ssSub,body[data-theme='dark'] .ssItemTime,
+body[data-theme='dark'] .ssEmpty,body[data-theme='dark'] .ssTplDesc{color:#b9b9b9}
+body[data-theme='dark'] .ssSearch,body[data-theme='dark'] .ssTpl{background:#2b2b2b;border-color:#555;color:#e8e8e8}
+body[data-theme='dark'] .ssItemName,body[data-theme='dark'] .ssSectionTitle{color:#e8e8e8}
+body[data-theme='dark'] .ssItem,body[data-theme='dark'] .ssTabs{border-color:#444}
+body[data-theme='dark'] .ssItem:hover,body[data-theme='dark'] .ssTab:hover{background:#333}
+body[data-theme='dark'] .ssTab.on{color:#4cc38a;border-bottom-color:#4cc38a}
+body[data-theme='dark'] .ssTplPrev{background:linear-gradient(180deg,#3d5c4a 0 12px,#2b2b2b 12px 100%)}
+body[data-theme='dark'] .ssStar.on{color:#e0b400}
 
 /* ---------- Google sign-in button (in-app auth dialog) ---------- */
 .gsignBtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;

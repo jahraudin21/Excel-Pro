@@ -8,6 +8,7 @@
 Object.assign(STR, {
   ssTitle:{np:'सुरु गर्नुहोस्',hi:'शुरू करें',en:'Welcome to Mini Excel'},
   ssSubtitle:{np:'हालका फाइलहरू खोल्नुहोस् वा टेम्प्लेटबाट सुरु गर्नुहोस्।',hi:'हाल की फ़ाइलें खोलें या टेम्पलेट से शुरू करें।',en:'Open a recent file or start from a template.'},
+  ssTemplates:{np:'टेम्प्लेटहरू',hi:'टेम्पलेट',en:'Templates'},
   ssRecent:{np:'हालका',hi:'हाल की',en:'Recent'},
   ssFavorites:{np:'मनपसंद',hi:'पसंदीदा',en:'Favorites'},
   ssNoRecent:{np:'अहिलेसम्म कुनै फाइल खोलिएको छैन।',hi:'अभी तक कोई फ़ाइल नहीं खोली गई।',en:'No files opened yet.'},
@@ -28,7 +29,14 @@ Object.assign(STR, {
   ssCalendarDesc:{np:'महिना योजना',hi:'महीना योजना',en:'Plan a month'},
   ssNewFromTemplate:{np:'टेम्प्लेटबाट सुरु',hi:'टेम्पलेट से शुरू',en:'Started from template'},
   ssFavoriteAdded:{np:'मनपसंदमा थपियो',hi:'पसंदीदा में जोड़ा',en:'Added to favorites'},
-  ssFavoriteRemoved:{np:'मनपसंदबाट हटाइयो',hi:'पसंदीदा से हटाया',en:'Removed from favorites'}
+  ssFavoriteRemoved:{np:'मनपसंदबाट हटाइयो',hi:'पसंदीदा से हटाया',en:'Removed from favorites'},
+  ssSearchPh:{np:'फाइलहरू खोज्नुहोस्…',hi:'फ़ाइलें खोजें…',en:'Search workbooks'},
+  ssNoMatch:{np:'कुनै मिलेन।',hi:'कुछ नहीं मिला।',en:'Nothing matches your search.'},
+  ssLastOpened:{np:'पछिलो खोलेको',hi:'अंतिम बार खोला',en:'Last opened'},
+  ssLocal:{np:'यस ब्राउजरमा',hi:'इस ब्राउज़र में',en:'This device'},
+  ssCloud:{np:'क्लाउडमा',hi:'क्लाउड में',en:'Cloud'},
+  ssWorkbook:{np:'वर्कबुक',hi:'वर्कबुक',en:'Workbook'},
+  ssMyAccount:{np:'मेरा खाता',hi:'मेरा खाता',en:'My account'}
 });
 
 /* ---------- storage ---------- */
@@ -46,6 +54,9 @@ function ssKey(id){return 'ss'+id.charAt(0).toUpperCase()+id.slice(1);}
 
 const StartScreen=(function(){
   let activeTab='recent';
+  /* Resolved lazily: the module body runs while the document is still being
+     parsed, so ids are looked up on use rather than captured at definition. */
+  function searchEl(){return document.getElementById('ssSearch');}
 
   function recent(){return ssRead(SS_RECENT_KEY,[]);}
   function favorites(){return ssRead(SS_FAVS_KEY,[]);}
@@ -188,34 +199,56 @@ const StartScreen=(function(){
   }
   function whenLabel(ts){
     try{
-      const m=Math.floor((Date.now()-ts)/60000);
-      if(m<1)return '•';
-      if(m<60)return m+'m';
-      const h=Math.floor(m/60);
-      if(h<24)return h+'h';
-      return Math.floor(h/24)+'d';
+      const d=new Date(ts);if(isNaN(d.getTime()))return '';
+      const mins=Math.floor((Date.now()-ts)/60000);
+      /* Today shows just the clock time, like Excel's "Last opened" column. */
+      if(mins<1)return T('ssLastOpened')+': '+d.toLocaleTimeString();
+      if(mins<1440&&d.getDate()===new Date().getDate())
+        return T('ssLastOpened')+': '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      return T('ssLastOpened')+': '+d.toLocaleDateString();
     }catch(e){return '';}
   }
+  /* Excel shows where a workbook lives next to its name. */
+  function locationOf(item){
+    return String(item.id||'').indexOf('cloud:')===0?T('ssCloud'):T('ssLocal');
+  }
+  /* Free-text filter over the active list. */
+  function filtered(){
+    const list=activeTab==='recent'?recent():favorites();
+    const box=searchEl();
+    const q=((box&&box.value)||'').trim().toLowerCase();
+    if(!q)return list;
+    return list.filter(function(it){
+      return String(it.name||'').toLowerCase().indexOf(q)>=0;});
+  }
 
+  /* Fill the list of whichever pane is on screen. Both panes carry a .ssList,
+     so this is what makes the Favorites tab render instead of staying blank. */
   function renderList(){
-    const host=document.getElementById('ssList');
+    const pane=document.getElementById(activeTab==='recent'?'ssPaneRecent':'ssPaneFavorites');
+    const host=pane?pane.querySelector('.ssList'):null;
     if(!host)return;
-    const items=activeTab==='recent'?recent():favorites();
+    const items=filtered();
+    const box=searchEl();
+    const q=((box&&box.value)||'').trim();
     if(!items.length){
-      host.innerHTML='<p class="ssEmpty">'+esc(T(activeTab==='recent'?'ssNoRecent':'ssNoFavorites'))+'</p>';
+      host.innerHTML='<p class="ssEmpty">'+esc(q?T('ssNoMatch'):
+        T(activeTab==='recent'?'ssNoRecent':'ssNoFavorites'))+'</p>';
       return;
     }
     host.innerHTML=items.map(function(item){
       const fav=isFavorite(item.id);
       return '<div class="ssItem" data-ss-id="'+esc(item.id)+'">'+
+        '<span class="ssItemIco" aria-hidden="true">&#128196;</span>'+
         '<div class="ssItemMain">'+
           '<span class="ssItemName">'+esc(item.name)+'</span>'+
-          '<span class="ssItemTime">'+esc(whenLabel(item.at))+'</span>'+
+          '<span class="ssItemTime">'+esc(locationOf(item))+' &middot; '+esc(whenLabel(item.at))+'</span>'+
         '</div>'+
         '<button type="button" class="ssStar'+(fav?' on':'')+'" data-ss-fav="'+esc(item.id)+'"'+
-          ' title="'+esc(T(fav?'ssRemoveFavorite':'ssAddFavorite'))+'">'+(fav?'★':'☆')+'</button>'+
+          ' title="'+esc(T(fav?'ssRemoveFavorite':'ssAddFavorite'))+'"'+
+          ' aria-label="'+esc(T(fav?'ssRemoveFavorite':'ssAddFavorite'))+'">'+(fav?'★':'☆')+'</button>'+
         (activeTab==='recent'
-          ? '<button type="button" class="ssX" data-ss-del="'+esc(item.id)+'" title="✕">✕</button>'
+          ? '<button type="button" class="ssX" data-ss-del="'+esc(item.id)+'" title="✕" aria-label="✕">✕</button>'
           : '')+
       '</div>';
     }).join('');
@@ -226,22 +259,54 @@ const StartScreen=(function(){
     if(!host)return;
     host.innerHTML=TEMPLATES.map(function(t){
       return '<button type="button" class="ssTpl" data-ss-tpl="'+t.id+'">'+
-        '<span class="ssTplIcon">'+t.icon+'</span>'+
-        '<span class="ssTplName">'+esc(T(ssKey(t.id)))+'</span>'+
-        '<span class="ssTplDesc">'+esc(T(ssKey(t.id)+'Desc'))+'</span>'+
+        '<span class="ssTplPrev"><span class="ssTplIcon">'+t.icon+'</span></span>'+
+        '<span class="ssTplBody">'+
+          '<span class="ssTplName">'+esc(T(ssKey(t.id)))+'</span>'+
+          '<span class="ssTplDesc">'+esc(T(ssKey(t.id)+'Desc'))+'</span>'+
+        '</span>'+
       '</button>';
     }).join('');
   }
 
+  /* Mirror the active tab onto both the tab strip and the left rail. */
   function render(){
     Array.prototype.forEach.call(document.querySelectorAll('.ssTab'),function(b){
+      const on=b.dataset.ssTab===activeTab;
+      b.classList.toggle('on',on);
+      b.setAttribute('aria-selected',on?'true':'false');
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.ssNavItem[data-ss-tab]'),function(b){
       b.classList.toggle('on',b.dataset.ssTab===activeTab);
     });
     const rec=document.getElementById('ssPaneRecent');
     const fav=document.getElementById('ssPaneFavorites');
+    const tpl=document.getElementById('ssPaneTemplates');
     if(rec)rec.hidden=activeTab!=='recent';
     if(fav)fav.hidden=activeTab!=='favorites';
-    renderList();
+    if(tpl)tpl.hidden=activeTab!=='templates';
+    /* Only the workbook lists are filtered; the Templates tab shows everything. */
+    if(activeTab!=='templates')renderList();
+    syncAccount();
+  }
+
+  /* The rail's account block mirrors the titlebar chip: name, email, avatar. */
+  function syncAccount(){
+    try{
+      const u=(typeof Account!=='undefined'&&Account.currentUser)?Account.currentUser():null;
+      const av=document.getElementById('ssUserAvatar');
+      const nm=document.getElementById('ssUserName');
+      const ml=document.getElementById('ssUserMail');
+      const btn=document.getElementById('ssAccount');
+      if(av){
+        if(u&&u.picture){av.style.backgroundImage='url("'+u.picture+'")';av.style.backgroundSize='cover';
+          av.style.backgroundPosition='center';av.textContent='';}
+        else{av.style.backgroundImage='';av.textContent=u?((u.name||'?').trim().charAt(0).toUpperCase()):'\u{1F464}';}
+      }
+      if(nm)nm.textContent=u?u.name:T('signIn');
+      if(ml)ml.textContent=u?(u.email||''):'';
+      if(btn){btn.classList.toggle('signed-in',!!u);
+        btn.title=u?((u.name||'')+(u.email?' \u00b7 '+u.email:'')):T('ssMyAccount');}
+    }catch(e){}
   }
 
   function open(){
@@ -249,11 +314,18 @@ const StartScreen=(function(){
     const el=document.getElementById('startScreen');
     if(!el)return;
     el.classList.add('open');
+   /* Flags the stacking order so the auth dialog / lock card can sit on top
+      of the start screen. */
+   try{document.body.classList.add('start-open');}catch(e){}
     render();
+    const box=searchEl();
+    if(box)try{box.value='';}catch(e){}
+    if(box)try{box.focus();}catch(e){}
   }
   function close(){
     const el=document.getElementById('startScreen');
     if(el)el.classList.remove('open');
+   try{document.body.classList.remove('start-open');}catch(e){}
   }
   function isOpen(){
     const el=document.getElementById('startScreen');
@@ -270,8 +342,24 @@ const StartScreen=(function(){
 
       if(t.closest('[data-ss-close]')){close();return;}
 
-      const tab=t.closest('.ssTab');
+      /* Both the tab strip and the left rail carry data-ss-tab. */
+      const tab=t.closest('[data-ss-tab]');
       if(tab){activeTab=tab.dataset.ssTab;render();return;}
+
+      /* Kept for any "scroll a section into view" affordance. */
+      const jump=t.closest('[data-ss-jump]');
+      if(jump){
+        const dest=document.getElementById('ssPaneTemplates');
+        if(dest&&dest.scrollIntoView)dest.scrollIntoView({block:'start'});
+        return;
+      }
+
+      /* The rail's account block hands over to the normal account UI. */
+      if(t.closest('#ssAccount')){
+        close();
+        try{const chip=document.getElementById('userChip');if(chip)chip.click();}catch(e){}
+        return;
+      }
 
       const tpl=t.closest('[data-ss-tpl]');
       if(tpl){applyTemplate(tpl.dataset.ssTpl);return;}
@@ -286,6 +374,11 @@ const StartScreen=(function(){
 
       const delBtn=t.closest('[data-ss-del]');
       if(delBtn){removeRecent(delBtn.dataset.ssDel);return;}
+    });
+
+    /* Live filter as the user types, Excel-style. */
+    el.addEventListener('input',function(ev){
+      if(ev.target&&ev.target.id==='ssSearch')renderList();
     });
 
     /* Double-click a row to reopen it. Cloud-backed entries are fetched; local
@@ -314,22 +407,35 @@ const StartScreen=(function(){
         Array.prototype.forEach.call(el.querySelectorAll('[data-i18n]'),function(n){
           n.textContent=T(n.dataset.i18n);
         });
+        Array.prototype.forEach.call(el.querySelectorAll('[data-i18n-ph]'),function(n){
+          n.placeholder=T(n.dataset.i18nPh);
+        });
       }
       const gl=document.querySelector('.gsignLabel');
       if(gl&&typeof T==='function')gl.textContent=T('gsignLabel');
     }catch(e){}
   }
 
+  let accountHooked=false;
   function init(){
     renderTemplates();
     wire();
     applyScreenI18n();
+    /* Keep the rail's account block live when the user signs in or out. */
+    try{
+      if(!accountHooked&&typeof Account!=='undefined'&&Account.onChange){
+        accountHooked=true;
+        Account.onChange(function(){syncAccount();});
+      }
+    }catch(e){}
+    syncAccount();
     /* Re-render template labels once the base i18n table is definitely loaded. */
-    setTimeout(function(){applyScreenI18n();renderTemplates();},0);
+    setTimeout(function(){applyScreenI18n();renderTemplates();syncAccount();},0);
   }
 
   return {open:open,close:close,isOpen:isOpen,init:init,render:render,
           rememberCurrent:rememberCurrent,applyTemplate:applyTemplate,
           toggleFavorite:toggleFavorite,recent:recent,favorites:favorites,
+          syncAccount:syncAccount,
           templates:TEMPLATES};
 })();

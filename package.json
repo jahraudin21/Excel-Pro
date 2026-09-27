@@ -9,7 +9,10 @@
     "build:win": "electron-builder --win --x64",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
-    "test": "node _test_auth_guard.js && node _test_google_signin.js",
+    "test": "node _test_auth_guard.js && node _test_google_signin.js && node _test_new_account_reset.js && node _test_excel_ui.mjs",
+    "test:regression": "node _test_no_regression.mjs",
+    "test:ribbon": "node _ribboncheck.mjs",
+    "test:smoke": "electron _smoke.js",
     "test:auth": "python _test_entrypoint.py && python _test_live_server.py && python _test_prod_hardening.py && python _test_google_button.py"
   },
   "repository": {

@@ -70,6 +70,7 @@ const RibbonDisplay=(function(){
       item.setAttribute('aria-checked',on?'true':'false');
       item.setAttribute('role','menuitemradio');
     });
+  }
   function setMode(next,fromUser){
     if(MODES.indexOf(next)<0)next='full';
     mode=next;

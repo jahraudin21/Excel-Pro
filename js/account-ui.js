@@ -76,6 +76,18 @@ Object.assign(STR,{
   newAccountReset:{np:'नयाँ खाताका लागि स्प्रेडसिट खाली गरियो',hi:'नए खाते के लिए स्प्रेडशीट खाली कर दी गई',en:'Started a fresh sheet for the new account'}
 });
 
+/* ---------- auth dialog subtitle + storage preference picker ----------
+   These are referenced from index.html via data-i18n; without a definition here
+   T() falls through to the key name and the UI renders the raw "authSub". */
+Object.assign(STR,{
+  authSub:{np:'आफ्ना स्प्रेडसिट सबै यन्त्रमा पर्नुहोस्',hi:'अपनी स्प्रेडशीट हर उपकरण पर रखें',en:'Sync spreadsheets across devices'},
+  storagePref:{np:'कहाँ सेभ गर्ने?',hi:'कहाँ सेव करें?',en:'Where to save'},
+  storageBrowser:{np:'ब्राउजरमा',hi:'ब्राउज़र में',en:'In this browser'},
+  storageCloud:{np:'मिनी क्लाउडमा',hi:'मिनी क्लाउड में',en:'In Mini Excel Cloud'},
+  storageDrive:{np:'Google Driveमा',hi:'Google ड्राइव में',en:'In Google Drive'},
+  connectDrive:{np:'Drive जोड्नुहोस्',hi:'ड्राइव कनेक्ट करें',en:'Connect Drive'}
+});
+
 /* ---------- "Sign in with Google" button in the redesigned dialog ----------
    The official Google button is rendered by Google Identity Services into
    #googleBtn when a client id is configured. This visible button is the
@@ -143,7 +155,13 @@ function renderUserChip(){
   chip.classList.toggle("signed-in",!!u);
   paintAvatar($("#userAvatar"),u,"👤");
   const nm=$("#userName");if(nm)nm.textContent=u?u.name:T("signIn");
-  chip.title=u?u.email:"Account";
+  /* Second line of the pill: the account email, so the corner carries the full
+     account identity instead of just a display name. */
+  const ml=$("#userMail");if(ml)ml.textContent=u?(u.email||''):'';
+  chip.title=u?((u.name||'')+(u.email?' · '+u.email:'')):"Account";
+  chip.setAttribute("aria-label",u?((u.name||T("signIn"))+(u.email?' · '+u.email:'')):T("signIn"));
+  /* Mirror the identity into the start screen's account block. */
+  try{if(typeof StartScreen!=='undefined'&&StartScreen&&StartScreen.syncAccount)StartScreen.syncAccount();}catch(e){}
  }catch(e){}}
 
 /* ---------- auth dialog ---------- */
@@ -167,6 +185,15 @@ function closeAuthDialog(){const d=$('#authDialog');
  /* While the auth guard is locked the dialog is the only route into the app. */
  if(typeof AuthGuard!=='undefined'&&AuthGuard.canCloseAuthDialog&&!AuthGuard.canCloseAuthDialog())return;
  if(d)d.classList.remove('open');showAuthError('');}
+/* Post-login redirect: dismiss the auth dialog AND the start screen, then put
+   focus on the spreadsheet grid so the user lands straight in the workbook. */
+function enterApp(){
+ /* The guard has already reacted to the account change and unlocked the app,
+    so the dialog is dismissible by the time we get here. */
+ setTimeout(()=>{try{closeAuthDialog();}catch(e){}
+  try{if(typeof StartScreen!=='undefined'&&StartScreen&&StartScreen.isOpen&&StartScreen.isOpen())
+   StartScreen.close();}catch(e){}
+  try{const g=document.getElementById('grid');if(g&&g.focus)g.focus();}catch(e){}},0);}
 function authSubmit(){
  const dlg=$('#authDialog');if(!dlg)return;
  const signup=dlg.classList.contains('mode-signup');
@@ -176,7 +203,7 @@ function authSubmit(){
  if(signup&&p1!==p2){showAuthError('passwordTooShort');return;}
  (signup?Account.signUp(email,name,p1):Account.signIn(email,p1))
   .then(res=>{
-   if(res===true){closeAuthDialog();const u=Account.currentUser();
+   if(res===true){enterApp();const u=Account.currentUser();
     setStatusMode(T('welcomeMsg')+(u&&u.name?', '+u.name:''));}
    else showAuthError(AUTH_ERR[res]||res);})
   .catch(()=>showAuthError('errorMsg'));}
@@ -216,7 +243,7 @@ function googleCredentialHandler(resp){
  if(!resp||!resp.credential){showAuthError('googleSignInFailed');return;}
  Account.signInWithGoogle(resp.credential)
   .then(res=>{
-   if(res===true){closeAuthDialog();renderUserChip();
+   if(res===true){enterApp();renderUserChip();
     const u=Account.currentUser();
     setStatusMode(T('welcomeMsg')+(u&&u.name?', '+u.name:''));}
    else showAuthError(AUTH_ERR[res]||res);})
@@ -467,7 +494,16 @@ let accountUiBooted=false;
 function initAllAccountUI(){if(accountUiBooted)return;accountUiBooted=true;try{initAuthUi();}catch(e){}try{initProfilePanel();}catch(e){}/* StartScreen is defined by an earlier deferred script. The readyState check
    above runs while deferred scripts execute, which the HTML spec puts at
    "interactive", so this boots before later scripts are evaluated. */
-try{if(typeof StartScreen!=='undefined')StartScreen.init();}catch(e){}try{if(typeof RibbonDisplay!=='undefined'){RibbonDisplay.init();setTimeout(function(){try{RibbonDisplay.apply();}catch(e){}},0);}}catch(e){}try{on('#gsignBtn',()=>gsignClick());}catch(e){}try{on('#ssOpen',()=>StartScreen.open());}catch(e){}}
+try{if(typeof StartScreen!=='undefined')StartScreen.init();}catch(e){}try{if(typeof RibbonDisplay!=='undefined'){RibbonDisplay.init();setTimeout(function(){try{RibbonDisplay.apply();}catch(e){}},0);}}catch(e){}try{on('#gsignBtn',()=>gsignClick());}catch(e){}try{on('#ssOpen',()=>StartScreen.open());}catch(e){}
+ /* Excel opens on the start screen every launch. Deferred a tick so the grid
+    and the auth guard have finished their own boot first; when nobody is
+    signed in the auth dialog is raised on top of it so "Sign in with Google"
+    is the first actionable thing on screen. */
+ setTimeout(()=>{try{
+   if(typeof StartScreen!=='undefined'&&StartScreen&&StartScreen.open)StartScreen.open();
+   const authed=(typeof Account!=='undefined'&&Account.currentUser&&Account.currentUser())?true:false;
+   if(!authed&&typeof openAuthDialog==='function')openAuthDialog('signin');
+  }catch(e){}},0);}
 /* Self-boot: with <script defer>, script.js runs init() BEFORE this file defines
    initAllAccountUI, so script.js's `typeof initAllAccountUI==='function'` guard is false
    and the account UI would never initialise. Booting here (DOM is parsed by now)

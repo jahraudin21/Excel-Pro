@@ -23,7 +23,6 @@ if ('serviceWorker' in navigator) {
 <div id="app">
 <div class="titlebar">
   <span class="appTitle">📊 मिनी Excel</span><span class="bookName" id="bookName">Book1</span>
-  <span style="flex:1"></span>
   <button class="qbtn" id="bUndo" title="Undo (Ctrl+Z)">↩</button>
   <button class="qbtn" id="bRedo" title="Redo (Ctrl+Y)">↪</button>
   <button class="qbtn" id="bSave" title="Save (Ctrl+S)">💾</button>
@@ -34,9 +33,13 @@ if ('serviceWorker' in navigator) {
   <button class="qbtn" id="bAllCsv" data-i18n="bAllCsv" title="All sheets as CSV (zip)">📦</button>
   <span class="tsep"></span>
   <button class="qbtn" id="bAI" title="AI Assistant">🤖 AI</button>
-  <button class="qbtn userChip" id="userChip" title="Account" aria-haspopup="dialog">
-   <span class="userAvatar" id="userAvatar">👤</span><span class="userName" id="userName" data-i18n="signIn">Sign in</span>
+  <button class="qbtn userChip" id="userChip" title="Account" aria-haspopup="dialog" aria-label="Account">
+   <span class="userAvatar" id="userAvatar">👤</span><span class="userMeta">
+    <span class="userName" id="userName" data-i18n="signIn">Sign in</span>
+    <span class="userMail" id="userMail"></span>
+   </span><span class="userChev" aria-hidden="true">▾</span>
   </button>
+  <span class="tbFlex"></span>
   <select id="lang" title="भाषा / Language">
    <option value="en" selected>English</option><option value="hi">हिन्दी</option>
    <option value="np">नेपाली</option>
@@ -523,25 +526,42 @@ if ('serviceWorker' in navigator) {
  </div>
 <div id="popMenu"></div>
  <div id="startScreen" role="dialog" aria-modal="true" aria-labelledby="ssTitle">
+  <aside class="ssRail">
+   <div class="ssRailHead"><span class="ssBrandMark">MX</span><span class="ssRailBrand">Mini Excel</span></div>
+   <nav class="ssNav" aria-label="Start screen sections">
+    <button type="button" class="ssNavItem" data-ss-tab="recent"><span class="ssNavIco" aria-hidden="true">&#128339;</span><span data-i18n="ssRecent">Recent</span></button>
+    <button type="button" class="ssNavItem" data-ss-tab="favorites"><span class="ssNavIco" aria-hidden="true">&#9733;</span><span data-i18n="ssFavorites">Favorites</span></button>
+    <button type="button" class="ssNavItem" data-ss-tab="templates"><span class="ssNavIco" aria-hidden="true">&#9638;</span><span data-i18n="ssTemplates">Templates</span></button>
+   </nav>
+   <div class="ssRailFoot">
+    <button type="button" class="ssAccount" id="ssAccount" title="Account">
+     <span class="userAvatar" id="ssUserAvatar">&#128100;</span>
+     <span class="ssAccountMeta">
+      <span class="ssAccountName" id="ssUserName" data-i18n="signIn">Sign in</span>
+      <span class="ssAccountMail" id="ssUserMail"></span>
+     </span>
+    </button>
+   </div>
+  </aside>
   <div class="ssCard">
    <div class="ssHead">
     <div class="ssBrandRow">
-     <span class="ssBrandMark">MX</span>
      <div>
       <h1 class="ssTitle" id="ssTitle" data-i18n="ssTitle">Welcome to Mini Excel</h1>
       <p class="ssSub" data-i18n="ssSubtitle">Open a recent file or start from a template.</p>
      </div>
     </div>
-    <button type="button" id="ssClose" class="qbtn" data-ss-close title="Close">&times;</button>
+    <input type="search" id="ssSearch" class="ssSearch" data-i18n-ph="ssSearchPh" placeholder="Search workbooks" aria-label="Search workbooks">
+    <button type="button" id="ssClose" class="qbtn ssClose" data-ss-close title="Close">&times;</button>
    </div>
-   <div class="ssTabs">
-    <button type="button" class="ssTab on" data-ss-tab="recent" data-i18n="ssRecent">Recent</button>
-    <button type="button" class="ssTab" data-ss-tab="favorites" data-i18n="ssFavorites">Favorites</button>
+   <div class="ssTabs" role="tablist">
+    <button type="button" class="ssTab on" role="tab" aria-selected="true" data-ss-tab="recent" data-i18n="ssRecent">Recent</button>
+    <button type="button" class="ssTab" role="tab" aria-selected="false" data-ss-tab="favorites" data-i18n="ssFavorites">Favorites</button>
+    <button type="button" class="ssTab" role="tab" aria-selected="false" data-ss-tab="templates" data-i18n="ssTemplates">Templates</button>
    </div>
    <div class="ssPane" id="ssPaneRecent"><div class="ssList" id="ssList"></div></div>
-   <div class="ssPane" id="ssPaneFavorites" hidden><div class="ssList"></div></div>
-   <h2 class="ssSectionTitle" data-i18n="ssTemplates">Templates</h2>
-   <div class="ssTplGrid" id="ssTemplates"></div>
+   <div class="ssPane" id="ssPaneFavorites" hidden><div class="ssList" id="ssFavList"></div></div>
+   <div class="ssPane" id="ssPaneTemplates" hidden><div class="ssTplGrid" id="ssTemplates"></div></div>
   </div>
  </div>
  <div id="authDialog" role="dialog" aria-modal="false" aria-labelledby="authTitle">

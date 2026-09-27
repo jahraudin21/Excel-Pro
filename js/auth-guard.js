@@ -98,6 +98,9 @@ const AuthGuard={
   document.addEventListener('click',e=>{
    if(!this.locked)return;
    if(e.target.closest('#authLock')||e.target.closest('#authDialog')||e.target.closest('#userChip'))return;
+   /* The start screen is the launch surface and carries its own sign-in
+      affordance, so it stays interactive even while the app is locked. */
+   if(e.target.closest('#startScreen'))return;
    e.preventDefault();e.stopPropagation();
   },true);
 

@@ -53,7 +53,7 @@ function makeSandbox() {
   };
   const ctx = vm.createContext(sandbox);
   const src = fs.readFileSync(path.join(__dirname, 'js', 'account.js'), 'utf8')
-    + '\nglobalThis.__Account = Account;';
+    + '\nglobalThis.__Account = Account; globalThis.__StorageBooks = StorageBooks;';
   vm.runInContext(src, ctx, { filename: 'account.js' });
   return ctx;
 }
@@ -144,6 +144,25 @@ async function main() {
   ok(A.currentUser() && A.currentUser().name === 'देवनागरी नाम', 'unicode name decodes correctly');
   A.signOut();
   ok(A.currentUser() === null, 'sign out clears session');
+
+  console.log('\n[google drive is the primary cloud backend]');
+  const SB = ctx.__StorageBooks;
+  A.signOut();
+  await A.signUp('pw@example.com', 'Pw User', 'secret1');
+  ok(SB.pref() === 'browser', 'password accounts keep the local-first default');
+  A.signOut();
+
+  await A.signInWithGoogle(idToken(claims({ sub: 'g-drive', email: 'drive@example.com' })));
+  ok(A.currentUser().storagePref === 'drive', 'google sign-in stamps drive as the storage preference');
+  ok(SB.pref() === 'drive', 'google accounts resolve to Drive as their provider');
+
+  /* An explicit choice made in the storage picker must survive. */
+  SB.setPref('browser');
+  ok(SB.pref() === 'browser', 'an explicit storage choice wins over the google default');
+  ok(SB.provider() !== ctx.DriveBooks, 'falls back to the local provider when Drive is not connected');
+
+  await A.signInWithGoogle(idToken(claims({ sub: 'g-drive', email: 'drive@example.com' })));
+  ok(SB.pref() === 'browser', 're-signing in does not re-stamp an explicit choice');
 
   console.log('\n[page wiring]');
   const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');

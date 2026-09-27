@@ -125,7 +125,11 @@ const StorageBooks={
  pref(){
   try{
    const u=(typeof Account!=='undefined'&&Account.currentUser)?Account.currentUser():null;
+   /* An explicit choice the user already made always wins. */
    if(u&&u.storagePref)return u.storagePref;
+   /* Google accounts default to Google Drive as their cloud backend; password
+      accounts keep the previous local-first default. */
+   if(u&&u.provider==='google')return 'drive';
    return localStorage.getItem('mx-storage-pref')||'browser';
   }catch(e){return 'browser';}
  },
@@ -256,12 +260,18 @@ Account.signInWithGoogle=function(credential){
   u.provider='google';u.googleSub=p.sub;
   if(!u.name&&p.name)u.name=p.name;
   if(p.picture)u.picture=p.picture;
+  /* Persist Drive as the default backend, but never overwrite a choice the
+     user already made in the storage preference picker. */
+  if(!u.storagePref)u.storagePref='drive';
   this._saveUsers(users);
  }else{
   u={id:newUserId(),email:p.email,name:p.name,provider:'google',googleSub:p.sub,
-   picture:p.picture||'',emailVerified:true,created:Date.now()};
+   picture:p.picture||'',emailVerified:true,created:Date.now(),storagePref:'drive'};
   users.push(u);this._saveUsers(users);
  }
+ /* No device-level mirror is written here: mx-storage-pref is global to the
+    browser profile, so stamping it would leak "drive" onto any later password
+    account used on this device. The per-user record is authoritative. */
  this._startSession(u);
  return Promise.resolve(true);};
 

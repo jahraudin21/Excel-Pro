@@ -27,6 +27,28 @@ const APP_SCHEME = 'app';
 const APP_ORIGIN = `${APP_SCHEME}://mini-excel`;
 const APP_ROOT = __dirname;
 
+/* ---------------- Chromium cache switches (see npm start below) ----------
+   This build is a local, offline-first app: every asset is served straight off
+   disk through the custom app:// protocol below, so Chromium's HTTP disk cache
+   and its GPU program/shader caches buy us nothing.
+
+   They also fail on Windows here, which is what made `npm start` look broken:
+
+     [ERROR:net\disk_cache\cache_util_win.cc] Unable to move the cache:
+     Access is denied. (0x5)
+     [ERROR:net\disk_cache\disk_cache.cc] Unable to create cache
+     [ERROR:gpu\ipc\host\gpu_disk_cache.cc] Gpu Cache Creation failed: -2
+
+   PowerShell renders anything a native process writes to stderr as a red
+   NativeCommandError block, so a perfectly healthy launch appeared as a failure
+   and a wall of red text. Turning the unused caches off removes the stderr
+   output entirely.
+
+   These must be appended before the app becomes ready. */
+app.commandLine.appendSwitch('disk-cache-size', '0');
+app.commandLine.appendSwitch('disable-gpu-program-cache');
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+
 /* Content types for the asset kinds this app ships. A wrong type here would
    make the browser refuse to run the script or apply the stylesheet. */
 const MIME_TYPES = {
