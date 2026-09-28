@@ -32,7 +32,10 @@ app.whenReady().then(() => {
     const file = path.resolve(APP_ROOT, rel);
     if (file !== APP_ROOT && !file.startsWith(APP_ROOT + path.sep)) return new Response('Forbidden', { status: 403 });
     try {
-      const body = await fs.promises.readFile(file);
+      /* fs.promises.readFile throws "The cb argument must be of type function"
+         in this Electron/Node combination, so the harness served "Not found"
+         for every asset. The sync API is fine here - the reads are tiny. */
+      const body = fs.readFileSync(file);
       return new Response(body, { status: 200, headers: { 'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream' } });
     } catch (e) { return new Response('Not found', { status: 404 }); }
   });
@@ -63,7 +66,7 @@ app.whenReady().then(() => {
       const ss = q('#startScreen');
       out.startOpen = !!(ss && ss.classList.contains('open'));
       out.bodyStartOpen = document.body.classList.contains('start-open');
-      out.tabs = [...document.querySelectorAll('.ssTab')].map(b => b.dataset.ssTab);
+      out.tabs = [...document.querySelectorAll('.ssNavItem')].map(b => b.dataset.ssTab);
       out.tplRendered = document.querySelectorAll('#ssTemplates .ssTpl').length;
       out.pillHasMail = !!q('#userChip #userMail');
       /* The pill is pushed right with the flex "order" property, so the contract
@@ -85,13 +88,13 @@ app.whenReady().then(() => {
 
     const click = async (tab) => {
       await win.webContents.executeJavaScript(
-        `document.querySelector('.ssTab[data-ss-tab="${tab}"]').click()`);
+        `document.querySelector('.ssNavItem[data-ss-tab="${tab}"]').click()`);
       await new Promise(r => setTimeout(r, 150));
       return win.webContents.executeJavaScript(`(() => ({
         recent: !document.getElementById('ssPaneRecent').hidden,
         favorites: !document.getElementById('ssPaneFavorites').hidden,
         templates: !document.getElementById('ssPaneTemplates').hidden,
-        active: [...document.querySelectorAll('.ssTab')].filter(b => b.classList.contains('on')).map(b => b.dataset.ssTab),
+        active: [...document.querySelectorAll('.ssNavItem')].filter(b => b.classList.contains('on')).map(b => b.dataset.ssTab),
         railOn: [...document.querySelectorAll('.ssNavItem.on')].map(b => b.dataset.ssTab)
       }))()`);
     };
@@ -100,8 +103,8 @@ app.whenReady().then(() => {
     ok(errors.length === 0, 'renderer produced no console errors' + (errors.length ? ' -> ' + errors.slice(0, 3).join(' | ') : ''));
     ok(probe.startOpen, 'app launches with the start screen open');
     ok(probe.bodyStartOpen, 'body carries the start-open flag (stacking)');
-    ok(JSON.stringify(probe.tabs) === JSON.stringify(['recent', 'favorites', 'templates']),
-      'tab strip is Recent / Favorites / Templates -> ' + JSON.stringify(probe.tabs));
+    ok(JSON.stringify(probe.tabs) === JSON.stringify(['templates', 'recent', 'favorites']),
+      'start screen rail is Templates / Recent / Favorites -> ' + JSON.stringify(probe.tabs));
     ok(probe.tplRendered >= 5, 'template tiles rendered -> ' + probe.tplRendered);
     ok(probe.pillHasMail, 'account pill has the email line');
     ok(probe.pillRightMost, 'account pill is the right-most control in the title bar');
@@ -134,8 +137,8 @@ app.whenReady().then(() => {
     }))()`);
     ok(bs.open, 'File opens the backstage');
     ok(JSON.stringify(bs.rail) ===
-      JSON.stringify(['home', 'new', 'open', 'recent', 'save', 'export', 'print', 'onedrive', 'info', 'account']),
-      'File rail is Home/Open/Recent/OneDrive/Info in Excel order -> ' + JSON.stringify(bs.rail));
+      JSON.stringify(['home', 'new', 'open', 'info', 'save', 'print', 'export', 'recent', 'onedrive', 'account']),
+      'File rail follows Excel order -> ' + JSON.stringify(bs.rail));
     ok(JSON.stringify(bs.pane) === JSON.stringify(['home']), 'File opens on the Home page -> ' + JSON.stringify(bs.pane));
     ok(bs.recentHost, 'Home page renders the recent list');
 

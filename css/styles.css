@@ -1,19 +1,50 @@
 /* ---------- Excel design tokens ----------
    The Office/Fluent palette Excel ships with: green accent, #f3f2f1 ribbon and
    title surfaces, hairline #d2d0ce separators, #323130 body text. `--accent` is
-   kept because the theme / fx blocks further down this file already reference it. */
+   kept because the theme / fx blocks further down this file already reference it.
+
+   Office draws its own window furniture in the UI face (Segoe UI) whatever font
+   the workbook uses, so the chrome font is stated on `*` and only the grid opts
+   back in to `--sheet-font`. */
 :root{
   --accent:#217346;--accent-dark:#1a5c38;
   --xl-ribbon:#f3f2f1;--xl-surface:#fff;--xl-hover:#e1dfdd;--xl-press:#c7c6c4;
   --xl-line:#d2d0ce;--xl-line-soft:#edebe9;--xl-text:#323130;--xl-text-2:#605e5c;
+  --xl-ui:'Segoe UI',Tahoma,Calibri,Arial,sans-serif;
+  /* Neighbour shades the ribbon's own controls use for borders and toggles. */
+  --xl-hover-line:#8a8886;--xl-toggle:#c7c6c4;--xl-toggle-line:#b3b0ad;
+  /* The hairline that divides command groups is lighter than the ribbon's own
+     bottom border: Office "Text 1, Lighter 90%". */
+  --xl-divider:#e1dfdd;
+  /* Sidebar metrics, in one place so every rail row is provably identical. */
+  --rail-h:32px;--rail-gap:10px;--rail-bar:4px;--rail-pad:14px;--rail-icon:16px;
+  /* ---------- layer scale ----------
+     Every popup in this app is a sibling inside #app, so these are directly
+     comparable and each one has to come from here. Menus float above every
+     full-screen view, because a dropdown opened from inside the backstage would
+     otherwise paint behind it - which is what happened when popMenu sat at 45
+     and the backstage at 60. */
+  --z-panel:20;    /* docked side panels (AI assistant) */
+  --z-dialog:30;   /* modal dialogs */
+  --z-overlay:40;  /* full-screen views (File backstage) */
+  --z-modal:50;    /* blocking overlays (registration lock) */
+  --z-screen:60;   /* full-screen app views (start screen) */
+  --z-popup:70;   /* menus and floating panels: always on top */
+  /* Gutter used when a floating menu has to be pushed back inside the window. */
+  --pop-edge:8px;
 }
-*{box-sizing:border-box;margin:0;padding:0;font-family:var(--sheet-font,'Segoe UI'),Calibri,Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--xl-ui)}
+/* The document - and only the document - follows the workbook font picked under
+   Page Layout > Themes. A new Excel workbook is Calibri 11pt, so Calibri is the
+   fallback here and 11pt is the size the grid inherits when a cell sets none. */
+#grid{font-family:var(--sheet-font,'Calibri'),'Segoe UI',Tahoma,Arial,sans-serif;
+  font-size:14.67px}
 /* Excel is a full-bleed desktop window, not a rounded card on a green page. */
 body{background:var(--xl-ribbon);padding:0;height:100vh;display:flex;overflow:hidden}
 #app{position:relative;background:var(--xl-surface);flex:1;display:flex;flex-direction:column;overflow:hidden}
 /* ---------- title bar (Excel: light strip, quick actions left, account right) ---------- */
 .titlebar{display:flex;align-items:center;gap:1px;background:var(--xl-ribbon);color:var(--xl-text);
-  padding:2px 6px;font-size:12.5px;flex:none;border-bottom:1px solid var(--xl-line)}
+  padding:2px 6px;font-size:12px;flex:none;border-bottom:1px solid var(--xl-line)}
 .titlebar .appTitle{font-weight:600;white-space:nowrap;padding-left:2px}
 .titlebar .bookName{color:var(--xl-text-2);font-size:12px;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;max-width:190px}
@@ -23,81 +54,174 @@ body{background:var(--xl-ribbon);padding:0;height:100vh;display:flex;overflow:hi
 .tbFlex{order:1;flex:1 1 auto;min-width:8px}
 .titlebar select{order:2;background:#fff;color:var(--xl-text);border:1px solid var(--xl-line);
   border-radius:2px;font-size:11.5px;height:20px;padding:0 2px;margin:0 1px;flex:none}
-.qbtn{background:transparent;border:1px solid transparent;color:var(--xl-text);font-size:13px;
+.qbtn{background:transparent;border:1px solid transparent;color:var(--xl-text);font-size:12px;
   padding:1px 6px;border-radius:2px;cursor:pointer;line-height:1.35;white-space:nowrap;flex:none}
 .qbtn:hover{background:var(--xl-hover);border-color:var(--xl-line)}
 .qbtn:active{background:var(--xl-press)}
 .tsep{width:1px;height:14px;background:var(--xl-line);margin:0 3px;flex:none}
-/* ---------- Ribbon Display Options (Excel parity) ---------- */
-#ribbonDispBtn{position:absolute;right:5px;bottom:0;border:none;background:transparent;
-  color:#6b6b6b;cursor:pointer;font-size:12px;line-height:1;padding:2px 7px;border-radius:3px;z-index:4}
-#ribbonDispBtn:hover,#ribbonDispBtn[aria-expanded="true"]{background:#e0dedd;color:#217346}
-#ribbonMin{right:26px}
-
-.rdMenu{display:none;position:absolute;right:4px;top:100%;z-index:60;min-width:224px;
-  background:#fff;border:1px solid #d4d4d4;border-radius:6px;padding:4px 0;
+/* ---------- Ribbon Display Options (Excel parity) ----------
+   Excel parks both corner controls - the collapse chevron and the Ribbon Display
+   Options menu - at the right-hand end of the 26px tab strip, above the command
+   area, and the menu drops straight down from there. Anchoring them to the top of
+   the ribbon (rather than the bottom) keeps them beside the tabs when the
+   commands are showing, which is where Excel puts them. */
+#ribbonMin,#ribbonDispBtn{position:absolute;top:0;height:26px;border:none;
+  background:transparent;color:var(--xl-text-2);cursor:pointer;font-size:12px;
+  line-height:24px;padding:0 7px;border-radius:0}
+#ribbonMin{right:30px;z-index:3}
+#ribbonDispBtn{right:4px;z-index:4}
+/* Excel keeps its scrollbar hidden but still gives the off-screen commands a way
+   out: this chevron pair appears only once the command area really overflows, and
+   each button greys out at its end of the range. */
+.rbOverflow{position:absolute;right:22px;bottom:2px;display:none;gap:1px;z-index:5}
+body[data-rboverflow] .rbOverflow{display:flex}
+/* ---------- close and back controls ----------
+   One rule for all twelve. The glyph lives here rather than in the markup so no
+   dialog invents its own button, and the colour is inherited so the same control
+   reads correctly on a green header (#aiHead) and on a white one. */
+[data-close]{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;min-height:20px;padding:2px 6px;background:transparent;
+  border:1px solid transparent;border-radius:2px;color:inherit;cursor:pointer;
+  font:16px/1 var(--xl-ui)}
+[data-close]::before{content:"\00D7"}
+[data-close="back"]::before{content:"\2039";font-size:20px}
+[data-close]:hover{background:var(--xl-hover)}
+[data-close]:focus-visible{outline:1px dotted currentColor;outline-offset:-3px}
+.rbOvBtn{width:16px;height:20px;padding:0;background:transparent;border:1px solid transparent;
+  color:var(--xl-text-2);font:16px/1 var(--xl-ui);cursor:pointer;border-radius:2px}
+.rbOvBtn:hover{background:var(--xl-hover);color:var(--xl-text)}
+.rbOvBtn[disabled]{opacity:.35;cursor:default}
+#ribbonMin:hover,#ribbonDispBtn:hover,#ribbonDispBtn[aria-expanded="true"]{
+  background:var(--xl-hover);color:var(--xl-text)}
+.rdMenu{display:none;position:absolute;right:4px;top:27px;z-index:var(--z-popup);min-width:232px;
+  background:#fff;border:1px solid var(--xl-line);border-radius:6px;padding:4px 0;
   box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .rdMenu.open{display:block}
-.rdMenuTitle{padding:6px 12px 6px;font-size:11px;font-weight:600;color:#5a5a5a;
-  text-transform:uppercase;letter-spacing:.4px}
+.rdMenuTitle{padding:4px 12px 6px;font-size:12px;font-weight:600;color:var(--xl-text)}
 .rdItem{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;
-  text-align:left;font:inherit;font-size:12.5px;color:#333;padding:6px 12px;cursor:pointer}
-.rdItem:hover{background:#eef3ef}
-.rdItem.on{color:#217346;font-weight:600}
-.rdCheck{width:14px;flex:0 0 14px;text-align:center;font-size:12px;line-height:1;color:#217346}
+  text-align:left;font:inherit;font-size:12px;color:var(--xl-text);padding:5px 12px;cursor:pointer}
+.rdItem:hover{background:var(--xl-hover)}
+.rdItem.on{color:var(--accent)}
+.rdCheck{width:14px;flex:0 0 14px;text-align:center;font-size:12px;line-height:1;color:var(--accent)}
 .rdItem.on .rdCheck::before{content:"✓"}
 
-/* Auto-hide leaves only the tab strip; the grid keeps the full height. */
+/* Auto-hide leaves only the tab strip; the grid keeps the full height. The strip
+   carries the single hairline, so the ribbon's own bottom border is dropped in
+   the collapsed states - otherwise the two lines would stack. */
 .ribbon.rd-tabs .rbody,.ribbon.rd-auto .rbody{display:none!important}
 .ribbon.rd-tabs .rtabs,.ribbon.rd-auto .rtabs{padding-bottom:0}
-.ribbon.rd-tabs{min-height:0}
+.ribbon.rd-tabs,.ribbon.rd-auto{border-bottom:none;min-height:0}
 
-/* ---------- ribbon ---------- */
+/* ---------- ribbon ----------
+   Excel's ribbon at 100% scaling: a 26px tab strip over a #f3f2f1 command area,
+   with 22px small buttons and 48px large ones, all set in Segoe UI. */
 .ribbon{background:var(--xl-ribbon);border-bottom:1px solid var(--xl-line);flex:none;position:relative}
-#ribbonMin{position:absolute;right:5px;bottom:0;border:none;background:transparent;color:var(--xl-text-2);cursor:pointer;font-size:12px;line-height:1;padding:2px 7px;border-radius:2px;z-index:3}
-#ribbonMin:hover{background:var(--xl-hover);color:var(--accent)}
 .ribbon.min .rbody{display:none!important}
-.ribbon.min{border-bottom:1px solid #d0d0d0}
+/* The strip carries the hairline under the tabs, so the collapsed ribbon keeps a
+   single line instead of the strip's and the ribbon's stacked together. */
+.ribbon.min{border-bottom:none}
 .ribbon.min .rtabs{padding-bottom:0}
-.rtabs{display:flex;gap:1px;padding:0 4px;align-items:stretch}
-.rtfile{background:var(--accent);color:#fff;border:none;padding:4px 14px 5px;font-size:12.5px;cursor:pointer;font-weight:600;margin-right:4px;flex:none}
+/* The right padding reserves the two corner controls. The hairline under the tabs
+   is drawn inside the strip rather than as a border, so the active tab's green bar
+   can paint straight over it and break the line, exactly as in Excel. */
+.rtabs{display:flex;gap:0;padding:0 64px 0 0;align-items:stretch;background:var(--xl-ribbon);
+  box-shadow:inset 0 -1px 0 var(--xl-line)}
+/* File tab: a full-height green block with a white 12px label and square corners. */
+.rtfile{background:var(--accent);color:#fff;border:none;height:26px;padding:0 12px;
+  font-size:12px;line-height:26px;cursor:pointer;font-weight:400;margin-right:6px;flex:none}
 .rtfile:hover{background:var(--accent-dark)}
-.file-menu{position:absolute;z-index:50;top:31px;left:6px;width:250px;padding:8px;background:#fff;border:1px solid #c9c9c9;border-radius:0 0 6px 6px;box-shadow:0 8px 22px rgba(0,0,0,.2);display:none;color:#222}
-.file-menu.open{display:block}
-.file-menu h2{font-size:15px;color:var(--accent);padding:5px 8px 8px;border-bottom:1px solid #e2e2e2;margin-bottom:5px}
-.file-menu button{display:flex;width:100%;align-items:center;gap:9px;border:0;background:transparent;padding:9px 8px;border-radius:3px;color:#222;font:13px 'Segoe UI',Calibri,Arial,sans-serif;text-align:left;cursor:pointer}
-.file-menu button:hover,.file-menu button:focus{background:#e8f2ec;outline:none}
-.file-menu kbd{margin-left:auto;color:#777;font-size:10px;font-family:inherit}
-.file-menu .file-menu-sep{height:1px;background:#e4e4e4;margin:5px 0}
-.rtell{margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 12px;color:#555;font-size:12.5px;white-space:nowrap}
-#rtTellMe{border:none;background:transparent;outline:none;font-size:12.5px;color:#555;width:210px;border-bottom:1px dotted #b5b5b5}
-#rtTellMe:focus{border-bottom-color:#217346}
+/* The old File dropdown (.file-menu) was replaced by the backstage view and is
+   gone from the markup; its rules are removed rather than left as dead CSS with
+   an off-scale z-index. */
+/* "Tell me" sits at the right end of the tab strip in the same 22px bordered box
+   Excel uses for its search field. */
+.rtell{margin-left:auto;display:flex;align-items:center;gap:4px;padding:0;color:var(--xl-text-2);font-size:12px;white-space:nowrap}
+#rtTellMe{border:1px solid var(--xl-line);background:#fff;border-radius:2px;outline:none;
+  font-size:12px;color:var(--xl-text);width:220px;height:22px;padding:0 4px}
+#rtTellMe::placeholder{color:var(--xl-hover-line)}
+#rtTellMe:hover{border-color:var(--xl-hover-line)}
+#rtTellMe:focus{border-color:var(--accent)}
 #grid.pageview{border-left:2px dashed #9ab7d3;border-right:2px dashed #9ab7d3}
 #grid.breakview{border-color:#4f81bd}
-.rtab{background:transparent;border:none;border-bottom:2px solid transparent;padding:4px 11px;font-size:12.5px;cursor:pointer;color:var(--xl-text-2);border-radius:0;white-space:nowrap;flex:none}
+/* Tabs: 12px labels on a 26px strip, with the top corners rounded like Excel. */
+.rtab{background:transparent;border:none;height:26px;padding:0 10px;line-height:26px;
+  font-size:12px;cursor:pointer;color:var(--xl-text);border-radius:2px 2px 0 0;
+  white-space:nowrap;flex:none;position:relative}
 .rtab:hover{background:var(--xl-hover)}
 /* The selected tab is white-on-grey, exactly like Excel, so it visually merges
-   with the command area below it. */
-.rtab.on{background:#fff;border-bottom-color:var(--accent);color:var(--accent);font-weight:600}
-.rbody{background:var(--xl-ribbon);border-top:1px solid var(--xl-line);display:flex;overflow-x:auto}
+   with the command area below it. Its 2px green bar is an inset shadow, which
+   paints over the strip's hairline and so breaks the line under the tab - the
+   same result Excel gets, without negative margins to upset the 26px box. */
+.rtab.on{background:#fff;color:var(--xl-text);font-weight:600;box-shadow:inset 0 -2px 0 var(--accent)}
+/* The hairline under the tabs belongs to the strip (see .rtabs), so the command
+   area is a plain #f3f2f1 surface. Excel scrolls the commands sideways on a
+   narrow window but never paints a scrollbar there, so the bar is suppressed and
+   the area is still scrollable by wheel and shift+wheel. */
+.rbody{background:var(--xl-ribbon);display:flex;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.rbody::-webkit-scrollbar{height:0;width:0}
 /* Command area: Excel gives each group a little air and separates them with a
    full-height hairline, with the group name centred underneath. */
-.rpage{display:none;padding:2px 0 1px;align-items:stretch}
+.rpage{display:none;padding:1px 0;align-items:stretch}
 .rpage.on{display:flex}
-.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--xl-line);padding:1px 6px 0;flex:none}
+.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--xl-divider);padding:1px 4px;flex:none;position:relative}
 .rgrp:last-child{border-right:none}
-.rrow{display:flex;align-items:center;gap:1px;flex:1;flex-wrap:wrap;justify-content:center}
-.rlabel{font-size:9.5px;color:var(--xl-text-2);margin-top:2px;line-height:1.2;white-space:nowrap}
+/* Rows take their natural height so a group's commands stay top-aligned, the way
+   Excel draws them; only the caption is pushed to the foot of the group. */
+.rrow{display:flex;align-items:center;gap:0;flex:none;flex-wrap:wrap;justify-content:center}
+/* Command labels are 9pt, the size Office uses for every ribbon command; group
+   captions sit a step below at 10px so the hierarchy survives at 100% scaling. */
+.rlabel{font-size:10px;color:var(--xl-text-2);line-height:13px;min-height:13px;white-space:nowrap;font-weight:400;margin-top:auto}
 /* 22px controls with a 1px transparent border keep the hover/pressed surface
    exactly the size of the button, as in Excel (no visible frame at rest). */
-.rbtn{background:transparent;border:1px solid transparent;border-radius:2px;min-width:24px;height:22px;padding:0 4px;cursor:pointer;font-size:11.5px;color:var(--xl-text);display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
+.rbtn{background:transparent;border:1px solid transparent;border-radius:2px;min-width:24px;height:22px;padding:0 4px;cursor:pointer;font-size:12px;color:var(--xl-text);display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;line-height:1}
 .rbtn:hover{background:var(--xl-hover);border-color:var(--xl-line)}
 .rbtn:active{background:var(--xl-press)}
-.rbtn.on{background:var(--xl-press);border-color:var(--xl-line)}
-.rbtn.big{flex-direction:column;height:46px;width:54px;font-size:10px;line-height:1.15;gap:0;padding:0 2px}
-.rbtn.big .bi{font-size:16px}
-.rsel{border:1px solid var(--xl-line);border-radius:2px;height:22px;font-size:11.5px;background:#fff;color:var(--xl-text);max-width:132px;padding:0 2px}
+/* A command that latches (Bold, Wrap, ...) holds the pressed fill while it is on. */
+.rbtn.on{background:var(--xl-toggle);border-color:var(--xl-toggle-line)}
+/* Keyboard focus: the 1px dotted ring Office draws inside the button. */
+.rbtn:focus-visible{outline:1px dotted var(--xl-text-2);outline-offset:-3px}
+/* A row that carries a 48px tile. Excel lines the 22px commands up with the
+   tile's ICON, not with the middle of the row; centring them leaves their icons
+   7px below the tile's. So the row is top-aligned and the short buttons are
+   pushed down to meet the tile's icon line.
+   The offset is measured, not guessed: an 18px icon + 1px gap + a 12.6px caption
+   block centred in a 48px tile puts the tile's icon 8.2px down, while a 16px icon
+   centres 11px down a 22px button - 8.2 + 9 - 11 = 6.2px to line them up.
+   Verified across all nine tabs by _probe_metrics.js. */
+.rrow:has(>.rbtn.big){align-items:flex-start}
+.rrow:has(>.rbtn.big)>.rbtn:not(.big){margin-top:6.2px}
+/* Large buttons: a 48px tile - an 18px glyph over a 12px caption - as wide as its
+   own label, the way Excel sizes Paste, AutoSum and Format. */
+.rbtn.big{flex-direction:column;justify-content:center;height:48px;width:auto;min-width:56px;font-size:12px;line-height:1.05;gap:1px;padding:2px 4px}
+/* Ribbon icons are real vector line art in a <symbol> sprite, referenced with
+   <use>. One fixed box on one baseline, and they take the button's colour, so a
+   latched command tints its own icon exactly as Office does. */
+.ic{width:16px;height:16px;flex:0 0 16px;display:inline-block;fill:none;stroke:currentColor;
+  stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
+.rbtn.big .ic{width:18px;height:18px;flex:0 0 18px;stroke-width:1.35}
+.qbtn .ic,.ssNavItem .ic{width:16px;height:16px;flex:0 0 16px}
+/* The sprite itself is never painted; only its symbols are referenced. */
+/* ---------- brand mark ----------
+   The mark carries its own fills, so it deliberately does not inherit the
+   line-art rules above. It is the app's green tile at two sizes: 18px beside the
+   title, 26px on the start-screen rail. */
+.brand{display:inline-flex;align-items:center;gap:6px}
+.brandMark{width:18px;height:18px;flex:0 0 18px;display:block}
+.brandMark.brandRail{width:26px;height:26px;flex:0 0 26px}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+/* Font and number-format boxes: 22px tall, to line up with the small buttons. */
+.rsel{border:1px solid var(--xl-line);border-radius:2px;height:22px;font-size:11px;background:#fff;color:var(--xl-text);max-width:132px;padding:0 2px}
+.rsel:hover{border-color:var(--xl-hover-line)}
+.rsel:focus{outline:none;border-color:var(--accent)}
+#fontSize{max-width:46px}
 .rsep{width:1px;background:var(--xl-line);margin:1px 2px;align-self:stretch}
+/* Fill and Font colour: Excel draws these as a 22px button whose lower band is a
+   bar of the current colour. A native colour input cannot draw the bucket glyph,
+   so the swatch is inset far enough to leave that band showing. */
+.rgrp input[type=color]{width:22px;height:22px;min-width:22px;padding:0;background:#fff;border:1px solid var(--xl-line);border-radius:2px;cursor:pointer;overflow:hidden}
+.rgrp input[type=color]:hover{border-color:var(--xl-hover-line)}
+.rgrp input[type=color]::-webkit-color-swatch-wrapper{padding:2px 2px 7px}
+.rgrp input[type=color]::-webkit-color-swatch{border:none;border-radius:1px}
 /* ---------- name box / formula bar ---------- */
 .formula{display:flex;align-items:center;background:#fff;border-bottom:1px solid #d0d0d0;padding:3px 6px;flex:none}
 #refbox{width:110px;border:1px solid #c8c8c8;padding:0 6px;font-size:12px;background:#fff;height:22px;line-height:20px}
@@ -131,7 +255,7 @@ button.fx:hover{background:#e9e7e7;border-color:#c8c8c8}
 label.tiny{font-size:11px;color:#666}
 input[type=color]{width:24px;height:22px;padding:0;border:1px solid #c8c8c8;cursor:pointer;background:#fff}
 /* ---------- popup menu ---------- */
-#popMenu{position:fixed;background:#fff;border:1px solid #bbb;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:45;display:none;min-width:190px;padding:4px 0;max-height:72vh;overflow:auto}
+#popMenu{position:fixed;background:#fff;border:1px solid #bbb;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:var(--z-popup);display:none;min-width:190px;padding:4px 0;max-height:min(72vh,calc(100vh - 16px));overflow:auto;overscroll-behavior:contain}
 #popMenu.open{display:block}
 #popMenu div{padding:6px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
 #popMenu div:hover{background:#e8f2fb}
@@ -169,7 +293,9 @@ th.filterTh{position:relative;padding-right:14px}
 #helpBody kbd{background:#f3f2f1;border:1px solid #ccc;border-bottom-width:2px;border-radius:3px;padding:0 5px;font-family:inherit;font-size:11.5px}
 table{border-collapse:collapse;table-layout:fixed}
 th,td{border:1px solid #d4d4d4;width:88px;height:22px;font-size:13px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-th{background:#f5f5f5;color:#555;font-weight:normal;text-align:center;position:sticky;user-select:none;cursor:pointer;z-index:2}
+/* Row and column headers are window furniture, so they take Office Background 1
+   (#f3f2f1) like the sheet-tab strip rather than a generic grey. */
+th{background:var(--xl-ribbon);color:#555;font-weight:normal;text-align:center;position:sticky;user-select:none;cursor:pointer;z-index:2}
 td.xhead{background:#d9ecdf!important;color:#217346;font-weight:700}
 thead th{top:0;z-index:3}
 tbody th{left:0;z-index:2}
@@ -186,9 +312,14 @@ td.noted::after{content:'';position:absolute;top:0;right:0;border-top:7px solid 
 #fh.on{display:block}
 #fh:hover{background:#1a5c38}
 #fp{position:absolute;border:2px dashed #7a7a7a;background:rgba(33,115,70,.05);display:none;pointer-events:none;z-index:5}
-td.va-t{vertical-align:top}td.va-m{vertical-align:middle}td.va-b{vertical-align:bottom}
+/* The class name is built from the button's data-va value (top | mid | bot), so
+   these selectors have to use those exact words - .va-b never matched anything
+   and Align Bottom silently fell back to the default. */
+td.va-top{vertical-align:top}td.va-mid{vertical-align:middle}td.va-bot{vertical-align:bottom}
 td input{width:100%;height:20px;border:none;outline:none;font-size:13px;padding:0 3px}
 .al-c{text-align:center}.al-r{text-align:right}
+/* Formula Auditing: cells the active formula depends on, or that depend on it. */
+td.traced{position:relative;box-shadow:inset 0 0 0 2px #1f6fc5;background:#1f6fc514;color:#1f4e79}
 
 
 
@@ -196,7 +327,7 @@ td input{width:100%;height:20px;border:none;outline:none;font-size:13px;padding:
 label.tiny{font-size:11px;color:#666}
 input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--xl-line);cursor:pointer;background:#fff;border-radius:2px}
 #clip{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
-#aiPanel{position:absolute;right:0;top:0;bottom:0;width:340px;max-width:70%;background:#fdfdfd;border-left:2px solid #217346;display:none;flex-direction:column;z-index:20;box-shadow:-4px 0 12px rgba(0,0,0,.15)}
+#aiPanel{position:absolute;right:0;top:0;bottom:0;width:340px;max-width:min(70%,420px);background:#fdfdfd;border-left:2px solid #217346;display:none;flex-direction:column;z-index:var(--z-panel);box-shadow:-4px 0 12px rgba(0,0,0,.15)}
 #aiPanel.open{display:flex}
 #aiHead{background:#217346;color:#fff;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;font-size:14px;flex:none}
 #aiClose{background:transparent;border:none;color:#fff;font-size:14px;cursor:pointer;padding:2px 6px}
@@ -211,7 +342,13 @@ input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--xl-lin
 #aiSend:hover{background:#1a5c38}
 .rsh{position:absolute;right:-3px;top:0;width:6px;height:100%;cursor:col-resize;z-index:5}
 .rsh:hover{background:#217346}
-#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog{position:absolute;left:50%;top:80px;transform:translateX(-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:30;display:none;flex-direction:column;padding:10px;gap:8px;min-width:340px}
+/* All eight dialogs share one box: centred on the viewport rather than a fixed
+   80px from the top of #app, capped to the window, and scrollable inside it. The
+   old rule put a tall dialog (Help, Page Setup) off the bottom of a short window
+   and let a 340px min-width overflow a 380px one. */
+#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:var(--z-dialog);display:none;flex-direction:column;padding:10px;gap:8px;
+  min-width:min(340px,calc(100vw - 32px));max-width:calc(100vw - 32px);
+  max-height:calc(100vh - 32px);overflow:auto;overscroll-behavior:contain}
 #findDlg.open,#chartDlg.open,#pivotDlg.open,#recDlg.open,#picDlg.open,#helpDlg.open,#psDlg.open,#authDialog.open{display:flex}
 .frow{display:flex;gap:6px;align-items:center}
 .frow input{flex:1;border:1px solid #ccc;padding:4px 8px;font-size:13px;outline:none}
@@ -221,7 +358,7 @@ input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--xl-lin
 #fStat{font-size:12px;color:#555;min-height:16px}
 #chartTypes{display:flex;gap:6px}
 #chartTypes button.on{background:#cfe8d9;border-color:#217346}
-#ctxMenu{position:fixed;background:#fff;border:1px solid #bbb;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:40;display:none;min-width:180px;padding:4px 0}
+#ctxMenu{position:fixed;background:#fff;border:1px solid #bbb;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:var(--z-popup);display:none;min-width:180px;padding:4px 0;max-height:min(72vh,calc(100vh - 16px));overflow:auto;overscroll-behavior:contain}
 #ctxMenu.open{display:block}
 #ctxMenu div{padding:6px 14px;font-size:13px;cursor:pointer}
 #ctxMenu div:hover{background:#e8f2fb}
@@ -235,10 +372,16 @@ body[data-theme='dark'] th,body[data-theme='dark'] td{background:#2b2b2b;color:#
 body[data-theme='dark'] td.sel{background:#3a4a5a}
 body[data-theme='dark'] td.act{outline-color:#4cc38a}
 body[data-theme='dark'] .formula,body[data-theme='dark'] #fbar,body[data-theme='dark'] #refbox{background:#2b2b2b;color:#e6e6e6;border-color:#3d3d3d}
-body[data-theme='dark'] .ribbon,body[data-theme='dark'] #tabs,body[data-theme='dark'] .rbody{background:#333;color:#ddd}
+body[data-theme='dark'] .ribbon,body[data-theme='dark'] .rtabs,body[data-theme='dark'] #tabs,body[data-theme='dark'] .rbody{background:#333;color:#ddd}
 body[data-theme='dark'] .rtab,body[data-theme='dark'] .rbtn{color:#ddd}
-body[data-theme='dark'] .rtab.on{background:#454545;border-bottom-color:#4cc38a;color:#4cc38a}
+body[data-theme='dark'] .rtab.on{background:#454545;color:#4cc38a;box-shadow:inset 0 -2px 0 #4cc38a}
 body[data-theme='dark'] .rbtn:hover,body[data-theme='dark'] .rtab:hover{background:#454545}
+/* The tab strip paints its own hairline (an inset shadow) and the corner controls
+   sit on it, so both need dark-theme shades of their own. */
+body[data-theme='dark'] .rtabs{box-shadow:inset 0 -1px 0 #4a4a4a}
+body[data-theme='dark'] #ribbonMin,body[data-theme='dark'] #ribbonDispBtn{color:#bbb}
+body[data-theme='dark'] #ribbonMin:hover,body[data-theme='dark'] #ribbonDispBtn:hover{background:#454545;color:#ddd}
+body[data-theme='dark'] #rtTellMe{background:#2b2b2b;border-color:#555;color:#e6e6e6}
 body[data-theme='dark'] td.xhead{background:#3d5c4a!important;color:#9fd6b4}
 body[data-theme='dark'] td input{background:#2b2b2b;color:#e6e6e6}
 body[data-theme='solar'] #app{background:#fdf6e3}
@@ -256,14 +399,18 @@ body[data-theme='solar'] td.act{outline-color:#b58900}
 @media print{body{background:#fff;padding:0}#app{box-shadow:none;border-radius:0}.titlebar,.ribbon,.formula,#tabs,#statusbar,#aiPanel,#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#psDlg,#ctxMenu,#popMenu,#drawLayer,#backstage,#authDialog,#profilePanel{display:none!important}#gridwrap{overflow:visible}th{position:static!important}td{position:static!important}}
 
 /* ---------- File backstage view (Excel-style full-page overlay) ---------- */
-#backstage{position:absolute;inset:0;z-index:60;display:none;background:#fff;color:#222}
+#backstage{position:absolute;inset:0;z-index:var(--z-overlay);display:none;background:#fff;color:#222}
 #backstage.open{display:flex}
 .bsRail{width:190px;flex:none;background:var(--accent);color:#fff;display:flex;flex-direction:column;padding:10px 0}
 .bsHead{display:flex;align-items:center;gap:8px;padding:2px 12px 10px}
 .bsBack{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:4px;width:26px;height:26px;font-size:14px;cursor:pointer}
 .bsBack:hover{background:rgba(255,255,255,.3)}
 .bsBrand{font-weight:600;font-size:14px}
-.bsItem{display:block;width:100%;text-align:left;background:transparent;border:none;color:#fff;font:13px inherit;padding:10px 16px;cursor:pointer;opacity:.92}
+/* font: 13px inherit is not a valid font shorthand - the family cannot be
+   `inherit` - so the whole declaration was dropped and the backstage silently
+   fell back to 13.33px. Longhands only. */
+.bsItem{display:block;width:100%;text-align:left;background:transparent;border:none;color:#fff;
+  font-family:inherit;font-size:13px;line-height:1.35;padding:10px 16px;cursor:pointer;opacity:.92}
 .bsItem:hover{background:rgba(255,255,255,.15);opacity:1}
 .bsItem.on{background:var(--accent-dark);font-weight:600;opacity:1}
 .bsPane{flex:1;overflow:auto;padding:26px 34px}
@@ -315,7 +462,7 @@ body[data-fx='sharp'] #backstage .bsCard,body[data-fx='sharp'] .bsBack{border-ra
 #authDialog.mode-signup .signupOnly{display:block}
 #authDialog #authSubmit{width:100%;padding:11px;font-size:14px;font-weight:600;border-radius:10px;margin-top:6px}
 /* ---------- Auth guard: lock overlay shown until a user registers ---------- */
-#authLock{position:absolute;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+#authLock{position:absolute;inset:0;z-index:var(--z-modal);display:none;align-items:center;justify-content:center;
   background:rgba(255,255,255,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding:20px}
 #authLock.open{display:flex}
 .lockCard{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.22);
@@ -342,7 +489,7 @@ body[data-fx='sharp'] .lockCard,body[data-fx='sharp'] .lockCta{border-radius:0}
 body.auth-locked #app>*:not(#authLock):not(#authDialog):not(#startScreen){pointer-events:none;user-select:none}
 body.auth-locked #app>*:not(#authLock):not(#authDialog):not(#startScreen){filter:blur(1.5px)}
 /* The sign-in/up card must sit above the lock veil while the user registers. */
-body.auth-locked #authDialog{z-index:80;top:50%;transform:translate(-50%,-50%)}
+body.auth-locked #authDialog{z-index:calc(var(--z-popup) + 10);top:50%;transform:translate(-50%,-50%)}
 .formError{font-size:12.5px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
  padding:7px 10px;min-height:0;display:none}
 .formError:not(:empty){display:block}
@@ -384,7 +531,7 @@ body[data-theme='dark'] .userChip .userMail,body[data-theme='dark'] .userChev{co
 .linkBtn{background:transparent;border:none;color:var(--accent);font-size:12px;cursor:pointer;text-decoration:underline;padding:2px 0;align-self:flex-start}
 .btnDanger{background:transparent;border:1px solid #c0392b;color:#c0392b;border-radius:3px;padding:6px 14px;font-size:13px;cursor:pointer}
 .btnDanger:hover{background:#c0392b;color:#fff}
-#profilePanel{position:absolute;right:10px;top:34px;z-index:40;display:none;width:340px;max-height:calc(100% - 80px);overflow:auto;background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);padding:10px}
+#profilePanel{position:absolute;right:10px;top:34px;z-index:var(--z-popup);display:none;width:340px;max-width:calc(100vw - 20px);max-height:calc(100% - 80px);overflow:auto;background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);padding:10px}
 #profilePanel.open{display:block}
 .panelHead{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid #e2e2e2;margin-bottom:8px}
 .userAvatar.big{width:34px;height:34px;font-size:16px}
@@ -478,27 +625,33 @@ body[data-theme='dark'] .psGrid select,body[data-theme='dark'] .psGrid input{bac
 
 
 /* ---------- Start screen (Excel Backstage: green rail + content pane) ---------- */
-#startScreen{position:fixed;inset:0;z-index:9000;display:none;background:var(--xl-surface);
+#startScreen{position:fixed;inset:0;z-index:var(--z-screen);display:none;background:var(--xl-surface);
   color:var(--xl-text);align-items:stretch}
 #startScreen.open{display:flex}
 /* While the start screen is up it owns the highest layer, so the auth dialog and
    the registration lock card have to be lifted above it to stay reachable. */
-body.start-open #authDialog,body.start-open #authLock{z-index:9100}
+body.start-open #authDialog,body.start-open #authLock{z-index:calc(var(--z-popup) + 10)}
 
 /* left rail */
 .ssRail{width:196px;flex:none;background:var(--accent);color:#fff;display:flex;
   flex-direction:column;padding:10px 0 8px}
 .ssRailHead{display:flex;align-items:center;gap:8px;padding:0 14px 12px}
-.ssRailBrand{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ssRailBrand{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ssBrandMark{width:26px;height:26px;flex:0 0 26px;border-radius:2px;background:#fff;color:var(--accent);
   display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.5px}
 .ssNav{display:flex;flex-direction:column;flex:1}
-.ssNavItem{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;
-  border:none;border-left:3px solid transparent;color:#fff;font:inherit;font-size:12.5px;
-  padding:7px 12px;cursor:pointer;opacity:.95}
+/* Excel's start-screen rail. Every metric comes from a shared token, so the three
+   rows are identical by construction rather than by three copies of the same
+   numbers: a 32px row, a 16px icon column, a 10px gap and a 4px active bar. That
+   puts the label of Templates, Recent and Favorites on the same x and the same
+   baseline whatever the label length or the UI language. */
+.ssNavItem{display:flex;align-items:center;gap:var(--rail-gap);width:100%;
+  height:var(--rail-h);line-height:var(--rail-h);
+  padding:0 12px 0 var(--rail-pad);text-align:left;background:transparent;border:none;
+  border-left:var(--rail-bar) solid transparent;color:#fff;font:inherit;font-size:12px;
+  cursor:pointer;opacity:.95}
 .ssNavItem:hover{background:rgba(255,255,255,.16);opacity:1}
-.ssNavItem.on{background:var(--accent-dark);border-left-color:#fff;font-weight:600;opacity:1}
-.ssNavIco{width:16px;flex:0 0 16px;text-align:center;font-size:12px;line-height:1}
+.ssNavItem.on{background:rgba(255,255,255,.18);border-left-color:#fff;font-weight:600;opacity:1}
 .ssRailFoot{border-top:1px solid rgba(255,255,255,.25);padding:8px 0 0;margin:0 10px}
 .ssAccount{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;
   border:none;border-radius:2px;color:#fff;font:inherit;padding:5px 4px;cursor:pointer}
@@ -521,13 +674,8 @@ body.start-open #authDialog,body.start-open #authLock{z-index:9100}
 .ssClose{font-size:18px;line-height:1;padding:2px 8px;color:var(--xl-text-2)}
 .ssClose:hover{color:var(--xl-text)}
 
-/* Recent / Favorites tabs */
-.ssTabs{display:flex;gap:2px;border-bottom:1px solid var(--xl-line);margin-bottom:8px}
-.ssTab{appearance:none;border:0;background:transparent;padding:7px 12px;font-size:12.5px;
-  font-weight:600;color:var(--xl-text-2);cursor:pointer;border-bottom:2px solid transparent;
-  margin-bottom:-1px}
-.ssTab:hover{background:var(--xl-hover)}
-.ssTab.on{color:var(--accent);border-bottom-color:var(--accent)}
+/* The start screen is navigated from the left rail, as in Excel, so the panes
+   sit directly under the heading with no duplicate tab strip above them. */
 .ssPane{min-height:70px}
 .ssEmpty{margin:16px 0;text-align:center;color:var(--xl-text-2);font-size:12.5px}
 /* flat list rows, like Excel's workbook list */
@@ -571,7 +719,7 @@ body[data-theme='dark'] .ssSub,body[data-theme='dark'] .ssItemTime,
 body[data-theme='dark'] .ssEmpty,body[data-theme='dark'] .ssTplDesc{color:#b9b9b9}
 body[data-theme='dark'] .ssSearch,body[data-theme='dark'] .ssTpl{background:#2b2b2b;border-color:#555;color:#e8e8e8}
 body[data-theme='dark'] .ssItemName,body[data-theme='dark'] .ssSectionTitle{color:#e8e8e8}
-body[data-theme='dark'] .ssItem,body[data-theme='dark'] .ssTabs{border-color:#444}
+body[data-theme='dark'] .ssItem{border-color:#444}
 body[data-theme='dark'] .ssItem:hover,body[data-theme='dark'] .ssTab:hover{background:#333}
 body[data-theme='dark'] .ssTab.on{color:#4cc38a;border-bottom-color:#4cc38a}
 body[data-theme='dark'] .ssTplPrev{background:linear-gradient(180deg,#3d5c4a 0 12px,#2b2b2b 12px 100%)}

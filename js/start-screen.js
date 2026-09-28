@@ -268,13 +268,9 @@ const StartScreen=(function(){
     }).join('');
   }
 
-  /* Mirror the active tab onto both the tab strip and the left rail. */
+  /* Mirror the active tab onto the left rail. Excel's start screen is navigated
+     from that rail alone, so it is the only place the active section is shown. */
   function render(){
-    Array.prototype.forEach.call(document.querySelectorAll('.ssTab'),function(b){
-      const on=b.dataset.ssTab===activeTab;
-      b.classList.toggle('on',on);
-      b.setAttribute('aria-selected',on?'true':'false');
-    });
     Array.prototype.forEach.call(document.querySelectorAll('.ssNavItem[data-ss-tab]'),function(b){
       b.classList.toggle('on',b.dataset.ssTab===activeTab);
     });

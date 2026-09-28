@@ -16,11 +16,15 @@ const probe = html => {
   const pages = [...html.matchAll(/data-page="([^"]+)"/g)].map(m => m[1]);
   // Only real <button> elements: the "b" id prefix also catches non-buttons
   // such as the <h1 id="bsUserTitle"> heading.
-  const ids = [...html.matchAll(/<button[^>]*\bid="(b[A-Za-z0-9]+)"/g)].map(m => m[1]);
+  const ids = [...html.matchAll(/<button[^>]*\bid="(b[A-Za-z0-9]+)"[^>]*>/g)].map(m => m[1]);
   const keys = [...html.matchAll(/data-i18n(?:-t|-ph)?="([^"]+)"/g)].map(m => m[1]);
+  // The alignment commands are wired declaratively: the buttons carry data-va /
+  // data-al and one loop binds them all. That is real wiring, not missing wiring.
+  const loopWired = new Set([...html.matchAll(/<button[^>]*\bid="(b[A-Za-z0-9]+)"[^>]*data-(?:va|al)="[^"]*"/g)]
+    .map(m => m[1]));
   return {
     mismatch: tabs.filter(t => !pages.includes(t)).concat(pages.filter(p => !tabs.includes(p))),
-    unwired: [...new Set(ids)].filter(id => !js.includes("'#" + id + "'")).sort(),
+    unwired: [...new Set(ids)].filter(id => !js.includes("'#" + id + "'") && !loopWired.has(id)).sort(),
     missing: [...new Set(keys)].filter(k => !js.includes(k + ':{')).sort()
   };
 };

@@ -1,4 +1,7 @@
-const CACHE_NAME = 'excel-pro-v1';
+/* Bumped whenever the app shell (index.html / css) changes, so returning web users
+   get the new ribbon on their next load instead of the stale cached copy. The
+   activate handler below drops the previous version. */
+const CACHE_NAME = 'excel-pro-v10';
 
 /* Same-origin files the app needs to boot offline. Kept in sync with the
    <link>/<script> tags in index.html. */
@@ -71,19 +74,24 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  /* Everything else: cache-first (stale-while-revalidate) for instant loads. */
+  /* App-shell assets (js/, css/): network-first, with the cache as the offline
+     fallback only.
+
+     This was cache-first with background revalidation, which meant a user could
+     run a whole session on the *previous* build of script.js / styles.css: the
+     revalidation only reached them on the next load. A stale ribbon, or a stale
+     popup close handler, is exactly the class of bug this file exists to
+     prevent - so freshness wins over the instant repeat load, which costs
+     nothing for a locally served app anyway. */
   event.respondWith(
-    caches.match(req).then(cached => {
-      const fromNetwork = fetch(req)
-        .then(res => {
-          if (isCacheable(res)) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || fromNetwork;
-    })
+    fetch(req)
+      .then(res => {
+        if (isCacheable(res)) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(req).then(cached => cached || caches.match('./index.html')))
   );
 });

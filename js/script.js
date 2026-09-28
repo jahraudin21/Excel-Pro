@@ -25,9 +25,9 @@ let LANG='en';
 const LSKLANG='mini-excel-lang';
 const STR={
  title:{np:'मिनी Excel — Spreadsheet',hi:'मिनी Excel — Spreadsheet',en:'Mini Excel — Spreadsheet'},
- new:{np:'🆕 नयाँ फाइल',hi:'🆕 नई फ़ाइल',en:'🆕 New File'},
- imp:{np:'📂 CSV इम्पोर्ट',hi:'📂 CSV इम्पोर्ट',en:'📂 CSV Import'},
- exp:{np:'💾 CSV एक्सपोर्ट',hi:'💾 CSV एक्सपोर्ट',en:'💾 CSV Export'},
+ new:{np:'नयाँ फाइल',hi:'नई फ़ाइल',en:'New File'},
+ imp:{np:'CSV इम्पोर्ट',hi:'CSV इम्पोर्ट',en:'CSV Import'},
+ exp:{np:'CSV एक्सपोर्ट',hi:'CSV एक्सपोर्ट',en:'CSV Export'},
  autosave:{np:'स्वतः browser मा save हुन्छ',hi:'अपने आप browser में save होता है',en:'Auto-saves in your browser'},
  fxph:{np:'यहाँ value वा =formula लेख्नुहोस् (जस्तै =SUM(B2:B6))',hi:'यहाँ value या =formula लिखें (जैसे =SUM(B2:B6))',en:'Type a value or =formula (e.g. =SUM(B2:B6))'},
  nf_gen:{np:'साधारण',hi:'सामान्य',en:'General'},
@@ -44,26 +44,26 @@ const STR={
  sheetName:{np:'Sheet को नाम:',hi:'Sheet का नाम:',en:'Sheet name:'},
  delSheet:{np:'यो sheet मेट्ने?',hi:'यह sheet हटाएँ?',en:'Delete this sheet?'},
  addSheet:{np:'नयाँ Sheet',hi:'नई Sheet',en:'New Sheet'},
- aiTitle:{np:'🤖 AI सहायक',hi:'🤖 AI सहायक',en:'🤖 AI Assistant'},
+ aiTitle:{np:'AI सहायक',hi:'AI सहायक',en:'AI Assistant'},
  aiPh:{np:'कमाण्ड लेख्नुहोस्… (जस्तै: B8 मा =SUM(B2:B6) राख्नुहोस्)',hi:'कमांड लिखें… (जैसे: B8 में =SUM(B2:B6) डालो)',en:'Type a command… (e.g. put =SUM(B2:B6) in B8)'},
  aiWelcome:{np:'नमस्ते! म AI सहायक हुँ। लेख्नुहोस् जस्तै: "B8 मा =SUM(B2:B6) राख्नुहोस्", "B2:B6 लाई गुणा 2 गर्नुहोस्", "A2:B6 लाई bold गर्नुहोस्", "A वर्पी sort गर्नुहोस्", "clear B2:B6"',hi:'नमस्ते! मैं AI सहायक हूँ। लिखें जैसे: "B8 में =SUM(B2:B6) डालो", "B2:B6 को 2 से multiply करो", "A2:B6 को bold करो", "A column से sort करो", "clear B2:B6"',en:'Hi! I am your AI assistant. Try: "put =SUM(B2:B6) in B8", "multiply B2:B6 by 2", "bold A2:B6", "sort by column A", "clear B2:B6"'},
- aiDone:{np:'✅ हो गयो!',hi:'✅ हो गया!',en:'✅ Done!'},
+ aiDone:{np:'हो गयो!',hi:'हो गया!',en:'Done!'},
  aiNoCmd:{np:'मैले यो कमाण्ड बुझिनँ। कृपया अर्को तरिकाले लेख्नुहोस्।',hi:'मैं यह कमांड समझ नहीं पाया। कृपया किसी और तरह लिखें।',en:'I did not understand that command. Please try rephrasing it.'},
  aiMic:{np:'\u092c\u094b\u0932\u0915\u0930 \u0915\u092e\u093e\u0902\u0921 \u0926\u0947\u0902',hi:'\u092c\u094b\u0932\u0915\u0930 \u0915\u092e\u093e\u0902\u0921 \u0926\u0947\u0902',en:'Speak a command'},
- voiceUnavailable:{np:'\u092f\u0938 \u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930\u092e\u093e \u0935\u094b\u0907\u0938 \u0915\u092e\u093e\u0928\u094d\u0921 \u0938\u092e\u0930\u094d\u0925\u0928 \u091b\u0948\u0928।',hi:'\u0907\u0938 \u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930 \u092e\u0947\u0902 वॉइस कमांड समर्थित नहीं है।',en:'Voice commands are not supported in this browser.'},
- voiceError:{np:'\u0935\u094b\u0907\u0938 \u092a\u0939\u093f\u091a\u093e\u0928 \u0935\u093f\u092b\u0932 भयो',hi:'वॉइस पहचान विफल रही',en:'Voice recognition failed'},
+ voiceUnavailable:{np:'\u092f\u0938 \u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930\u092e\u093e \u0935\u094b\u0907\u0938 \u0915\u092e\u093e\u0928\u094d\u0921 \u0938\u092e\u0930\u094d\u0925\u0928 \u091b\u0948\u0928।',hi:'\u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930 \u092e\u0947\u0902 वॉइस कमांड समर्थित नहीं है।',en:'Voice commands are not supported in this browser.'},
+ voiceError:{np:'\u094b\u0907\u0938 \u092a\u0939\u093f\u091a\u093e\u0928 \u0935\u093f\u092b\u0932 भयो',hi:'वॉइस पहचान विफल रही',en:'Voice recognition failed'},
  agentTask:{np:'\u090f\u091c\u0947\u0928\u094d\u091f \u0915\u093e\u092e \u091a\u0932\u093e \u0930\u0939\u093e \u0939\u0942\u0901',hi:'\u090f\u091c\u0947\u0902\u091f \u0915\u093e\u092e \u091a\u0932\u093e \u0930\u0939\u093e \u0939\u0942\u0901',en:'Agent executing task'},
- fileNew:{np:'\u{1F195} \u0928\u0908 \u092b\u093c\u093e\u0907\u0932',hi:'\u{1F195} \u0928\u0908 \u092b\u093c\u093e\u0907\u0932',en:'\u{1F195} New File'},
- fileOpen:{np:'\u{1F4C2} \u0916\u094b\u0932\u0947\u0902 (CSV)',hi:'\u{1F4C2} \u0916\u094b\u0932\u0947\u0902 (CSV)',en:'\u{1F4C2} Open (CSV)'},
- fileSaveAs:{np:'\u0938\u0947\u0935 \u0915\u0930\u0947\u0902',hi:'\u0938\u0947\u0935 \u0915\u0930\u0947\u0902',en:'Save As'},
- fileSaveBrowser:{np:'\u{1F4BE} \u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930 \u092e\u0947\u0902 \u0938\u0947\u0935',hi:'\u{1F4BE} \u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930 \u092e\u0947\u0902 \u0938\u0947\u0935',en:'\u{1F4BE} Save (browser)'},
- fileSaved:{np:'\u2705 \u0938\u0947\u0935 \u0939\u094b \u0917\u092f\u093e',hi:'\u2705 \u0938\u0947\u0935 \u0939\u094b \u0917\u092f\u093e',en:'\u2705 Saved'},
- aiErr:{np:'⚠️ त्रुटि:',hi:'⚠️ त्रुटि:',en:'⚠️ Error:'},
- bChart:{np:'📊 चार्ट',hi:'📊 चार्ट',en:'📊 Chart'},
- bFind:{np:'🔍 खोजें',hi:'🔍 खोजें',en:'🔍 Find'},
- bPrint:{np:'🖨 प्रिंट',hi:'🖨 प्रिंट',en:'🖨 Print'},
- bXlsx:{np:'📥 Excel (.xlsx)',hi:'📥 Excel (.xlsx)',en:'📥 Excel (.xlsx)'},
- bAllCsv:{np:'📦 सबै CSV',hi:'📦 सभी CSV',en:'📦 All CSV (zip)'},
+ fileNew:{np:'\u0928\u0908 \u092b\u093c\u093e\u0907\u0932',hi:'\u0928\u0908 \u092b\u093c\u093e\u0907\u0932',en:'New File'},
+ fileOpen:{np:'\u0916\u094b\u0932\u0947\u0902 (CSV)',hi:'\u0916\u094b\u0932\u0947\u0902 (CSV)',en:'Open (CSV)'},
+ fileSaveAs:{np:'\u0915\u0930\u0947\u0902',hi:'\u0915\u0930\u0947\u0902',en:'Save As'},
+ fileSaveBrowser:{np:'\u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930 \u092e\u0947\u0902 \u0938\u0947\u0935',hi:'\u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930 \u092e\u0947\u0902 \u0938\u0947\u0935',en:'Save (browser)'},
+ fileSaved:{np:'\u0938\u0947\u0935 \u0939\u094b \u0917\u092f\u093e',hi:'\u0938\u0947\u0935 \u0939\u094b \u0917\u092f\u093e',en:'Saved'},
+ aiErr:{np:'त्रुटि:',hi:'त्रुटि:',en:'Error:'},
+ bChart:{np:'चार्ट',hi:'चार्ट',en:'Chart'},
+ bFind:{np:'खोजें',hi:'खोजें',en:'Find'},
+ bPrint:{np:'प्रिंट',hi:'प्रिंट',en:'Print'},
+ bXlsx:{np:'Excel (.xlsx)',hi:'Excel (.xlsx)',en:'Excel (.xlsx)'},
+ bAllCsv:{np:'सबै CSV',hi:'सभी CSV',en:'All CSV (zip)'},
  findPh:{np:'के खोज्नुहोस्…',hi:'क्या खोजें…',en:'Find what…'},
  replPh:{np:'कसरी बदल्ने…',hi:'किसमें बदलें…',en:'Replace with…'},
  fNext:{np:'अर्को',hi:'अगला',en:'Next'},
@@ -331,6 +331,35 @@ const STR={
  paSet:{np:'छानिएकोबाट सेट',hi:'चयन से सेट करें',en:'Set from selection'},
  paClear:{np:'प्रिन्ट क्षेत्र हटाउनु',hi:'प्रिंट क्षेत्र हटाएँ',en:'Clear Print Area'},
  bBreaks:{np:'ब्रेक',hi:'ब्रेक',en:'Breaks'},
+ /* ---- Excel parity: the groups this build added or re-homed ---- */
+ gInsert:{np:'इन्सर्ट',hi:'इन्सर्ट',en:'Insert'},
+ bDTText:{np:'टेक्स्ट बक्स',hi:'टेक्स्ट बॉक्स',en:'Text Box'},
+ bDTPic:{np:'तस्बिर',hi:'तस्वीरें',en:'Pictures'},
+ bDTShapes:{np:'आकार',hi:'आकार',en:'Shapes'},
+ gPageBreaks:{np:'पेज ब्रेक',hi:'पेज ब्रेक',en:'Page Breaks'},
+ gCalcOpt:{np:'गणना विकल्प',hi:'गणना विकल्प',en:'Calculation Options'},
+ bCalcMode:{np:'गणना विकल्प',hi:'गणना विकल्प',en:'Calc Options'},
+  bTracePre:{np:'पूर्ववर्ती',hi:'पूर्ववर्ती',en:'Precedents'},
+  bShowFormulas:{np:'सूत्र',hi:'सूत्र',en:'Formulas'},
+  orientAngle:{np:'कोण',hi:'कोण',en:'Angle'},
+  orientUp:{np:'क्षैतिज',hi:'क्षैतिज',en:'Horizontal'},
+  orientClear:{np:'कोण हटाएँ',hi:'कोण हटाएँ',en:'Clear angle'},
+ calcAuto:{np:'स्वचालित',hi:'स्वचालित',en:'Automatic'},
+ calcManual:{np:'मैन्युअल',hi:'मैन्युअल',en:'Manual'},
+ calcNow:{np:'अहिले पुनः गणना गर्नुहोस्',hi:'अभी पुनर्गणना करें',en:'Calculate Now'},
+ gNames:{np:'परिभाषित नाम',hi:'परिभाषित नाम',en:'Defined Names'},
+ bNameGo:{np:'जाउनुहोस्',hi:'जाएँ',en:'Go To'},
+ gDataTypes:{np:'डेटा प्रकार',hi:'डेटा प्रकार',en:'Data Types'},
+ bDtNum:{np:'नम्बर निकाल्नुहोस्',hi:'नंबर निकालें',en:'Extract Number'},
+ bDtText:{np:'पाठ निकाल्नुहोस्',hi:'पाठ निकालें',en:'Extract Text'},
+ bDtNeedRange:{np:'कृपया बढी भन्दा एउटा सेल छान्नुहोस्।',hi:'कृपया एक से अधिक सेल चुनें।',en:'Select more than one cell first.'},
+ gA11y:{np:'पहुँचयोग्यता',hi:'सुगम्यता',en:'Accessibility'},
+ bA11y:{np:'पहुँचयोग्यता',hi:'सुगम्यता',en:'Accessibility'},
+ gLang:{np:'भाषाहरू',hi:'भाषाएँ',en:'Languages'},
+ bLang:{np:'भाषा',hi:'भाषा',en:'Language'},
+ gShare:{np:'साझा',hi:'साझा करें',en:'Share'},
+ bShareCopy:{np:'लिंक प्रतिलिपि',hi:'लिंक कॉपी करें',en:'Copy Link'},
+ bShareMail:{np:'इमेल',hi:'ईमेल',en:'Email'},
  brkInsert:{np:'पेज ब्रेक घुसाउनु',hi:'पेज ब्रेक डालें',en:'Insert Page Break'},
  brkRemove:{np:'यो ब्रेक हटाउनु',hi:'यह ब्रेक हटाएँ',en:'Remove Page Break here'},
  brkReset:{np:'सबै ब्रेक रिसेट',hi:'सभी ब्रेक रीसेट',en:'Reset All Page Breaks'},
@@ -404,12 +433,12 @@ const STR={
  bsDriveHint:{np:'Google खाता जोड्नुहोस्',hi:'Google खाता जोड़ें',en:'Connect a Google account'},
  bsStoragePref:{np:'स्टोरेज',hi:'स्टोरेज',en:'Storage'},
  bsNoRecentBs:{np:'अहिलेसम्म कुनै फाइल खोलिएको छैन।',hi:'अभी तक कोई फ़ाइल नहीं खोली गई।',en:'No recent workbooks yet.'},
- bsInfo:{np:'ℹ️ जानकारी',hi:'ℹ️ जानकारी',en:'ℹ️ Info'},
- bsNew:{np:'🆕 नयाँ',hi:'🆕 नई',en:'🆕 New'},
- bsOpen:{np:'📂 खोल्नुहोस्',hi:'📂 खोलें',en:'📂 Open'},
- bsSave:{np:'💾 सेभ',hi:'💾 सेव',en:'💾 Save'},
- bsExport:{np:'⬇ निर्यात',hi:'⬇ निर्यात',en:'⬇ Export'},
- bsPrintPage:{np:'🖨 प्रिन्ट',hi:'🖨 प्रिंट',en:'🖨 Print'},
+ bsInfo:{np:'जानकारी',hi:'जानकारी',en:'Info'},
+ bsNew:{np:'नयाँ',hi:'नई',en:'New'},
+ bsOpen:{np:'खोल्नुहोस्',hi:'खोलें',en:'Open'},
+ bsSave:{np:'सेभ',hi:'सेव',en:'Save'},
+ bsExport:{np:'निर्यात',hi:'निर्यात',en:'Export'},
+ bsPrintPage:{np:'प्रिन्ट',hi:'प्रिंट',en:'Print'},
  bsWorkbook:{np:'कार्यपुस्तिका',hi:'वर्कबुक',en:'Workbook'},
  bsSaveBrowser:{np:'ब्राउज़रमा सेभ',hi:'ब्राउज़र में सेव',en:'Save in browser'},
  bsSavedHint:{np:'स्वतः browser मा save हुन्छ',hi:'अपने आप browser में save होता है',en:'Auto-saves in your browser'},
@@ -430,7 +459,7 @@ const STR={
  bsSaveTitle:{np:'सेभ',hi:'सेव',en:'Save'},
  bsSaveHint2:{np:'यो browser मा स्थानीय रूपमा भण्डारण',hi:'इस browser में स्थानीय रूप से संग्रहीत',en:'Stored locally in this browser'},
  bsExportTitle:{np:'निर्यात',hi:'निर्यात',en:'Export'},
- bPgSetup:{np:'⚙️ पृष्ठ सेटअप',hi:'⚙️ पेज सेटअप',en:'⚙️ Page Setup'},
+ bPgSetup:{np:'पृष्ठ सेटअप',hi:'पेज सेटअप',en:'Page Setup'},
 };
 function T(k){const v=STR[k];return v?(v[LANG]||v.en):k;}
 function applyLang(l){
@@ -680,12 +709,21 @@ function paint(td){const ref=td.dataset.ref;const v=vals[ref];const s=styleOf(re
  if(ref===active)cls+=' act';
  if(s.note&&wb.showNotes!==false){cls+=' noted';td.title=s.note.length>60?s.note.slice(0,60)+'…':s.note;}
  else if(td.hasAttribute&&td.hasAttribute('title'))td.removeAttribute('title');
+ if(wb.trace&&wb.trace.refs.indexOf(ref)>=0)cls+=' traced';
  td.className=cls.trim();
- td.textContent=dispVal(ref);
+ /* Show Formulas displays the formula text in place of the result. */
+ const raw=sheet().cells[ref]&&sheet().cells[ref].raw;
+ td.textContent=wb.showFormulas&&typeof raw==='string'&&raw[0]==='='?raw:dispVal(ref);
  td.style.color=(cond.color||s.color)||'';td.style.background=(cond.bg||s.bg)||'';
  td.style.fontWeight=(cond.b||s.b)?'700':'';td.style.fontStyle=s.i?'italic':'';
  td.style.textDecoration=(s.u&&s.st)?'underline line-through':(s.u?'underline':(s.st?'line-through':''));
- td.style.fontFamily=s.ff||'';td.style.fontSize=(s.fs||13)+'px';
+ /* Font sizes are stored in points, the way Excel stores them, and converted to
+    pixels for the DOM. A cell with no size of its own inherits the grid's default
+    rather than being pinned here, so "clear formatting" restores Calibri 11pt. */
+ td.style.fontFamily=s.ff||'';td.style.fontSize=s.fs?(s.fs*PT).toFixed(2)+'px':'';
+ /* Indent is 3 characters per step, as in Excel; rotation spins the text in the cell. */
+ td.style.paddingLeft=s.indent?(Number(s.indent)*3+1)+'ch':'';
+ td.style.transform=s.rot?'rotate('+Number(s.rot)+'deg)':'';
  const bc=borderCss(s.border);
  td.style.borderTop=bc.borderTop||'';td.style.borderRight=bc.borderRight||'';
  td.style.borderBottom=bc.borderBottom||'';td.style.borderLeft=bc.borderLeft||'';}
@@ -1090,11 +1128,76 @@ function accentMenu(anchor){
  items.push(null,{label:T('thmReset')+' — '+T('bAccent'),action:()=>{applyAccent('#217346');setStatusMode(T('thmReset'));}});
  popMenu(anchor,items);}
 
+/* ---------- ribbon overflow: Excel's responsive affordance ---------- */
+/* The command area scrolls, but its scrollbar is hidden to match Excel, so the
+   chevron pair is the only way to reach commands that fall off a narrow window.
+   It appears only when there is genuinely something hidden, and each button
+   greys out once it reaches its end of the range. */
+function syncRibbonOverflow(){
+ const body=$('.rbody');if(!body)return;
+ const over=body.scrollWidth>body.clientWidth+1;
+ document.body.toggleAttribute('data-rboverflow',over);
+ const prev=$('#rbPrev'),next=$('#rbNext');
+ if(!prev||!next)return;
+ prev.disabled=!over||body.scrollLeft<=1;
+ next.disabled=!over||body.scrollLeft>=body.scrollWidth-body.clientWidth-1;}
+function stepRibbon(dir){const body=$('.rbody');if(!body)return;
+ /* A discrete step, like Excel's chevron: no animation, and clamped to the
+    scroll range so a click at either end cannot leave the area half moved. */
+ const max=Math.max(0,body.scrollWidth-body.clientWidth);
+ const step=Math.max(160,Math.round(body.clientWidth*0.4));
+ body.scrollLeft=Math.max(0,Math.min(max,body.scrollLeft+dir*step));
+ syncRibbonOverflow();}
+function initRibbonOverflow(){
+ const prev=$('#rbPrev'),next=$('#rbNext');
+ if(prev)prev.onclick=()=>stepRibbon(-1);
+ if(next)next.onclick=()=>stepRibbon(1);
+ addEventListener('resize',syncRibbonOverflow);
+ const body=$('.rbody');
+ if(body)body.addEventListener('scroll',syncRibbonOverflow,{passive:true});
+ /* Re-measure whenever the tab changes, since each page is a different width. */
+ document.addEventListener('click',e=>{if(e.target.closest('.rtab'))setTimeout(syncRibbonOverflow,30);},true);
+ syncRibbonOverflow();}
+
 function applyStyle(patch,rangeStr){snapshot();const q=rangeStr?rangeFromStr(rangeStr):rect();
  for(let r=q.r1;r<=q.r2;r++)for(let c=q.c1;c<=q.c2;c++){
   const ref=refOf(r,c);const cel=sheet().cells[ref]||{};
   cel.s=Object.assign({},cel.s||{},patch);sheet().cells[ref]=cel;}
- saveLS();renderAll();}
+ saveLS();renderAll();syncRibbon();}
+
+/* ---------- Formula Auditing: trace precedents / dependents ---------- */
+/* Reads the A1-style references out of a formula, expanding ranges. Text inside
+   quoted string literals is skipped, so =CONCAT("A1") traces nothing. */
+function refsInFormula(text){
+  const src=String(text).replace(/"[^"]*"/g,'""');const out=[];const re=/\$?[A-Z]{1,3}\$?\d+(?::\$?[A-Z]{1,3}\$?\d+)?/g;
+  let m;while((m=re.exec(src))){
+   const a=m[0].replace(/\$/g,'');const parts=a.split(':');
+   if(parts.length<2){out.push(a);continue;}
+   const p=refToRC(parts[0]),q=refToRC(parts[1]);
+   const r1=Math.min(p.r,q.r),r2=Math.max(p.r,q.r),c1=Math.min(p.c,q.c),c2=Math.max(p.c,q.c);
+   if((r2-r1+1)*(c2-c1+1)>2000)continue;          /* refuse to outline a whole sheet */
+   for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)out.push(refOf(r,c));}
+  return out;}
+function setTrace(refs){wb.trace=refs.length?{refs:refs}:undefined;renderAll();syncRibbon();}
+function tracePrecedents(){const c=cell(active);
+ if(!c||typeof c.raw!=='string'||c.raw[0]!=='='){setTrace([]);return;}
+ setTrace(refsInFormula(c.raw));}
+function traceDependents(){const out=[];const cs=sheet().cells;
+ for(const ref in cs){const c=cs[ref];
+  if(c&&typeof c.raw==='string'&&c.raw[0]==='='&&refsInFormula(c.raw).indexOf(active)>=0)out.push(ref);}
+ setTrace(out);}
+function removeTraces(){wb.trace=undefined;renderAll();syncRibbon();}
+function toggleShowFormulas(){wb.showFormulas=!wb.showFormulas;saveLS();renderAll();syncRibbon();}
+/* ---------- Alignment: indent and text orientation ---------- */
+function bumpIndent(dir){const q=rect();const cur=Number(styleOf(refOf(q.r1,q.c1)).indent)||0;
+ applyStyle({indent:Math.max(0,cur+dir)});}
+function angleMenu(anchor){const cur=Number(styleOf(active).rot)||0;
+ const mark=v=>v===cur?'\u2714 ':'';
+ popMenu(anchor,[
+  {head:T('orientAngle')},
+  ...[0,45,-45,90,-90].map(v=>({label:mark(v)+(v===0?T('orientUp'):v+'\u00b0'),action:()=>applyStyle({rot:v})})),
+  null,
+  {label:mark(0)+T('orientClear'),action:()=>applyStyle({rot:0})}]);}
 function undo(){if(!hist.length)return;fut.push(JSON.stringify(sheet().cells));sheet().cells=JSON.parse(hist.pop());renderAll();renderTabs();}
 function redo(){if(!fut.length)return;hist.push(JSON.stringify(sheet().cells));sheet().cells=JSON.parse(fut.pop());renderAll();renderTabs();}
 function moveSheet(i,dir){const j=i+dir;if(j<0||j>=wb.sheets.length)return;
@@ -1248,9 +1351,8 @@ function openCtx(e,ref){const menu=$('#ctxMenu');const p=refToRC(ref);menu.inner
  ].forEach(it=>{if(!it){menu.appendChild(document.createElement('hr'));return;}
   const d=document.createElement('div');d.textContent=it[0];
   d.onclick=()=>{menu.classList.remove('open');it[1]();};menu.appendChild(d);});
- menu.style.left=Math.min(e.clientX,window.innerWidth-200)+'px';
- menu.style.top=Math.min(e.clientY,window.innerHeight-230)+'px';
- menu.classList.add('open');
+  menu.classList.add('open');
+  placeFloating(menu,null,{point:{x:e.clientX,y:e.clientY}});
  active=ref;selA=selB=ref;renderAll();}
 
 function findNext(needle){if(!needle){$('#fStat').textContent=T('fType');return;}
@@ -1596,6 +1698,44 @@ function autoSumMenu(anchor){popMenu(anchor,['SUM','AVERAGE','COUNT','MIN','MAX'
   setRawNoSnap(r.target,'='+fn+'('+r.rng+')');renderAll();}})));}
 const FNTS=['Calibri','Arial','Times New Roman','Segoe UI','Tahoma','Verdana','Courier New','Georgia','Trebuchet MS','Impact','Comic Sans MS'];
 const FSZ=[8,9,10,11,12,14,16,18,20,24,28,32,36,48];
+/* Points -> CSS pixels at 96 DPI, and Excel's own default workbook size (11pt). */
+const PT=96/72,FS_DEFAULT=11;
+/* ---------- floating menu placement ----------
+   One rule for every menu in the app. Measure the real box, keep it inside the
+   window with a single gutter, and flip it to the other side of the anchor when
+   there is no room. Re-placed on resize so an open menu cannot be left stranded
+   off-screen. This replaces two hand-rolled positioners: popMenu clamped with
+   mismatched 4px/6px margins, and openCtx guessed the menu's size from
+   innerWidth-200 / innerHeight-230, which pushed it off a short window. */
+const POP_EDGE=8;
+function placeFloating(el,anchor,opts){
+ opts=opts||{};
+ if(!el)return;
+ /* Measure with the menu visible, otherwise offsetWidth is 0. */
+ el.classList.add('open');
+ const w=el.offsetWidth,h=el.offsetHeight,vw=document.documentElement.clientWidth,
+  vh=document.documentElement.clientHeight;
+ let x,y;
+ if(opts.point){x=opts.point.x;y=opts.point.y;}
+ else if(anchor&&anchor.getBoundingClientRect){
+  const r=anchor.getBoundingClientRect();
+  x=opts.align==='right'?r.right-w:r.left;
+  y=r.bottom+2;}
+ else {x=opts.x||POP_EDGE;y=opts.y||POP_EDGE;}
+ /* Flip to the other side rather than squeezing against the edge. */
+ if(!opts.point&&anchor&&anchor.getBoundingClientRect){
+  const r=anchor.getBoundingClientRect();
+  if(x+w>vw-POP_EDGE&&r.left-w>=POP_EDGE)x=r.left-w;
+  if(y+h>vh-POP_EDGE&&r.top-h>=POP_EDGE)y=r.top-h;}
+ x=Math.max(POP_EDGE,Math.min(x,vw-w-POP_EDGE));
+ y=Math.max(POP_EDGE,Math.min(y,vh-h-POP_EDGE));
+ el.style.left=Math.round(x)+'px';
+ el.style.top=Math.round(y)+'px';
+ if(!el.__repositionBound){
+  el.__repositionBound=true;
+  addEventListener('resize',()=>{if(el.classList.contains('open'))
+   placeFloating(el,anchor,Object.assign({},opts,{_keep:true}));});}}
+
 function popMenu(anchor,items){const m=$('#popMenu');if(!m)return;m.innerHTML='';
  items.forEach(it=>{
   if(!it){m.appendChild(document.createElement('hr'));return;}
@@ -1604,11 +1744,8 @@ function popMenu(anchor,items){const m=$('#popMenu');if(!m)return;m.innerHTML=''
   if(it.on)d.style.fontWeight='700';
   d.onclick=()=>{m.classList.remove('open');try{if(it.action)it.action();}catch(e){}};
   m.appendChild(d);});
- m.classList.add('open');
- if(anchor&&anchor.getBoundingClientRect){const r=anchor.getBoundingClientRect();
-  const w=m.offsetWidth||200,h=m.offsetHeight||200;
-  m.style.left=Math.max(4,Math.min(r.left,window.innerWidth-w-6))+'px';
-  m.style.top=Math.max(4,Math.min(r.bottom+2,window.innerHeight-h-6))+'px';}}
+  m.classList.add('open');
+  placeFloating(m,anchor);}
 function closeMenus(){$('#popMenu').classList.remove('open');$('#ctxMenu').classList.remove('open');}
 
 /* ================= File backstage view (Excel-style full-page File menu) ================= */
@@ -1744,7 +1881,7 @@ function syncRibbon(){
  const ff=$('#fontFam');if(ff&&!ff.options.length)FNTS.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;ff.appendChild(o);});
  if(ff)ff.value=s.ff||'Calibri';
  const fs2=$('#fontSize');if(fs2&&!fs2.options.length)FSZ.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;fs2.appendChild(o);});
- if(fs2)fs2.value=String(s.fs||13);
+ if(fs2)fs2.value=String(s.fs||FS_DEFAULT);
  {
   const chk=(id,v)=>{const el=$(id);if(el)el.checked=!!v;};
   chk('#bPlGrid',wb.showGrid!==false);chk('#bPlGridP',wb.printGrid!==false);
@@ -1754,6 +1891,8 @@ function syncRibbon(){
  const po=$('#bOrientTxt');if(po)po.textContent=T((wb.pageSetup||{}).orientation==='landscape'?'orientL':'orientP');
  const pp=$('#bProtTxt');if(pp)pp.textContent=T(sheet().protect?'protOff':'protOn');
  document.querySelectorAll('[data-va]').forEach(b2=>b2.classList.toggle('on',s.va===b2.dataset.va));
+ document.querySelectorAll('[data-al]').forEach(b2=>b2.classList.toggle('on',s.al===b2.dataset.al));
+ t('#bShowFormulas',!!wb.showFormulas);
  t('#bVwN',(wb.view||'normal')==='normal');t('#bVwP',wb.view==='page');t('#bVwB',wb.view==='break');}
 function insertTotalRow(){const q=rect();snapshot();const cs=sheet().cells;
  let lastUsed=-1;
@@ -1936,7 +2075,7 @@ function applyBorderPatch(patch){const q=rect();snapshot();const cs=sheet().cell
   else if(cel.s){delete cel.s.border;if(!Object.keys(cel.s).length)delete cel.s;
    if(cel.raw==null)delete cs[ref];}}
  saveLS();renderAll();}
-function fontSizeOf(ref){const s=styleOf(ref);return s.fs||13;}
+function fontSizeOf(ref){const s=styleOf(ref);return s.fs||FS_DEFAULT;}
 function sizeStep(ref,dir){const cur=fontSizeOf(ref);
  const sizes=dir>0?FSZ.filter(x=>x>cur):FSZ.filter(x=>x<cur).reverse();
  return sizes.length?sizes[0]:cur;}
@@ -2116,6 +2255,12 @@ function initTabNav(){
 
 function initRibbon(){
   initTabNav();
+  initRibbonOverflow();
+  /* This function binds the Themes, Page Setup, Sheet Options, Scale to Fit and
+     the whole Page Setup dialog - including #psOk / #psCancel / #psClose - and it
+     was never called, so 17 controls on the Page Layout tab were dead. A few ids
+     are also bound above in initRibbon; re-assigning the same handler is a no-op. */
+  wirePageLayout();
   const hide=el=>{if(el)el.style.display='none';};
  hide($('#bXlsx'));hide($('#bAllCsv'));hide($('#bExport'));
 
@@ -2210,6 +2355,13 @@ function initRibbon(){
  tg('#bShowNotes',()=>{wb.showNotes=wb.showNotes===false?undefined:false;saveLS();renderAll();syncRibbon();});
  tg('#bProtect',toggleProtect);
  document.querySelectorAll('[data-va]').forEach(b=>{b.onclick=()=>applyStyle({va:b.dataset.va});});
+ tg('#bIndentInc',()=>bumpIndent(1));
+ tg('#bIndentDec',()=>bumpIndent(-1));
+ tg('#bOrientCell',e=>angleMenu(e.currentTarget));
+ tg('#bTracePre',tracePrecedents);
+ tg('#bTraceDep',traceDependents);
+ tg('#bTraceClear',removeTraces);
+ tg('#bShowFormulas',toggleShowFormulas);
  tg('#bAutoTotal',insertTotalRow);
  tg('#bVwN',()=>setViewMode('normal'));
  tg('#bVwP',()=>setViewMode('page'));
@@ -2226,6 +2378,36 @@ function initRibbon(){
   else aiMsg(T('explNone'),'bot');});
  tg('#bNameMgr',()=>nameMgrMenu($('#bNameMgr')));
  tg('#bCalcNow',()=>{renderAll();setStatusMode(T('sbSaved'));});
+ /* --- Formulas: calculation options + defined names --- */
+ tg('#bCalcMode',()=>popMenu($('#bCalcMode'),[
+  {label:T('calcAuto'),action:()=>{wb.calcMode='auto';saveLS();recalc();syncRibbon();setStatusMode(T('calcAuto'));}},
+  {label:T('calcManual'),action:()=>{wb.calcMode='manual';saveLS();syncRibbon();setStatusMode(T('calcManual'));}},
+  null,
+  {label:T('calcNow'),action:()=>{recalc();renderAll();setStatusMode(T('sbSaved'));}}]));
+ tg('#bNameGo',()=>{const names=wb.names||{},keys=Object.keys(names);
+  const items=[{head:T('gNames')}];
+  if(keys.length)keys.forEach(k=>items.push({label:k+'  →  '+names[k],action:()=>{nameMgrMenu($('#bNameMgr'));}}));
+  else items.push({head:T('namesHead')},{label:T('namesAdd')+'…',action:()=>nameMgrMenu($('#bNameMgr'))});
+  popMenu($('#bNameGo'),items);});
+ /* --- Data: data types (extract number / text from a selection) --- */
+ function extractType(anchor,mode){const q=rect();
+  if(!q||q.r1===q.r2&&q.c1===q.c2){popMenu(anchor,[{head:T('gDataTypes')},{label:T('bDtNeedRange'),action:()=>{}}]);return;}
+  let n=0;
+  for(let r=q.r1;r<=q.r2;r++)for(let c=q.c1;c<=q.c2;c++){
+   const ref=refOf(r,c),raw=String(dispVal(ref)||'');
+   if(!raw)continue;
+   const v=mode==='num'?raw.replace(/[^0-9.,\-]/g,''):raw.replace(/[0-9]/g,'');
+   if(v!==raw){setRaw(ref,v);n++;}}
+  saveLS();renderAll();syncRibbon();
+  setStatusMode(T(mode==='num'?'bDtNum':'bDtText')+': '+n);}
+ tg('#bDtNum',()=>extractType($('#bDtNum'),'num'));
+ tg('#bDtText',()=>extractType($('#bDtText'),'text'));
+ /* --- Review: languages --- */
+ tg('#bLang',()=>{const sel=document.getElementById('lang');
+  const items=[{head:T('gLang')}];
+  Array.prototype.forEach.call(sel?sel.options:[],function(o){
+   items.push({label:o.textContent,action:()=>{sel.value=o.value;applyLang(o.value);setStatusMode(T('gLang')+': '+o.textContent);}});});
+  popMenu($('#bLang'),items);});
  /* --- Draw tab --- */
  tg('#bInkDraw',()=>setDrawMode('draw'));
  tg('#bInkSelect',()=>setDrawMode(null));
@@ -2237,10 +2419,25 @@ function initRibbon(){
  tg('#bShArrow',()=>insertDrawing('arrow'));
  tg('#bShTri',()=>insertDrawing('triangle'));
  tg('#bShText',()=>insertDrawing('text'));
+ /* --- Draw ▸ Insert --- */
+ tg('#bDTText',()=>insertDrawing('text'));
+ tg('#bDTPic',openPic);
+ tg('#bDTShapes',()=>popMenu($('#bDTShapes'),[
+  {label:T('bShRect'),action:()=>insertDrawing('rect')},
+  {label:T('bShEllipse'),action:()=>insertDrawing('ellipse')},
+  {label:T('bShLine'),action:()=>insertDrawing('line')},
+  {label:T('bShArrow'),action:()=>insertDrawing('arrow')},
+  {label:T('bShTri'),action:()=>insertDrawing('triangle')}]));
  /* --- Help tab --- */
  tg('#bHelpOpen',()=>openHelp());
  tg('#bShortcuts',()=>openHelp());
  tg('#bFnRef',()=>popMenu($('#bFnRef'),fnItemList('all')));
+ /* --- Help ▸ Share --- */
+ tg('#bShareCopy',()=>{const clip=document.getElementById('clip');
+  const link=location.href.split('#')[0];
+  if(clip){clip.value=link;clip.select();try{document.execCommand('copy');}catch(e){}}
+  setStatusMode(T('bShareCopy')+': '+link);});
+ tg('#bShareMail',()=>{location.href='mailto:?subject='+encodeURIComponent(T('sbTitle')||'Mini Excel')+'&body='+encodeURIComponent(location.href);});
  tg('#bFeedback',()=>{const p=$('#aiPanel');if(p)p.classList.add('open');
   const i=$('#aiInput');if(i)i.focus();});
  tg('#bAbout',()=>popMenu($('#bAbout'),[
@@ -2269,7 +2466,7 @@ function initRibbon(){
   ['±','≈','≠','≤','≥','√','∑','∏','∫','∞','α','β','γ','π','Ω','Δ','θ','λ','μ','°','′','″','€','£','¥','₹','©','®','™','★','☆','♥','✓','✔','✗','→','←','↑','↓','⇒','⇔','•','§','¶','†','‡','‰'].map(s2=>({label:s2,action:()=>setRaw(active,(rawOf(active)||'')+s2)}))));
  const pvc=$('#pivotClose');if(pvc)pvc.onclick=()=>$('#pivotDlg').classList.remove('open');
  const rcc=$('#recClose');if(rcc)rcc.onclick=()=>$('#recDlg').classList.remove('open');
- const hpc=$('#helpClose');if(hpc)hpc.onclick=()=>$('#helpDlg').classList.remove('open');
+ const hpc=$('#helpClose');if(hpc)hpc.onclick=()=>{const d=$('#helpDlg');if(d)d.classList.remove('open');};
  const picc=$('#picClose');if(picc)picc.onclick=()=>$('#picDlg').classList.remove('open');
  /* --- Excel-mirroring additions: Home▸Cells Format, Data▸Get & Transform --- */
  tg('#bFormat',()=>popMenu($('#bFormat'),[
@@ -2683,7 +2880,7 @@ function openHelp(){const dlg=$('#helpDlg');if(!dlg)return;
 function applyThemeFont(f){const m=String(f||'').replace(/[^\w \-]/g,'').trim();
  if(!m){document.documentElement.style.removeProperty('--sheet-font');grid.style.fontFamily='';wb.sheetFont='';return;}
  grid.style.fontFamily=m;document.documentElement.style.setProperty('--sheet-font',m);}
-function themeFontMenu(anchor){const cur=wb.sheetFont||'Segoe UI';
+function themeFontMenu(anchor){const cur=wb.sheetFont||'Calibri';
  popMenu(anchor,[{head:T('bThemeFonts')}].concat(
   ['Segoe UI','Calibri','Arial','Tahoma','Verdana','Georgia','Times New Roman','Trebuchet MS','Consolas','Courier New'].map(f=>
    ({label:(f===cur?'✔ ':'')+f,action:()=>{wb.sheetFont=f;saveLS();applyThemeFont(f);setStatusMode(T('bThemeFonts')+': '+f);}})),

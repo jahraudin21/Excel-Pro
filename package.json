@@ -13,6 +13,7 @@
     "test:regression": "node _test_no_regression.mjs",
     "test:ribbon": "node _ribboncheck.mjs",
     "test:smoke": "electron _smoke.js",
+    "test:popups": "electron _test_popups.js",
     "test:auth": "python _test_entrypoint.py && python _test_live_server.py && python _test_prod_hardening.py && python _test_google_button.py"
   },
   "repository": {
