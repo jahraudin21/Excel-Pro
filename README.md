@@ -105,7 +105,19 @@ Set at minimum:
 AUTH_ENV=production
 AUTH_SECRET=<random>       # REQUIRED in production — see below
 AUTH_DB_PATH=<path to auth.db>
+OAUTH_REDIRECT_BASE=https://excel-pro-7n5l.onrender.com
 ```
+
+`OAUTH_REDIRECT_BASE` pins the public URL used to build OAuth callbacks. It
+matters on Render because TLS terminates at the proxy and gunicorn receives
+plain `http`, so without it the backend would send Google an `http://` redirect
+URI that is not on the allowlist. It is **required** in production — the app
+refuses to boot without a valid `https://` value, because deriving the callback
+from the request `Host` would let a caller decide where Google delivers the
+authorization code. Register the full callback path with each provider —
+`https://excel-pro-7n5l.onrender.com/auth/callback/google` — because Google
+compares redirect URIs literally; the bare origin is not sufficient. See
+[`auth_app/README.md`](auth_app/README.md) for the GitHub and Microsoft values.
 
 Generate a secret with:
 
@@ -119,6 +131,9 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
   placeholder value, the app refuses to boot. This secret signs *both* session
   cookies and license keys, so a publicly known value would make every session
   and licence forgeable.
+- **Fail-fast on a missing `OAUTH_REDIRECT_BASE`.** The public base URL for
+  OAuth callbacks must be stated explicitly and must be `https://`, so the
+  authorization code is never delivered to a host chosen by a caller.
 - **`Secure` cookies** (`mx-session` and the Flask flow cookie).
 - **HSTS** and a strict **Content-Security-Policy** (`script-src 'self'`;
   `https:` images are allowed because OAuth avatars are hosted by Google,

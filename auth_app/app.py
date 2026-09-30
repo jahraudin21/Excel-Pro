@@ -15,6 +15,8 @@ Run::
 Environment variables
 ---------------------
 ``AUTH_SECRET``             HMAC key for sessions + license signing
+``OAUTH_REDIRECT_BASE``     public base URL for OAuth callbacks (required in
+                            production, e.g. https://excel-pro-7n5l.onrender.com)
 ``GOOGLE_CLIENT_ID``        OAuth credentials (same pattern for GitHub/Microsoft)
 ``GOOGLE_CLIENT_SECRET``
 ``SMTP_HOST``               optional, enables real email delivery
@@ -33,6 +35,7 @@ from datetime import date, datetime, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
+from urllib.parse import urlsplit
 
 from flask import (
     Flask,
@@ -43,6 +46,7 @@ from flask import (
     send_from_directory,
     session,
 )
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -76,6 +80,25 @@ if not SECRET_KEY or SECRET_KEY == _PLACEHOLDER_SECRET:
         )
     SECRET_KEY = SECRET_KEY or _PLACEHOLDER_SECRET
 
+# The OAuth callback URI is matched literally by Google, so it must be stable
+# and known in advance. Deriving it from the request Host would let a caller
+# who controls that header choose where the authorization code is delivered,
+# so a production deployment has to state the public URL explicitly instead.
+OAUTH_REDIRECT_BASE = os.environ.get("OAUTH_REDIRECT_BASE", "").strip().rstrip("/")
+if IS_PROD:
+    if not OAUTH_REDIRECT_BASE:
+        raise RuntimeError(
+            "OAUTH_REDIRECT_BASE must be set to the public base URL when "
+            "AUTH_ENV=production, for example: "
+            "https://excel-pro-7n5l.onrender.com"
+        )
+    _parts = urlsplit(OAUTH_REDIRECT_BASE)
+    if _parts.scheme != "https" or not _parts.netloc:
+        raise RuntimeError(
+            "OAUTH_REDIRECT_BASE must be an absolute https:// URL, got: "
+            f"{OAUTH_REDIRECT_BASE}"
+        )
+
 # Name of our own HMAC auth token cookie (separate from Flask's session cookie).
 SESSION_COOKIE = "mx-session"
 
@@ -96,6 +119,22 @@ app.config.update(
     SESSION_COOKIE_SECURE=IS_PROD,
     MAX_CONTENT_LENGTH=2 * 1024 * 1024,
 )
+
+# ``request.host_url`` reports the scheme and host of the *inbound* connection.
+# On Render (and any TLS-terminating proxy) the public request is https, but
+# gunicorn receives plain http. ProxyFix rewrites the WSGI environ from the
+# X-Forwarded-* headers the proxy sets so those URLs stay correct.
+#
+# It is applied only in production because those headers are trivially spoofable
+# by a direct client; in production the dyno is reachable solely through the
+# platform proxy, which overwrites them. Local development talks to Flask
+# directly, so trusting them there would only add risk.
+#
+# Note this is a convenience for URL building, not the source of truth for OAuth:
+# ``OAUTH_REDIRECT_BASE`` is mandatory in production and is what actually pins
+# the callback, so the redirect cannot be steered by a forged Host header.
+if IS_PROD:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 STORAGE_PREFERENCES = ("browser", "cloud", "drive")
 OAUTH_STATE_TTL = 600
@@ -532,7 +571,14 @@ def api_license_trial():
 # OAuth: Google / GitHub / Microsoft
 # --------------------------------------------------------------------------- #
 def callback_uri(provider: str) -> str:
-    base = os.environ.get("OAUTH_REDIRECT_BASE", request.host_url.rstrip("/"))
+    """Build the public OAuth callback URL for ``provider``.
+
+    In production ``OAUTH_REDIRECT_BASE`` is mandatory and validated at import
+    time, so this cannot be influenced by a caller-supplied ``Host`` header.
+    Local development falls back to the request host, which is what makes
+    ``http://127.0.0.1:5001`` work with zero configuration.
+    """
+    base = OAUTH_REDIRECT_BASE or request.host_url.rstrip("/")
     return f"{base}/auth/callback/{provider}"
 
 

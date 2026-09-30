@@ -8,12 +8,20 @@ import importlib
 import os
 import sys
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 PASSED = 0
 FAILED = 0
+
+# A valid production configuration, so individual checks can vary one key at a
+# time without repeating the required values.
+PROD_BASE = {
+    "AUTH_SECRET": "a-real-random-secret-value-123",
+    "OAUTH_REDIRECT_BASE": "https://excel-pro-7n5l.onrender.com",
+}
 
 
 def check(label, condition, extra=""):
@@ -28,7 +36,7 @@ def check(label, condition, extra=""):
 
 def load_app(env):
     """Import auth_app.app fresh under the given environment."""
-    for key in ("AUTH_ENV", "AUTH_SECRET", "AUTH_DB_PATH"):
+    for key in ("AUTH_ENV", "AUTH_SECRET", "AUTH_DB_PATH", "OAUTH_REDIRECT_BASE"):
         os.environ.pop(key, None)
     os.environ.update(env)
     os.environ["AUTH_DB_PATH"] = str(ROOT / "auth_app" / "_prodcheck.db")
@@ -74,13 +82,27 @@ def main():
             check(f"refuses to boot with {bad or 'no AUTH_SECRET'}", True)
             check("  ...error names AUTH_SECRET", "AUTH_SECRET" in str(exc))
 
+    print("\n--- production refuses a missing/invalid OAUTH_REDIRECT_BASE ---")
+    for bad in (
+        {"OAUTH_REDIRECT_BASE": ""},
+        {"OAUTH_REDIRECT_BASE": "excel-pro-7n5l.onrender.com"},
+        {"OAUTH_REDIRECT_BASE": "http://excel-pro-7n5l.onrender.com"},
+    ):
+        try:
+            load_app({"AUTH_ENV": "production", **PROD_BASE, **bad})
+            check(f"refuses to boot with OAUTH_REDIRECT_BASE={bad['OAUTH_REDIRECT_BASE']!r}", False,
+                  "no error raised")
+        except RuntimeError as exc:
+            check(f"refuses to boot with OAUTH_REDIRECT_BASE={bad['OAUTH_REDIRECT_BASE']!r}", True)
+            check("  ...error names OAUTH_REDIRECT_BASE", "OAUTH_REDIRECT_BASE" in str(exc))
+
     print("\n--- development still works with no configuration ---")
     mod = load_app({"AUTH_ENV": "development"})
     check("development boots without AUTH_SECRET", mod.SECRET_KEY == "dev-auth-secret-change-me")
     check("development is not prod", mod.IS_PROD is False)
 
     print("\n--- production accepts a real secret and hardens responses ---")
-    mod = load_app({"AUTH_ENV": "production", "AUTH_SECRET": "a-real-random-secret-value-123"})
+    mod = load_app({"AUTH_ENV": "production", **PROD_BASE})
     check("production boots with a real secret", mod.IS_PROD is True)
     check("prod keeps the supplied secret", mod.SECRET_KEY == "a-real-random-secret-value-123")
 
@@ -125,6 +147,62 @@ def main():
     check("dev session is live", client_dev.get("/api/session").json.get("authenticated") is True)
     check("dev has no HSTS", not client_dev.get("/api/health").headers.get("Strict-Transport-Security"))
     check("dev has no CSP", not client_dev.get("/api/health").headers.get("Content-Security-Policy"))
+
+    print("\n--- OAuth callback URL is pinned, not taken from the Host header ---")
+    os.environ["GOOGLE_CLIENT_ID"] = "prod-client-id"
+    os.environ["GOOGLE_CLIENT_SECRET"] = "prod-client-secret"
+
+    # Google matches redirect URIs literally, so the value sent must be the
+    # registered https callback -- not the internal http hop gunicorn sees
+    # behind Render's TLS-terminating proxy.
+    resp = client.get(
+        "/auth/start/google",
+        headers={
+            "Host": "excel-pro-7n5l.onrender.com",
+            "X-Forwarded-Proto": "http",
+            "X-Forwarded-Host": "attacker.example.com",
+        },
+    )
+    check("configured provider redirects", resp.status_code == 302)
+    location = resp.headers.get("Location", "")
+    redirect_uri = parse_qs(urlparse(location).query).get("redirect_uri", [""])[0]
+    check(
+        "callback matches the registered URI",
+        redirect_uri == "https://excel-pro-7n5l.onrender.com/auth/callback/google",
+        redirect_uri,
+    )
+    check("callback is not the internal http hop", "http://" not in redirect_uri, redirect_uri)
+    check("a forwarded Host cannot steer the callback",
+          "attacker.example.com" not in redirect_uri, redirect_uri)
+
+    print("\n--- a trailing slash on OAUTH_REDIRECT_BASE is normalised ---")
+    mod_slash = load_app({"AUTH_ENV": "production", **PROD_BASE,
+                          "OAUTH_REDIRECT_BASE": "https://excel-pro-7n5l.onrender.com/"})
+    resp = mod_slash.app.test_client().get("/auth/start/google")
+    redirect_uri = parse_qs(urlparse(resp.headers.get("Location", "")).query).get(
+        "redirect_uri", [""]
+    )[0]
+    check(
+        "trailing slash does not double up the separator",
+        redirect_uri == "https://excel-pro-7n5l.onrender.com/auth/callback/google",
+        redirect_uri,
+    )
+
+    print("\n--- development still derives the callback from the request host ---")
+    mod_dev_proxy = load_app({"AUTH_ENV": "development", "AUTH_SECRET": "dev-secret"})
+    resp = mod_dev_proxy.app.test_client().get(
+        "/auth/start/google",
+        base_url="http://127.0.0.1:5001",
+    )
+    redirect_uri = parse_qs(urlparse(resp.headers.get("Location", "")).query).get(
+        "redirect_uri", [""]
+    )[0]
+    check("localhost callback works with no configuration",
+          redirect_uri == "http://127.0.0.1:5001/auth/callback/google", redirect_uri)
+
+    os.environ.pop("OAUTH_REDIRECT_BASE", None)
+    os.environ.pop("GOOGLE_CLIENT_ID", None)
+    os.environ.pop("GOOGLE_CLIENT_SECRET", None)
 
     # tidy up
     for name in ("_prodcheck.db",):

@@ -9,10 +9,15 @@ plus optional **Google Drive** storage with auto-save.
 
 1. Open [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services → Credentials → Create credentials → OAuth client ID**.
 2. Application type: **Web application**.
-3. Add **Authorized JavaScript origins**, e.g. `http://127.0.0.1:5000` and `http://localhost:5000` (the Flask dev server in `app.py`).
-4. Enable **Google Drive API** (APIs & Services → Library → Google Drive API → Enable).
-5. Configure the OAuth consent screen (External + test users is fine while developing). Add scope `https://www.googleapis.com/auth/drive.file`.
-6. Copy the client ID (`…apps.googleusercontent.com`) into `index.html`:
+3. Add **Authorized JavaScript origins**, e.g. `http://127.0.0.1:5000` and `http://localhost:5000` (the Flask dev server in `app.py`). For the deployed app add `https://excel-pro-7n5l.onrender.com`.
+4. Add **Authorized redirect URIs**. This step only applies to the *backend*
+   OAuth flow in `auth_app/` (see `auth_app/README.md`), which needs the full
+   callback path — Google matches redirect URIs literally, so the bare origin
+   is not sufficient:
+   `https://excel-pro-7n5l.onrender.com/auth/callback/google`
+5. Enable **Google Drive API** (APIs & Services → Library → Google Drive API → Enable).
+6. Configure the OAuth consent screen (External + test users is fine while developing). Add scope `https://www.googleapis.com/auth/drive.file`.
+7. Copy the client ID (`…apps.googleusercontent.com`) into `index.html`:
 
    ```html
    <meta name="google-client-id" content="PASTE_YOUR_CLIENT_ID.apps.googleusercontent.com">

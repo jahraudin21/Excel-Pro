@@ -73,7 +73,7 @@ Everything is environment driven; nothing is required for local development.
 | `OTP_PEPPER` | Extra secret mixed into OTP hashes. Defaults to `AUTH_SECRET`. |
 | `AUTH_PORT` | Port for `python auth_app/app.py` (default `5001`). |
 | `AUTH_DB_PATH` | SQLite file location (default `auth_app/auth.db`). |
-| `OAUTH_REDIRECT_BASE` | Public base URL used to build OAuth callbacks (defaults to the request host). |
+| `OAUTH_REDIRECT_BASE` | Public base URL used to build OAuth callbacks. **Required** in production; must be an absolute `https://` URL. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Enable Google sign-in. |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | Enable GitHub sign-in. |
 | `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET` | Enable Microsoft sign-in. |
@@ -84,11 +84,44 @@ email flow keeps working while you set them up.
 
 ### OAuth callback URLs to register
 
+Local development:
+
 ```
 http://127.0.0.1:5001/auth/callback/google
 http://127.0.0.1:5001/auth/callback/github
 http://127.0.0.1:5001/auth/callback/microsoft
 ```
+
+Production (`https://excel-pro-7n5l.onrender.com`):
+
+```
+https://excel-pro-7n5l.onrender.com/auth/callback/google
+https://excel-pro-7n5l.onrender.com/auth/callback/github
+https://excel-pro-7n5l.onrender.com/auth/callback/microsoft
+```
+
+Register the **full callback path**, not the bare origin. Google matches
+redirect URIs literally, so adding only `https://excel-pro-7n5l.onrender.com`
+does **not** work — the sign-in fails with `redirect_uri_mismatch`. The origin
+alone (`https://excel-pro-7n5l.onrender.com`) belongs under *Authorized
+JavaScript origins*, and is only needed by the client-side GIS flow in
+`index.html` described in [`../GOOGLE_SIGNIN.md`](../GOOGLE_SIGNIN.md), not by
+this backend.
+
+Behind a TLS-terminating proxy such as Render, Flask only sees the internal
+`http://` hop, so the public URL is pinned explicitly instead of being guessed
+from the request:
+
+```
+OAUTH_REDIRECT_BASE=https://excel-pro-7n5l.onrender.com
+```
+
+This is **required** when `AUTH_ENV=production`; the app refuses to boot
+without it, or with a value that is not an absolute `https://` URL. That is
+deliberate — deriving the callback from the request `Host` would let a caller
+supplying that header decide where Google delivers the authorization code.
+`AUTH_ENV=production` also enables `ProxyFix` so other URLs the app generates
+respect the proxy's `X-Forwarded-*` headers.
 
 ## License keys
 
