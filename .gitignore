@@ -20,3 +20,8 @@ latest-linux.yml
 npm-debug.log*
 .DS_Store
 Thumbs.db
+
+# Local databases and secrets
+*.db
+*.sqlite
+.env
