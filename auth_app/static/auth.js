@@ -15,9 +15,19 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
+  /* A fetch that never settles (server wedged, proxy stalling, half-open socket)
+     leaves the promise pending forever. Because busy() has already disabled the
+     button and replaced its label, the user sees a permanently dead "Signing in…"
+     button and no message at all. Aborting after REQUEST_TIMEOUT_MS turns that
+     silence into a prompt, actionable error. */
+  var REQUEST_TIMEOUT_MS = 15000;
+
   function api(path, options) {
     var opts = options || {};
-    return fetch(path, {
+    var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS) : null;
+
+    var init = {
       method: opts.method || "GET",
       headers: Object.assign(
         { "Content-Type": "application/json" },
@@ -25,14 +35,48 @@
       ),
       credentials: "same-origin",
       body: opts.body ? JSON.stringify(opts.body) : undefined
-    }).then(function (response) {
-      return response.json()
-        .catch(function () { return { ok: false, error: "Unreadable server response." }; })
-        .then(function (payload) {
-          payload.httpStatus = response.status;
-          return payload;
-        });
-    });
+    };
+    if (controller) { init.signal = controller.signal; }
+
+    return fetch(path, init)
+      .then(function (response) {
+        return response.json()
+          /* The legacy dev server (app.py, port 5000) has no /api/login route and
+             answers an unknown /api/ path with Flask's HTML 404 page. Calling
+             .json() on that throws, which used to surface as a bare TypeError. */
+          .catch(function () {
+            return {
+              ok: false,
+              httpStatus: response.status,
+              error: response.headers.get("Content-Type") &&
+                     response.headers.get("Content-Type").indexOf("json") < 0
+                ? "The server replied with a non-JSON error page (" + response.status +
+                  "). You are probably talking to the wrong server - the auth API lives " +
+                  "on port 5001, not 5000."
+                : "Unreadable server response."
+            };
+          })
+          .then(function (payload) {
+            payload.httpStatus = response.status;
+            return payload;
+          });
+      })
+      .catch(function (error) {
+        /* Transport-level failure: nothing is listening, or the request timed
+           out. Distinguish the two so the message says something useful. */
+        var timedOut = error && (error.name === "AbortError");
+        return {
+          ok: false,
+          httpStatus: 0,
+          networkError: true,
+          error: timedOut
+            ? "The server did not respond within " + (REQUEST_TIMEOUT_MS / 1000) +
+              " seconds. Is the auth backend running on port 5001?"
+            : "Could not reach the server. Check that " +
+              "'python auth_app/app.py' is running."
+        };
+      })
+      .finally(function () { if (timer) { clearTimeout(timer); } });
   }
 
   function alertBox(message, kind) {
@@ -194,6 +238,14 @@
           if (payload.code === "oauth_only") {
             $("providerNote").hidden = false;
             $("providerNote").textContent = "Use one of the social buttons below for this account.";
+          }
+          /* An unverified account cannot sign in yet, but the remedy is a code
+             rather than a new password, so route the user straight to the OTP
+             pane. Without this they read the message and have nowhere to go. */
+          if (payload.code === "email_unverified" && payload.email) {
+            $("loginForm").reset();
+            showPane("otp", { email: payload.email, purpose: "signup" });
+            alertBox(payload.error + " We sent a fresh code - enter it below.", "error");
           }
           return;
         }

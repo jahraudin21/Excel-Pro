@@ -8,6 +8,7 @@
     "build": "electron-builder --win --x64",
     "build:win": "electron-builder --win --x64",
     "make:icon": "python make_icon.py",
+    "find:exe": "node find_exe.js",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
     "test": "node _test_auth_guard.js && node _test_google_signin.js && node _test_new_account_reset.js && node _test_excel_ui.mjs",

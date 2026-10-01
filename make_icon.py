@@ -2,78 +2,117 @@
 # Pure-stdlib: rasterises each size into an uncompressed 32-bit BMP (BITMAPINFOHEADER
 # + BGRA pixel array, bottom-up) and packs them into an ICO container.
 #
-#   python make_icon.py
+#   npm run make:icon          (or: python make_icon.py)
 #
-# Design: a rounded "grid" tile in the app's green, with a white spreadsheet grid
-# and a check mark. Stays legible down to 16px because the grid is 2 cells wide and
-# the mark is a single bold stroke.
+# Design: an Excel-inspired tile -- the signature spreadsheet green, a faint cell
+# grid, and a bold white "X". It deliberately does NOT reproduce Microsoft's logo
+# (that would be a trademark problem in a distinct product); it borrows only the
+# colour and the grid idea, which is what makes a spreadsheet read as a spreadsheet.
+#
+# Rendering is 4x supersampled and box-filtered down, which is what gives the
+# diagonal X strokes clean anti-aliased edges instead of visible stair-stepping.
 
 import os
 import struct
 
-# BGR + alpha, top-down; flipped per row when written bottom-up into the ICO.
-GREEN   = (0x37, 0x7D, 0x22)   # #217D37 -> RGB(33,125,55)
-GRID    = (255, 255, 255)      # white
-SIZES   = (16, 24, 32, 48, 64, 128, 256)
-OUT     = os.path.join("build", "icon.ico")
+# ---- palette ---------------------------------------------------------------
+# Excel's signature brand green (#217346), stored as RGB.
+BRAND      = (0x46, 0x72, 0x21)   # #217346
+BRAND_DARK = (0x2F, 0x51, 0x18)   # #2F5118 -- grid lines
+WHITE      = (0xFF, 0xFF, 0xFF)
+
+SIZES = (16, 24, 32, 48, 64, 128, 256)
+SS    = 4                       # supersampling factor
+OUT   = os.path.join("build", "icon.ico")
 
 
-def _px(x, y, n, grid_l, grid_t, grid_r, grid_b, cell, mark, rad):
-    """Return (b,g,r,a) for one pixel of the n x n icon."""
-    # ---- rounded-rectangle mask for the tile -------------------------------
-    inside = True
-    for corner_x, corner_y in ((grid_l + rad, grid_t + rad),
-                                (grid_r - rad, grid_t + rad),
-                                (grid_l + rad, grid_b - rad),
-                                (grid_r - rad, grid_b - rad)):
-        in_x = x < corner_x if corner_x == grid_l + rad else x > corner_x
-        in_y = y < corner_y if corner_y == grid_t + rad else y > corner_y
-        if in_x and in_y:
-            if (x - corner_x) ** 2 + (y - corner_y) ** 2 > rad * rad:
-                inside = False
-    if not inside:
-        return (0, 0, 0, 0)
+def _inside_rounded(px, py, n, rad):
+    """Rounded-square mask for a tile of side n, at sub-pixel point (px, py)."""
+    m = n * 3 / 100.0                     # small margin so the tile isn't flush
+    lo, hi = m, n - m
+    if px < lo or px > hi or py < lo or py > hi:
+        return False
+    # Only the four corner squares can fall outside the rounded boundary.
+    for cx, cy in ((lo + rad, lo + rad), (hi - rad, lo + rad),
+                   (lo + rad, hi - rad), (hi - rad, hi - rad)):
+        inside_x = px < cx if cx == lo + rad else px > cx
+        inside_y = py < cy if cy == lo + rad else py > cy
+        if inside_x and inside_y:
+            if (px - cx) ** 2 + (py - cy) ** 2 > rad * rad:
+                return False
+    return True
 
-    # ---- white spreadsheet grid -------------------------------------------
-    if grid_l < x < grid_r and grid_t < y < grid_b:
-        on_v = any(abs(x - gx) <= max(0, cell // 6) for gx in
-                   (grid_l + cell, grid_l + 2 * cell, grid_l + 3 * cell))
-        on_h = any(abs(y - gy) <= max(0, cell // 6) for gy in
-                   (grid_t + cell, grid_t + 2 * cell, grid_t + 3 * cell))
-        if on_v or on_h:
-            return (GRID[2], GRID[1], GRID[0], 255)
-        # ---- check mark over the lower-left cells ---------------------------
-        for (mx, my) in mark:
-            if (x - mx) ** 2 + (y - my) ** 2 <= max(1.0, cell / 5.0) ** 2:
-                return (GRID[2], GRID[1], GRID[0], 255)
 
-    return (GREEN[2], GREEN[1], GREEN[0], 255)
+def _coverage(x, y, n):
+    """Anti-aliased alpha (0.0..1.0) for pixel (x, y) of the n x n tile."""
+    rad = n * 6 // 100
+    hits = 0
+    for sy in range(SS):
+        for sx in range(SS):
+            if _inside_rounded(x + (sx + 0.5) / SS, y + (sy + 0.5) / SS, n, rad):
+                hits += 1
+    return hits / float(SS * SS)
+
+
+def _dist_to_segment(px, py, ax, ay, bx, by):
+    """Distance from (px, py) to the line segment (ax, ay)-(bx, by)."""
+    vx, vy = bx - ax, by - ay
+    wx, wy = px - ax, py - ay
+    seg = vx * vx + vy * vy
+    t = 0.0 if seg == 0 else max(0.0, min(1.0, (wx * vx + wy * vy) / seg))
+    dx, dy = wx - t * vx, wy - t * vy
+    return (dx * dx + dy * dy) ** 0.5
+
+
+def _colour(px, py, n):
+    """Return (r, g, b) at a point known to be inside the tile."""
+    # ---- bold white X ------------------------------------------------------
+    # The X spans most of the tile so it reads as an X at 16px. It is drawn
+    # BEFORE (i.e. under) the grid in paint order below: the stroke punches a
+    # gap in the grid lines, so the diagonals stay continuous instead of being
+    # chopped into disconnected dashes.
+    half = n * 6.5 / 100.0                # stroke half-width
+    reach = n * 0.34                      # half-extent of the diagonals
+
+    def _x_stroke_at(qx, qy):
+        if abs(qx - n / 2.0) > reach or abs(qy - n / 2.0) > reach:
+            return False
+        c = n / 2.0
+        return min(_dist_to_segment(qx, qy, c - reach, c - reach,
+                                    c + reach, c + reach),
+                   _dist_to_segment(qx, qy, c + reach, c - reach,
+                                    c - reach, c + reach)) <= half
+
+    # ---- faint cell grid (the "spreadsheet" cue) --------------------------
+    lw = max(0.7, n * 1.3 / 100.0)        # grid line half-width
+    on_grid = False
+    for f in (0.25, 0.5, 0.75):
+        g = n * f
+        if abs(px - g) <= lw or abs(py - g) <= lw:
+            on_grid = True
+            break
+
+    if on_grid and not _x_stroke_at(px, py):
+        return BRAND_DARK
+
+    if _x_stroke_at(px, py):
+        return WHITE
+
+    return BRAND
 
 
 def render(n):
-    """Rasterise one size, returning raw BGRA rows top-down."""
-    rad = max(2, n * 5 // 100)
-    grid_l, grid_t = n * 8 // 100, n * 8 // 100
-    grid_r, grid_b = n * 92 // 100, n * 92 // 100
-    cell = (grid_r - grid_l) // 4
-
-    # check-mark stroke: short down-stroke then long up-stroke
-    scale = cell / 100.0
-    ox, oy = grid_l + cell * 1.0, grid_t + cell * 2.0
-    mark = []
-    for t in range(0, 46, 4):
-        mark.append((int(ox + t * scale), int(oy + t * scale)))
-    for t in range(0, 92, 4):
-        mark.append((int(ox + 46 * scale + t * scale),
-                     int(oy + 46 * scale - t * scale)))
-
+    """Rasterise one size -> list of top-down BGRA rows."""
     rows = []
     for y in range(n):
         row = bytearray()
         for x in range(n):
-            b, g, r, a = _px(x, y, n, grid_l, grid_t, grid_r, grid_b,
-                             cell, mark, rad)
-            row += bytes((b, g, r, a))
+            a = _coverage(x, y, n)
+            if a <= 0.0:
+                row += bytes((0, 0, 0, 0))
+                continue
+            r, g, b = _colour(x + 0.5, y + 0.5, n)
+            row += bytes((b, g, r, int(round(255 * a))))
         rows.append(bytes(row))
     return rows
 
@@ -81,28 +120,32 @@ def render(n):
 def ico_image(n, rows):
     """Pack one size as a BMP-in-ICO (BITMAPINFOHEADER + BGRA + AND mask)."""
     hdr = struct.pack("<IiiHHIIiiII", 40, n, n * 2, 1, 32, 0, 0, 0, 0, 0, 0)
-    pixels = b"".join(reversed(rows))                     # bottom-up
-    mask_stride = ((n + 31) // 32) * 4                     # 1bpp, padded to 4B
-    and_mask = bytes(mask_stride * n)                     # fully opaque
+    pixels = b"".join(reversed(rows))                     # ICO wants bottom-up
+    mask_stride = ((n + 31) // 32) * 4                    # 1bpp AND mask, 4B pad
+    and_mask = bytes(mask_stride * n)                    # alpha channel governs
     return hdr + pixels + and_mask
 
 
 def main():
     images = [ico_image(n, render(n)) for n in SIZES]
-    out = struct.pack("<HHH", 0, 1, len(images))
+    header = struct.pack("<HHH", 0, 1, len(images))
     offset = 6 + 16 * len(images)
     entries, blobs = b"", b""
     for n, img in zip(SIZES, images):
-        entries += struct.pack("<BBBBHHII", n if n < 256 else 0,
-                               n if n < 256 else 0, 0, 0, 1, 32,
-                               len(img), offset)
+        entries += struct.pack("<BBBBHHII",
+                               n if n < 256 else 0, n if n < 256 else 0,
+                               0, 0, 1, 32, len(img), offset)
         offset += len(img)
         blobs += img
     os.makedirs("build", exist_ok=True)
     with open(OUT, "wb") as fh:
-        fh.write(out + entries + blobs)
-    print("wrote %s (%d bytes, sizes=%s)" % (OUT, os.path.getsize(OUT),
-                                              ",".join(map(str, SIZES))))
+        fh.write(header + entries + blobs)
+    print("wrote %s (%d bytes, sizes=%s)"
+          % (OUT, os.path.getsize(OUT), ",".join(map(str, SIZES))))
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":

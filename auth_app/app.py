@@ -58,6 +58,57 @@ from auth_app.license import generate_license, validate_license  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
 
+
+def _load_dotenv(path: Path) -> None:
+    """Populate os.environ from a ``.env`` file, if one is present.
+
+    The project ships ``auth_app/.env.example`` and its README says to "copy to
+    .env and fill in what you need", but nothing ever read that file: every
+    setting below comes straight from ``os.environ``. Filling in the .env
+    therefore did nothing, and Google sign-in stayed disabled with no obvious
+    reason. This closes that gap without pulling in python-dotenv (which is not
+    a declared dependency, and adding one just to read six variables would be a
+    poor trade).
+
+    Rules:
+      * Real environment variables always win. A deployment (Procfile, Render,
+        systemd) sets these directly, and a stray .env must never override them.
+      * Only variables that are not already set are filled in.
+      * Blank lines and ``#`` comments are ignored; surrounding single or double
+        quotes and an optional ``export`` prefix are stripped, so values copied
+        straight out of a shell work unchanged.
+    """
+    try:
+        if not path.is_file():
+            return
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return
+
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[len("export "):].strip()
+        key, sep, value = line.partition("=")
+        if not sep:
+            continue
+        key = key.strip()
+        if not key or key in os.environ:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        os.environ[key] = value
+
+
+# Read auth_app/.env (and a repo-root .env) before any of the settings below are
+# captured at import time. Missing files are simply ignored, which is what keeps
+# zero-configuration local development and the test suite working unchanged.
+_load_dotenv(BASE_DIR / ".env")
+_load_dotenv(BASE_DIR.parent / ".env")
+
 # ``AUTH_ENV=production`` switches on the deployment-safe behaviour: the signing
 # secret must be supplied explicitly, cookies are marked Secure, and internal
 # error text is never echoed to the browser. Any other value (including unset)
@@ -391,7 +442,20 @@ def api_login():
     if not security.verify_password(password, user["password_hash"]):
         return fail("Invalid email or password.", 401)
 
-    response, status = ok({"user": public_user(user), "email_verified": bool(user["email_verified"])})
+    # A password is only trustworthy once the address behind it is proven. Every
+    # new account lands here with email_verified = 0 (see api_signup) and is only
+    # cleared by /api/otp/verify, so without this check an account that never
+    # confirmed its email - or abandoned signup entirely - could still sign in.
+    if not user.get("email_verified"):
+        return fail(
+            "Please verify your email address before signing in. "
+            "Check your inbox for the 6-digit code, or request a new one.",
+            403,
+            code="email_unverified",
+            email=email,
+        )
+
+    response, status = ok({"user": public_user(user), "email_verified": True})
     return login_user(response, user["id"]), status
 
 
