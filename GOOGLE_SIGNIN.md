@@ -33,7 +33,7 @@ hidden; email/password sign-in is unaffected.
 | File | Change |
 |------|--------|
 | `index.html` | GIS loader script, `google-client-id` meta tag, Google button row (`#googleRow/#googleBtn`) in `#authDialog`, storage-preference radios + `#driveConnectBtn`, clean auth card markup (`#authForm`, `#emailField`, `#nameField`, `#passwordField`) |
-| `js/drive.js` (new) | `DriveBooks` provider: OAuth token client (`drive.file`), folder `MiniExcel`, list/save/get/update/delete via Drive v3 REST + multipart upload |
+| `js/drive.js` | `DriveBooks` provider: OAuth token client (`drive.file`), books stored as `*.miniexcel.json` tagged `application/vnd.miniexcel.book+json` in an app-owned `MiniExcel` folder (created on first save), list/save/get/update/delete via Drive v3 REST + a hand-built `multipart/related` upload |
 | `js/account.js` | `Account.setStoragePref`, `StorageBooks` router (browser/cloud/drive), renamed `acc*` helpers/keys to clean names (`readStoredJSON`, `APP_*_KEY`, error codes `invalidEmail`, `googleSignInFailed`, ...) |
 | `js/account-ui.js` | Clean IDs/classes/i18n (`userChip`, `authDialog`, `emailLabel`, ...), `paintDriveBtn`, `scheduleDriveAutosave` (2s debounce via `saveLS`), storage radios wiring, sign-out disconnects Drive |
 | `js/script.js` | `saveLS()` triggers `scheduleDriveAutosave()`; `bsOpenAccount` uses renamed `showAccountPage` |
@@ -45,7 +45,8 @@ hidden; email/password sign-in is unaffected.
 - **Same Google account later** reuses the stored record — no duplicates.
 - **Matching email** on an existing password account *links* Google to it (password still works; cloud books/API keys stay with the same user id).
 - **Google-only accounts** have no local password: the *Change password* row is replaced with an explanatory note, and the engine rejects password changes (`googleNoPasswordNote`).
-- **Storage preference** (per user + `mx-storage-pref` fallback): Browser = localStorage only; App cloud = same local `CloudBooks`; Drive = `DriveBooks` when connected, else falls back to local. Drive saves also mirror locally. Auto-save fires ~2s after any edit while Drive is selected + connected.
+- **Storage preference** (per user + `mx-storage-pref` fallback): Browser = localStorage only; App cloud = same local `CloudBooks`; Drive = `DriveBooks` when connected, else falls back to local. Drive saves also mirror locally under the same `g:<fileId>` id, so the merged list shows one row per book. Auto-save fires ~2s after any edit while Drive is selected + connected.
+- **Drive scoping.** Books live only in the app's `MiniExcel` folder and carry the `application/vnd.miniexcel.book+json` mime type. `list()` filters on both, so the rest of the user's Drive is never read, shown or touched — the `drive.file` scope alone would otherwise surface their documents as cloud saves.
 - Button/labels translate with the app language (np → Nepali `ne`, hi → `hi`, en → `en`).
 - Without a client ID or when the GIS script cannot load (e.g. offline), the Google row simply stays hidden — email/password sign-in is unaffected. Drive methods resolve `'driveNeedConnect'` so the UI falls back safely.
 
@@ -71,8 +72,27 @@ node --check js/account-ui.js
 node --check js/drive.js
 node --check js/script.js
 node _test_google_signin.js
+node _test_drive.js
 ```
 
 Run the app: `python app.py` → http://127.0.0.1:5000 (the client ID above is required
 for the Google button + Drive connect to work).
+
+## Remaining manual step
+
+Everything on the code side is in place. One value cannot be generated here and
+must come from your own Google Cloud project:
+
+1. Create the OAuth client (steps 1-6 above).
+2. Put the client id in `index.html`:
+
+   ```html
+   <meta name="google-client-id" content="YOUR_ID.apps.googleusercontent.com">
+   ```
+
+3. For the `auth_app` backend flow, set `GOOGLE_CLIENT_ID` and
+   `GOOGLE_CLIENT_SECRET` in `auth_app/.env`.
+
+Until then the Google row stays hidden and email/password sign-in is unaffected
+— that is the documented behaviour for an unconfigured client id, not a fault.
 

@@ -96,12 +96,19 @@ const CloudBooks={
  list(){const u=Account.currentUser();if(!u)return Promise.resolve([]);
   return Promise.resolve(readStoredJSON(APP_BOOKS_KEY(u.id),[]));},
  get(id){return this.list().then(arr=>arr.find(b=>b.id===id)||null);},
- save(name,data,cur){
+ save(name,data,cur,id){
   const u=Account.currentUser();if(!u)return Promise.resolve('signInRequired');
   const arr=readStoredJSON(APP_BOOKS_KEY(u.id),[]);
   const now=Date.now();
-  const b={id:'b'+now.toString(36)+Math.floor(Math.random()*1e4).toString(36),
+  /* DriveBooks mirrors every remote book locally under the SAME 'g:<fileId>'
+     id, so the merged list in StorageBooks.list() de-duplicates on id instead
+     of showing the book twice when Drive cannot be reached. */
+  const b={id:id||('b'+now.toString(36)+Math.floor(Math.random()*1e4).toString(36)),
    name:String(name||'Book1'),data:data,cur:cur||0,created:now,updated:now};
+  /* Re-mirroring a Drive book must refresh the existing record, not stack a
+     second copy of it on top of the first. findIndex returns -1 when absent,
+     and splice(-1,1) would delete the newest unrelated book, so check first. */
+  if(id){const at=arr.findIndex(x=>x.id===id);if(at>=0)arr.splice(at,1);}
   arr.unshift(b);writeStoredJSON(APP_BOOKS_KEY(u.id),arr);
   return Promise.resolve(b);},
  update(id,name,data,cur){
