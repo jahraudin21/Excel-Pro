@@ -7,6 +7,7 @@
     "start": "electron .",
     "build": "electron-builder --win --x64",
     "build:win": "electron-builder --win --x64",
+    "make:icon": "python make_icon.py",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
     "test": "node _test_auth_guard.js && node _test_google_signin.js && node _test_new_account_reset.js && node _test_excel_ui.mjs",
@@ -49,6 +50,7 @@
       "!**/*.map"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "nsis",
         "portable"
@@ -59,6 +61,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "portable": {
