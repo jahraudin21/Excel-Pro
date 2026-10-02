@@ -123,17 +123,34 @@ function gsignClick(){
   googleSignInInit();
   return true;
 }
+/* GIS draws its own control into #googleBtn, and clicking *that* is what opens
+   the Google account-chooser popup -- the actual OAuth flow. #gsignBtn is our own
+   button, so a click on it has to be forwarded to the rendered control. */
+function googleTriggerOAuthFlow(){
+ try{
+  const host=$('#googleBtn');if(!host)return false;
+  const btn=host.querySelector('div[role="button"]');
+  if(btn&&typeof btn.click==='function'){btn.click();return true;}
+  const frame=host.querySelector('iframe');
+  if(frame&&typeof frame.click==='function'){frame.click();return true;}
+ }catch(e){}
+ return false;
+}
 /* Surface the real Google affordance for a click on #gsignBtn: draw the official
-   button into #googleRow and open the One Tap account chooser. */
+   button into #googleRow and open the Google account chooser. */
 function googleOpenPrompt(){
-  try{googleRenderButton();}catch(e){}
-  const row=$('#googleRow');if(row)row.style.display='';
-  try{
-    if(typeof google!=='undefined'&&google.accounts&&google.accounts.id
-      &&typeof google.accounts.id.prompt==='function'){google.accounts.id.prompt();return true;}
-  }catch(e){}
-  showAuthError('googleUnavailable');
-  return false;
+ try{googleRenderButton();}catch(e){}
+ const row=$('#googleRow');if(row)row.style.display='';
+ /* Preferred path: forward the click to the rendered Google control, which opens
+    the real consent popup. */
+ if(googleTriggerOAuthFlow())return true;
+ /* It may not be in the DOM yet (GIS still settling), so fall back to One Tap. */
+ try{
+  if(typeof google!=='undefined'&&google.accounts&&google.accounts.id
+    &&typeof google.accounts.id.prompt==='function'){google.accounts.id.prompt();return true;}
+ }catch(e){}
+ showAuthError('googleUnavailable');
+ return false;
 }
 
 /* ---------- clear grid + headers when the signed-in account changes ----------
@@ -227,6 +244,36 @@ function enterApp(){
   try{if(typeof StartScreen!=='undefined'&&StartScreen&&StartScreen.isOpen&&StartScreen.isOpen())
    StartScreen.close();}catch(e){}
   try{const g=document.getElementById('grid');if(g&&g.focus)g.focus();}catch(e){}},0);}
+/* ---------- post-authentication transition ----------
+   One funnel for every successful sign-in -- sign-up, password sign-in and
+   Google Sign-In -- so the paths cannot drift apart: dismiss the dialog and the
+   start screen, land in the workbook, refresh the account chrome, re-sync the
+   storage UI, and hand a Google account to its Drive backend. */
+function authTransition(){
+ try{enterApp();}catch(e){}
+ try{renderUserChip();}catch(e){}
+ try{syncStorageUi();}catch(e){}
+ const u=(typeof Account!=='undefined'&&Account.currentUser)?Account.currentUser():null;
+ try{setStatusMode(T('welcomeMsg')+(u&&u.name?', '+u.name:''));}catch(e){}
+ driveConnectAfterAuth(u);
+}
+/* A Google account lands with storagePref 'drive' (Account.signInWithGoogle), but
+   the ID token that proves its identity is not a Drive token. Without this the
+   account looks connected while every cloud save quietly falls back to
+   localStorage. connect() asks for the token silently (prompt:''), so a refused
+   grant just leaves the "Connect Drive" affordance in place instead of opening a
+   surprise consent popup on top of the sign-in that just finished. */
+function driveConnectAfterAuth(u){
+ try{
+  if(!u||u.provider!=='google')return;
+  if(typeof StorageBooks==='undefined'||StorageBooks.pref()!=='drive')return;
+  if(typeof DriveBooks==='undefined'||!DriveBooks.isConfigured||!DriveBooks.isConfigured())return;
+  if(DriveBooks.isConnected())return;
+  DriveBooks.connect().then(res=>{
+   try{if(res===true){setStatusMode(T('driveConnected'));syncStorageUi();}else paintDriveBtn();}catch(e){}
+  }).catch(()=>{try{paintDriveBtn();}catch(e){}});
+ }catch(e){}
+}
 function authSubmit(){
  const dlg=$('#authDialog');if(!dlg)return;
  const signup=dlg.classList.contains('mode-signup');
@@ -236,8 +283,7 @@ function authSubmit(){
  if(signup&&p1!==p2){showAuthError('passwordTooShort');return;}
  (signup?Account.signUp(email,name,p1):Account.signIn(email,p1))
   .then(res=>{
-   if(res===true){enterApp();const u=Account.currentUser();
-    setStatusMode(T('welcomeMsg')+(u&&u.name?', '+u.name:''));}
+   if(res===true)authTransition();
    else showAuthError(AUTH_ERR[res]||res);})
   .catch(()=>showAuthError('errorMsg'));}
 function initAuthUi(){
@@ -273,12 +319,13 @@ function googleRenderButton(){
  catch(e){console.warn('[Mini Excel] Google button render failed:',e);
   showAuthError('googleUnavailable');}}
 function googleCredentialHandler(resp){
+ /* A credential arriving means the OAuth flow finished, so the click-time
+    "waiting for GIS" flag has served its purpose. */
+ googlePromptPending=false;
  if(!resp||!resp.credential){showAuthError('googleSignInFailed');return;}
  Account.signInWithGoogle(resp.credential)
   .then(res=>{
-   if(res===true){enterApp();renderUserChip();
-    const u=Account.currentUser();
-    setStatusMode(T('welcomeMsg')+(u&&u.name?', '+u.name:''));}
+   if(res===true)authTransition();
    else showAuthError(AUTH_ERR[res]||res);})
   .catch(()=>showAuthError('googleSignInFailed'));}
 function googleSignInError(err){

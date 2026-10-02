@@ -658,8 +658,10 @@ chk('lock veil spares the start screen (no blur / no pointer-events:none)',
 chk('start-open flag is set and cleared', /classList\.add\('start-open'\)/.test(ss) && /classList\.remove\('start-open'\)/.test(ss));
 chk('enterApp() redirects to the dashboard',
   /function enterApp\(\)/.test(accountUi) && /StartScreen\.close\(\)/.test(accountUi) && /getElementById\('grid'\)/.test(accountUi));
-chk('both sign-in paths use enterApp(), not just closeAuthDialog()',
-  (accountUi.match(/\{enterApp\(\);/g) || []).length >= 2);
+chk('both sign-in paths funnel through the shared auth transition',
+  /function authTransition\(\)/.test(accountUi)
+  && /function authTransition\(\)\{[^}]*enterApp\(\)/.test(accountUi)
+  && (accountUi.match(/if\(res===true\)authTransition\(\);/g) || []).length >= 2);
 chk('"Sign in with Google" button present', /id="gsignBtn"/.test(html));
 chk('Google button carries the 4-colour logo',
   /class="gsignLogo"/.test(html) && /fill="#EA4335"/.test(html) && /fill="#4285F4"/.test(html)

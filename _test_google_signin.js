@@ -203,9 +203,33 @@ async function main() {
     'a click while GIS is still loading records the intent and starts the loader');
   ok(/if\(googlePromptPending\)\{googlePromptPending=false;googleOpenPrompt\(\);\}/.test(ui),
     'the loader fulfils the pending click the moment GIS is ready');
-  ok(/google\.accounts\.id\.prompt\(\)/.test(ui), 'the One Tap prompt is actually opened');
+  ok(/google\.accounts\.id\.prompt\(\)/.test(ui), 'the One Tap prompt is opened as a fallback');
   ok(ui.indexOf("if(typeof googleSignInInit==='function'){googleSignInInit();return;}") < 0,
     'the old handler that returned after a no-op init is gone');
+
+  console.log('\n[the click drives the OAuth flow]');
+  ok(ui.indexOf('function googleTriggerOAuthFlow') >= 0, 'the click is forwarded to the GIS control');
+  ok(/querySelector\('div\[role="button"\]'\)/.test(ui) || /querySelector\('iframe'\)/.test(ui),
+    'the rendered Google control is what gets clicked');
+  ok(/if\(googleTriggerOAuthFlow\(\)\)return true;/.test(ui),
+    'the OAuth popup is preferred over the One Tap fallback');
+
+  console.log('\n[successful connection transitions into the app]');
+  ok(ui.indexOf('function authTransition') >= 0, 'a single post-auth transition exists');
+  ok(/function authTransition\(\)\{[\s\S]{0,260}?enterApp\(\)/.test(ui),
+    'the transition dismisses the dialog and start screen and focuses the grid');
+  ok(/function authTransition\(\)\{[\s\S]{0,320}?syncStorageUi\(\)/.test(ui),
+    'the transition re-syncs the storage UI');
+  ok(/function googleCredentialHandler\(resp\)\{[\s\S]{0,420}?authTransition\(\)/.test(ui),
+    'a Google credential runs the transition');
+  ok(/Account\.signInWithGoogle\(resp\.credential\)/.test(ui),
+    'the Google credential is exchanged for an account session');
+  ok(ui.indexOf('function driveConnectAfterAuth') >= 0,
+    'a Google sign-in hands the account to its Drive backend');
+  ok(/DriveBooks\.connect\(\)\.then\(res=>\{[\s\S]{0,160}?driveConnected/.test(ui),
+    'a granted Drive connection is reported');
+  ok(/\{enterApp\(\);renderUserChip\(\);/.test(ui) === false,
+    'the Google path no longer carries its own copy of the redirect');
 
   console.log('\n' + passed + ' passed, ' + failed + ' failed');
   if (failed) process.exit(1);
