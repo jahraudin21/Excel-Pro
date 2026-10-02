@@ -8,6 +8,11 @@
      remembered and replayed once sign-in/sign-up succeeds.
    - The dialog cannot be dismissed with ✕ / Escape while locked, so there is
      always a path back into the app.
+   - Clicking the dimmed overlay outside the card opens the sign-in modal, and a
+     successful sign-in clears the lock (locked=false).
+   - The lock card hands over to the auth dialog: choosing "Create account" or
+     "Already registered? Sign in" hides the veil and shows the matching modal,
+     while the app stays inert until the session exists.
 
    Depends on: account.js (Account), account-ui.js (openAuthDialog, renderUserChip),
    script.js ($, T, STR, setStatusMode). */
@@ -64,16 +69,26 @@ const AuthGuard={
   return false;
  },
 
+ /* The dimmed veil and the logical lock are separate concerns: the veil can step
+    aside while the auth dialog is up, but the app stays inert (locked) until a
+    session exists. */
+ showVeil(){const v=$('#authLock');if(v)v.classList.add('open');},
+ hideVeil(){const v=$('#authLock');if(v)v.classList.remove('open');},
+
  lock(){
   this.locked=true;
   document.body.classList.add('auth-locked');
-  const veil=$('#authLock');if(veil)veil.classList.add('open');
+  /* The dialog is the sign-in surface once it is up, so re-raising the veil on
+     top of it (e.g. a blocked action calling require() again) would only cover
+     the modal the user is working in. */
+  const dlg=$('#authDialog');
+  if(!(dlg&&dlg.classList&&dlg.classList.contains('open')))this.showVeil();
  },
 
  unlock(){
   this.locked=false;
   document.body.classList.remove('auth-locked');
-  const veil=$('#authLock');if(veil)veil.classList.remove('open');
+  this.hideVeil();
   /* Replay whatever the user tried to do before registering. */
   const q=this._queue;this._queue=[];
   q.forEach(fn=>{try{fn();}catch(e){}});
@@ -85,11 +100,40 @@ const AuthGuard={
     affordances and ignore Escape. */
  canCloseAuthDialog(){return !this.locked;},
 
+ /* Hand-off from the lock card / veil: open the requested dialog and get the
+    veil out of the way so the modal is the only thing on screen. The app stays
+    locked (locked===true, body.auth-locked) until the session exists; the
+    Account.onChange -> sync() subscription then flips the lock to false and
+    replays whatever the user tried to do. */
+ openFromLock(mode){
+  let opened=false;
+  try{if(typeof openAuthDialog==='function'){openAuthDialog(mode||'signin');opened=true;}}catch(e){}
+  /* Only step aside once the dialog is really up: if it failed to open, the veil
+     is the user's only route back in and has to stay. */
+  if(opened)this.hideVeil();
+  return this.locked;
+ },
+
+ /* Kept for the veil-backdrop click path. */
+ openLogin(){return this.openFromLock('signin');},
+
  init(){
   if(this._wired)return;this._wired=true;
 
-  const cta=$('#authLockCta');if(cta)cta.onclick=()=>{try{openAuthDialog('signup');}catch(e){}};
-  const alt=$('#authLockSignIn');if(alt)alt.onclick=()=>{try{openAuthDialog('signin');}catch(e){}};
+  const cta=$('#authLockCta');if(cta)cta.onclick=()=>{this.openFromLock('signup');};
+  const alt=$('#authLockSignIn');if(alt)alt.onclick=()=>{this.openFromLock('signin');};
+
+  /* The whole dimmed overlay is a sign-in affordance: clicking the backdrop
+     (anywhere outside .lockCard) opens the sign-in modal. Clicks inside the card
+     are ignored so the two buttons above keep their own behaviour -- otherwise
+     "Create account" would be overridden by the sign-in dialog bubbling up from
+     the very same tap. */
+  const veil=$('#authLock');
+  if(veil)veil.onclick=e=>{
+   const t=e&&e.target;
+   if(t&&t.closest&&t.closest('.lockCard'))return;
+   this.openFromLock('signin');
+  };
 
   /* Account emits on sign-in, sign-up and sign-out. */
   try{Account.onChange(()=>{renderUserChip();this.sync();});}catch(e){}

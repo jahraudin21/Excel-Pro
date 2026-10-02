@@ -471,6 +471,10 @@ function applyLang(l){
  fbar.placeholder=T('fxph');
  const ls=$('#lang');if(ls&&ls.value!==l)ls.value=l;
  if(recog)recog.lang=voiceLocale();
+ /* The Drive connect/disconnect label is state, not a static string: the button
+    also carries data-i18n="connectDrive", so without this a language switch
+    would relabel a *connected* Drive as "Connect Drive". */
+ try{if(typeof paintDriveBtn==='function')paintDriveBtn();}catch(e){}
  renderTabs();renderAll();}
 function demoData(){if(LANG==='en')return{h:['Item','Amount'],items:[['Rice',950],['Lentils',1400],['Oil',180],['Sugar',450],['Salt',40]],tot:'Total'};
  if(LANG==='np')return{h:['सामान','रकम'],items:[['चामल',950],['दाल',1400],['तेल',180],['चिनी',450],['नुन',40]],tot:'जम्मा'};
@@ -1786,7 +1790,10 @@ function bsInfoRefresh(){
  set('#bsSheetName',s?s.name:'');
  set('#bsNCells',s?String(Object.keys(s.cells).length):'0');
  const lang=$('#lang');
- set('#bsLang',lang&&lang.selectedOptions&&lang.selectedOptions[0]?lang.selectedOptions[0].textContent:LANG.toUpperCase());}
+ set('#bsLang',lang&&lang.selectedOptions&&lang.selectedOptions[0]?lang.selectedOptions[0].textContent:LANG.toUpperCase());
+ /* The OneDrive page's Account / Storage / Cloud-saves rows are live account
+    state, so refresh them from the session instead of leaving placeholders. */
+ try{if(typeof syncStorageUi==='function')syncStorageUi();}catch(e){}}
 function saveNow(){saveLS();setStatusMode(T('fileSaved'));}
 function startNewWorkbook(){if(confirm(T('newConfirm'))){const appearance={theme:wb.theme||'default',accent:wb.accent||''};wb={cur:0,sheets:[{name:'Sheet1',cells:{}}],...appearance};hist=[];fut=[];active=selA=selB='A1';saveLS();renderAll();renderTabs();}}
 function triggerImport(){const fi=$('#fileIn');if(fi)fi.click();}

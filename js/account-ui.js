@@ -50,7 +50,8 @@ Object.assign(STR,{
 /* ---------- error code -> i18n key ---------- */
 const AUTH_ERR={invalidEmail:'invalidEmail',passwordTooShort:'passwordTooShort',fillAllFields:'fillAllFields',
  emailExists:'emailExists',noSuchUser:'noSuchUser',wrongPassword:'wrongPassword',signInRequired:'signInRequired',
- saveNotFound:'saveNotFound',googleSignInFailed:'googleSignInFailed',googleNoPasswordNote:'googleNoPasswordNote'};
+ saveNotFound:'saveNotFound',googleSignInFailed:'googleSignInFailed',googleNoPasswordNote:'googleNoPasswordNote',
+ driveSaveFailed:'driveSaveFailed',driveNeedConnect:'driveNeedConnect'};
 Object.assign(STR,{
  invalidEmail:{np:'अमान्य इमेल',hi:'अमान्य ईमेल',en:'Invalid email'},
  passwordTooShort:{np:'पासवर्ड कम्तीमा ४ अक्षर',hi:'पासवर्ड कम से कम 4 अक्षर',en:'Password must be 4+ chars'},
@@ -88,19 +89,51 @@ Object.assign(STR,{
   connectDrive:{np:'Drive जोड्नुहोस्',hi:'ड्राइव कनेक्ट करें',en:'Connect Drive'}
 });
 
+/* ---------- Drive status strings used by the storage panel + status bar ----------
+   paintDriveBtn()/saveCloudBook()/DriveBooks.connect() all feed these through T().
+   Without them the status bar echoed the raw key ("driveConnected") instead of a
+   message, and AUTH_ERR left a Drive save failure as the generic "Error". */
+Object.assign(STR,{
+  disconnectDrive:{np:'Drive विच्छेद गर्नुहोस्',hi:'ड्राइव डिस्कनेक्ट करें',en:'Disconnect Drive'},
+  driveConnected:{np:'Google Drive जोडियो',hi:'Google Drive जुड़ गया',en:'Google Drive connected'},
+  driveSaved:{np:'Google Drive मा सेभ भयो',hi:'Google Drive में सेव हो गया',en:'Saved to Google Drive'},
+  driveSaveFailed:{np:'Google Drive मा सेभ गर्न सकिएन',hi:'Google Drive में सेव नहीं हो सका',en:'Could not save to Google Drive'},
+  driveNeedConnect:{np:'पहिले Google Drive जोड्नुहोस्',hi:'पहले Google Drive कनेक्ट करें',en:'Connect Google Drive first'}
+});
+
 /* ---------- "Sign in with Google" button in the redesigned dialog ----------
    The official Google button is rendered by Google Identity Services into
    #googleBtn when a client id is configured. This visible button is the
    always-present entry point: it opens the GIS prompt when available, and
    explains the problem when it is not, rather than silently doing nothing. */
 function gsignClick(){
+  if(typeof Account==='undefined'||!Account.isGoogleConfigured||!Account.isGoogleConfigured()){
+    showAuthError('googleUnavailable');return false;}
+  /* GIS is already live, so a click acts immediately. */
+  if(googleSignInReady)return googleOpenPrompt();
+  /* The loader already gave up (see the tries>=40 branch of googleSignInInit):
+     say so rather than silently waiting forever. */
+  if(googleInitDone){showAuthError('googleUnavailable');return false;}
+  /* Google Identity Services is loaded by an async <script>, so the first click
+     can only record the intent; googleSignInInit()'s poll fulfils it the moment
+     GIS is ready. This replaces the previous handler, which called
+     googleSignInInit() -- a no-op after the boot-time call -- and returned, so
+     the button silently did nothing for the rest of the session. */
+  googlePromptPending=true;
+  googleSignInInit();
+  return true;
+}
+/* Surface the real Google affordance for a click on #gsignBtn: draw the official
+   button into #googleRow and open the One Tap account chooser. */
+function googleOpenPrompt(){
+  try{googleRenderButton();}catch(e){}
+  const row=$('#googleRow');if(row)row.style.display='';
   try{
-    if(typeof Account!=='undefined'&&Account.isGoogleConfigured&&Account.isGoogleConfigured()){
-      if(typeof googleSignInInit==='function'){googleSignInInit();return;}
-      if(typeof googleRenderButton==='function'){googleRenderButton();return;}
-    }
+    if(typeof google!=='undefined'&&google.accounts&&google.accounts.id
+      &&typeof google.accounts.id.prompt==='function'){google.accounts.id.prompt();return true;}
   }catch(e){}
   showAuthError('googleUnavailable');
+  return false;
 }
 
 /* ---------- clear grid + headers when the signed-in account changes ----------
@@ -228,7 +261,7 @@ function initAuthUi(){
  renderUserChip();googleSignInInit();}
 
 /* ---------- Google Sign-In (Google Identity Services) ---------- */
-let googleSignInReady=false,googleInitDone=false,googleBtnDrawn=false;
+let googleSignInReady=false,googleInitDone=false,googleBtnDrawn=false,googlePromptPending=false;
 function googleSignInLocale(){try{return (typeof LANG!=='undefined'&&LANG==='np')?'ne':((typeof LANG!=='undefined'&&LANG==='hi')?'hi':'en');}catch(e){return 'en';}}
 function googleRenderButton(){
  if(!googleSignInReady||googleBtnDrawn)return;
@@ -267,10 +300,13 @@ function googleSignInInit(){
      callback:(typeof googleCredentialHandler==='function'?googleCredentialHandler:function(){}),error_callback:(typeof googleSignInError==='function'?googleSignInError:function(){})});
     googleSignInReady=true;
     const row=$('#googleRow');if(row)row.style.display='';
-    if($('#authDialog')&&$('#authDialog').classList.contains('open'))googleRenderButton();}
+    if($('#authDialog')&&$('#authDialog').classList.contains('open'))googleRenderButton();
+    /* Fulfil a #gsignBtn click that arrived while GIS was still loading. */
+    if(googlePromptPending){googlePromptPending=false;googleOpenPrompt();}}
    catch(e){console.warn('[Mini Excel] Google Sign-In init failed:',e);}
   }else if(tries>=40){clearInterval(wait);
-   console.warn('[Mini Excel] Google Identity Services failed to load');}
+   console.warn('[Mini Excel] Google Identity Services failed to load');
+   if(googlePromptPending){googlePromptPending=false;showAuthError('googleUnavailable');}}
  },250);}
 
 /* ---------- account panel (profile + cloud saves) ---------- */
@@ -392,6 +428,27 @@ function paintDriveBtn(){
   b.textContent=T(on?'disconnectDrive':'connectDrive');
  }catch(e){}
 }
+/* ---------- storage preference UI sync ----------
+   The preference is per-account state, so the radios and the backstage
+   "Account / Storage / Cloud saves" rows have to follow the signed-in user
+   rather than whatever was true at boot. Google accounts default to Drive, so
+   without this the panel kept showing the previous account's choice, and the
+   OneDrive page's info rows stayed at their placeholder "—/—/0" forever. */
+function syncStorageUi(){
+ try{
+  const pref=(typeof StorageBooks!=='undefined')?StorageBooks.pref():'browser';
+  document.querySelectorAll('input[name="storagePref"]').forEach(r=>{r.checked=(r.value===pref);});
+  const u=(typeof Account!=='undefined'&&Account.currentUser)?Account.currentUser():null;
+  const set=(id,v)=>{const el=$('#'+id);if(el&&v!=null)el.textContent=v;};
+  set('bsCloudUser',u?(u.email||u.name||''):'—');
+  set('bsCloudPref',T(pref==='drive'?'storageDrive':(pref==='cloud'?'storageCloud':'storageBrowser')));
+  paintDriveBtn();
+  const Store=(typeof StorageBooks!=='undefined')?StorageBooks:(typeof CloudBooks!=='undefined'?CloudBooks:null);
+  if(!u||!Store||!Store.list){set('bsCloudCount','0');return;}
+  Store.list().then(arr=>set('bsCloudCount',String((arr||[]).length))).catch(()=>set('bsCloudCount','0'));
+ }catch(e){}
+}
+
 /* ---------- Drive auto-save (debounced; only when Drive is the preference) ---------- */
 let driveAutoT=null;
 function scheduleDriveAutosave(){
@@ -444,7 +501,7 @@ function initProfilePanel(){
  card('#bsUserCloudOpen',()=>{renderCloudList();showAccountPage();});
  card('#bsUserSave',()=>{try{saveCloudBook((typeof wb!=='undefined'&&wb&&wb.cloudId)?wb.cloudId:null);}catch(e){}});
  card('#bsUserSignOut',()=>{Account.signOut();renderUserChip();showAccountPage();setStatusMode(T('signedOutMsg'));});
- Account.onChange(()=>{renderUserChip();showAccountPage();clearHeadersForNewAccount(Account.currentUser());});
+ Account.onChange(()=>{renderUserChip();showAccountPage();clearHeadersForNewAccount(Account.currentUser());syncStorageUi();});
  on('#profileSave',()=>{
   const ne=$('#profileNameField');const v=ne?ne.value:'';
   if(!Account.updateName)return;
@@ -481,13 +538,17 @@ function initProfilePanel(){
   function _showAk(s){if(!apiKeyInput)return;const k=Account.getApiKey();if(k){apiKeyInput.value=s?k:'●'.repeat(16);apiKeyInput.title=s?k:'';}else{apiKeyInput.value='';apiKeyInput.title='';}}
   on('#apiKeyShowBtn',()=>{_showAk(!_akShown);_akShown=!_akShown;});
   on('#apiKeyRegenBtn',()=>{if(!Account.currentUser()){setStatusMode(T('signInRequired'));return;}Account.regenerateApiKey().then(k=>{if(k){_akShown=true;_showAk(true);setStatusMode(T('copiedMsg'));}else setStatusMode(T('errorMsg'));}).catch(()=>setStatusMode(T('errorMsg')));});
-  Account.onChange(()=>{if(apiKeyInput){const k=Account.currentUser()?Account.getApiKey():null;apiKeyInput.value=k?'●'.repeat(16):'●'.repeat(16);apiKeyInput.title=k||'';}});
+  /* Reset the field to its masked placeholder on every account change. Asking
+     Account.getApiKey() here used to *create* a monthly key as a side effect, so
+     merely signing in persisted an API key the user had never opened. */
+  Account.onChange(()=>{if(apiKeyInput){apiKeyInput.value='●'.repeat(16);apiKeyInput.title='';}_akShown=false;});
   on('#signOut',()=>{
   Account.signOut();closeProfilePanel();renderUserChip();
   if(typeof DriveBooks!=='undefined')DriveBooks.disconnect();
   try{if(typeof wb!=='undefined'&&wb){wb.cloudId=null;wb.cloudName=null;}if(typeof saveLS==='function')saveLS();if(typeof setBookName==='function')setBookName();}catch(e){}
   setStatusMode(T('signedOutMsg'));paintDriveBtn();});
- Account.onChange(()=>renderUserChip());}
+ Account.onChange(()=>renderUserChip());
+ syncStorageUi();}
 
 /* ---------- boot (called from script.js init, after DOM ready) ---------- */
 let accountUiBooted=false;

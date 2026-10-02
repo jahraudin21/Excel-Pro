@@ -204,9 +204,10 @@ const DriveBooks = {
   if (!fileId) return CloudBooks.delete(id);
   return fetch(DRIVE_API + '/files/' + encodeURIComponent(fileId),
    { method: 'DELETE', headers: self._headers() })
-   .then((r) => (r && r.ok ? r.json() : null))
-   /* Trashed remotely, but drop the local mirror too or the row lingers. */
-   .then(() => CloudBooks.delete(id))
+   /* A successful delete answers 204 with an empty body, so the response is
+      never parsed (r.json() rejects on an empty body). The local mirror is
+      dropped here too, or the row lingers in the list. */
+   .then((r) => (r && r.ok) ? CloudBooks.delete(id) : 'driveSaveFailed')
    .catch(() => 'driveSaveFailed');
  }
 };

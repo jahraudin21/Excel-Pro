@@ -9,6 +9,7 @@ HTTP traffic is covered separately by _test_live_server.py.
 import io
 import os
 import runpy
+import shutil
 import sys
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -68,10 +69,11 @@ def cleanup():
         if path.exists():
             path.unlink()
     cache = ROOT / "auth_app" / "__pycache__"
-    if cache.exists():
-        for item in cache.iterdir():
-            item.unlink()
-        cache.rmdir()
+    # Best-effort only. This folder is a OneDrive reparse point, and on Windows
+    # os.rmdir raises PermissionError (WinError 5) on it even when empty, which
+    # would abort the run after every assertion had already passed and hide the
+    # real result. Bytecode is regenerated on demand, so leaving it is harmless.
+    shutil.rmtree(cache, ignore_errors=True)
 
 
 

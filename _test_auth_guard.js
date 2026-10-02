@@ -342,9 +342,25 @@ async function testAuthGuard() {
   section('auth-guard.js - lock card wiring & sign-out');
   sandbox.__opened.length = 0;
   els.authLockCta.onclick();
-  els.authLockSignIn.onclick();
   ok(sandbox.__opened[0] === 'signup', 'lock CTA opens the sign-up form');
+  ok(!els.authLock.classList.contains('open'),
+    'the lock overlay is hidden once the CTA hands over to the sign-up modal');
+  ok(api.locked === true, 'the app stays locked while the sign-up modal is open');
+  ok(sandbox.document.body.classList.contains('auth-locked'),
+    'app surfaces stay inert until a session exists');
+
+  els.authLockSignIn.onclick();
   ok(sandbox.__opened[1] === 'signin', 'lock secondary button opens the sign-in form');
+  ok(!els.authLock.classList.contains('open'),
+    'the lock overlay stays hidden for the sign-in hand-off');
+
+  /* A blocked action calling require() again must not re-raise the veil over the
+     modal the user is working in. */
+  els.authDialog.classList.add('open');
+  api.lock();
+  ok(!els.authLock.classList.contains('open'),
+    'lock() does not re-raise the veil over an open dialog');
+  els.authDialog.classList.remove('open');
 
   signIn(null);
   ok(api.locked === true, 'signing out re-locks the app');
@@ -352,6 +368,41 @@ async function testAuthGuard() {
 
   const after = fire('keydown', makeTarget(['#app']), { key: 's', ctrlKey: true });
   ok(!after.bubbleRan, 'shortcuts are blocked again after sign-out');
+
+  section('auth-guard.js - overlay click opens the login modal');
+  ok(typeof els.authLock.onclick === 'function', 'the lock overlay carries an onclick listener');
+  /* The real handler receives a click event; the harness passes the target via
+     an event-like object, exactly as fire() builds one. */
+  sandbox.__opened.length = 0;
+  els.authLock.onclick({ target: makeTarget(['#authLock']) });
+  ok(sandbox.__opened[0] === 'signin', 'clicking the dimmed backdrop opens the sign-in modal');
+  ok(api.locked === true, 'the app stays locked until the sign-in succeeds');
+  ok(!els.authLock.classList.contains('open'), 'the backdrop click also hides the veil');
+
+  /* A real tap on the card bubbles to the overlay; it must not hijack the button
+     that was actually pressed (e.g. "Create account"). */
+  sandbox.__opened.length = 0;
+  els.authLock.onclick({ target: makeTarget(['#authLock', '.lockCard']) });
+  ok(sandbox.__opened.length === 0, 'a click inside the card is left to the card buttons');
+
+  /* A click with no target (synthetic / programmatic) must not throw. */
+  sandbox.__opened.length = 0;
+  els.authLock.onclick({});
+  ok(sandbox.__opened[0] === 'signin', 'a target-less click still opens the modal');
+
+  sandbox.__opened.length = 0;
+  ok(api.openLogin() === true, 'openLogin() keeps the lock while nobody is signed in');
+  ok(sandbox.__opened[sandbox.__opened.length - 1] === 'signin', 'openLogin() raises the sign-in modal');
+
+  signIn({ id: 'u-overlay' });
+  ok(api.locked === false, 'a successful login sets the lock state to false');
+  ok(!els.authLock.classList.contains('open'), 'the overlay is hidden once unlocked');
+  ok(!document_locked(sandbox), 'body.auth-locked is cleared once unlocked');
+}
+
+/* The unlocked state must also drop the veil class from <body>. */
+function document_locked(sandbox) {
+  return sandbox.document.body.classList.contains('auth-locked');
 }
 
 /* ============ PART 3 - index.html / styles.css wiring ============ */

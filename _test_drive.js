@@ -49,7 +49,14 @@ function makeSandbox(opts) {
       const id = decodeURIComponent(rec.url.split('/files/')[1].split('?')[0]);
       return remote[id] ? json(remote[id].book, true) : json(null, false);
     }
-    if (rec.method === 'DELETE') return json({}, true);
+    if (rec.method === 'DELETE') {
+      // Drive really answers a successful delete with 204 and an EMPTY body, so
+      // the default mock is noBody. r.json() rejects on an empty body, which is
+      // how the "local mirror is never dropped" bug hid from this suite.
+      if (opts.emptyDelete === false) return json({}, true);
+      return Promise.resolve({ ok: true, status: 204,
+        json: () => Promise.reject(new SyntaxError('Unexpected end of JSON input')) });
+    }
     // List first: its query also mentions the folder, so it must be matched
     // before the folder lookup below.
     if (rec.url.indexOf('in%20parents') !== -1) {
@@ -227,6 +234,22 @@ async function main() {
   await D.delete('g:' + FILE);
   ok(lastCall(ctx, '/files/' + FILE).method === 'DELETE', 'delete removes the remote file');
   ok(ctx.__cloud.length === 0, 'delete also drops the local mirror so the row does not linger');
+
+  // Regression: a 204 has an empty body, so parsing it must not be on the path.
+  const noBody = makeSandbox();
+  await noBody.__DriveBooks.connect();
+  await noBody.__DriveBooks.save('Book1', { sheets: [] }, 0);
+  ok(noBody.__cloud.length === 1, 'mirror exists before the delete under test');
+  ok(await noBody.__DriveBooks.delete('g:' + FILE) !== 'driveSaveFailed',
+    'a 204 empty-body delete is not reported as a failure');
+  ok(noBody.__cloud.length === 0,
+    'a 204 empty-body delete still drops the local mirror');
+  const jsonBody = makeSandbox({ emptyDelete: false });
+  await jsonBody.__DriveBooks.connect();
+  await jsonBody.__DriveBooks.save('Book1', { sheets: [] }, 0);
+  await jsonBody.__DriveBooks.delete('g:' + FILE);
+  ok(jsonBody.__cloud.length === 0,
+    'a delete that does return a JSON body drops the mirror too');
 
   console.log('\n[local-only books]');
   ctx.__cloud.push({ id: 'b-local', name: 'Local', data: { sheets: [] }, cur: 0 });

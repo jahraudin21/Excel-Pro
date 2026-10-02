@@ -177,6 +177,36 @@ async function main() {
    'googleSignInFailed', 'googleNoPasswordNote'
   ].forEach(s => ok(ui.indexOf(s) >= 0, 'account-ui.js contains ' + s));
 
+  console.log('\n[auth dialog layout: Google button closes the card]');
+  const gi = html.indexOf('id="gsignBtn"');
+  const noAccount = html.indexOf('id="authSwitchMode"');
+  const formEnd = html.indexOf('</form>', gi);
+  ok(gi > 0 && noAccount > 0, 'both the Google button and the sign-up link are present');
+  ok(gi > noAccount, 'the Google button sits below the "no account" link');
+  ok(gi < formEnd, 'the Google button is still inside the sign-in form');
+  /* Nothing but the GIS host may follow it, so it really is the bottom of the
+     card rather than merely after the link. */
+  const tail = html.slice(html.indexOf('</button>', gi), formEnd);
+  ok(tail.indexOf('id="emailField"') < 0 && tail.indexOf('id="passwordField"') < 0 &&
+    tail.indexOf('id="authSubmit"') < 0,
+    'no form field or submit button follows the Google button');
+  /* The "or" divider that used to sit above the button moved with it; the GIS
+     row no longer needs a second one. */
+  ok((html.match(/data-i18n="orLabel"/g) || []).length === 1,
+    'exactly one "or" divider remains');
+
+  console.log('\n[a click on the Google button reaches the authentication logic]');
+  ok(ui.indexOf('function googleOpenPrompt') >= 0, 'a Google prompt helper exists');
+  ok(/googleSignInReady\)return googleOpenPrompt\(\)/.test(ui),
+    'a click with GIS already loaded opens the prompt immediately');
+  ok(/googlePromptPending=true;/.test(ui) && /googleSignInInit\(\)/.test(ui),
+    'a click while GIS is still loading records the intent and starts the loader');
+  ok(/if\(googlePromptPending\)\{googlePromptPending=false;googleOpenPrompt\(\);\}/.test(ui),
+    'the loader fulfils the pending click the moment GIS is ready');
+  ok(/google\.accounts\.id\.prompt\(\)/.test(ui), 'the One Tap prompt is actually opened');
+  ok(ui.indexOf("if(typeof googleSignInInit==='function'){googleSignInInit();return;}") < 0,
+    'the old handler that returned after a no-op init is gone');
+
   console.log('\n' + passed + ' passed, ' + failed + ' failed');
   if (failed) process.exit(1);
 }

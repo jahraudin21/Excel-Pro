@@ -39,7 +39,13 @@ const Account={
  currentUser(){
   if(this._user)return this._user;
   const sess=readStoredJSON(APP_SESSION_KEY,null);
-  if(sess&&sess.id){const u=this.users().find(x=>x.id===sess.id);if(u)this._user=u;}
+  if(sess&&sess.id){
+   const u=this.users().find(x=>x.id===sess.id);
+   if(u)this._user=u;
+   /* The session names an account that no longer exists (the user list was
+      cleared or replaced, so the id can never match again). Drop the dead token
+      instead of re-reading it on every boot. */
+   else{try{localStorage.removeItem(APP_SESSION_KEY);}catch(e){}}}
   return this._user;},
  _startSession(u){this._user=u;writeStoredJSON(APP_SESSION_KEY,{id:u.id,at:Date.now()});this._emit();},
  signUp(email,name,pass){
