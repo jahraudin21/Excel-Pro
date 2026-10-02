@@ -65,6 +65,7 @@ Object.assign(STR,{
   orLabel:{np:'वा',hi:'या',en:'or'},
   googleSignInFailed:{np:'Google साइन इन असफल भयो',hi:'Google साइन इन विफल रहा',en:'Google sign-in failed'},
   googleUnavailable:{np:'Google साइन इन अहिले उपलब्ध छैन',hi:'Google साइन इन अभी उपलब्ध नहीं है',en:'Google sign-in is unavailable right now'},
+  googleNotConfigured:{np:'Google साइन इन सेट गरिएको छैन',hi:'Google साइन इन सेट नहीं है',en:'Google sign-in is not set up yet (add a client ID)'},
   googleNoPasswordNote:{np:'Google खाताको पासवर्ड Google बाट आउँछ',hi:'Google खाते का पासवर्ड Google से आते हैं',en:'Google accounts sign in with their Google password'},
   addressLabel:{np:'ठेगाना',hi:'पता',en:'Address'},
   addressSaved:{np:'ठेगाना सेभ भयो',hi:'पता सेव हो गया',en:'Address saved'},
@@ -102,21 +103,25 @@ Object.assign(STR,{
 });
 
 /* ---------- "Sign in with Google" button in the redesigned dialog ----------
-   GOOGLE_SIGNIN.md promises the Google row stays hidden until a client id is
-   configured, so #gsignBtn, the "or" divider and #googleRow start hidden here
-   and are revealed by syncGoogleUi() only when Account.isGoogleConfigured() is
-   true. That is what "enabled" means for this button: it is offered exactly
-   when it can actually work. Previously it was always visible, so a click could
-   only ever report "Google unavailable". */
+   #gsignBtn and the "or" divider are a permanent part of the card, rendered
+   below the sign-up form: the component stays in the modal whether or not a
+   client id is present, so the layout never shifts when one is added. Only the
+   official GIS host (#googleRow) is gated, because it stays empty until Google
+   Identity Services actually draws into it -- an empty box would just be a gap.
+   An unconfigured client id therefore shows the button, and a click explains
+   how to enable it (see gsignClick) instead of failing silently. */
 function syncGoogleUi(){
  const cfg=(typeof Account!=='undefined'&&Account.isGoogleConfigured&&Account.isGoogleConfigured())?true:false;
- [['#gsignBtn',cfg],['.googleDivider',cfg],['#googleRow',cfg]].forEach(function(pair){
+ [['#gsignBtn',true],['.googleDivider',true],['#googleRow',cfg]].forEach(function(pair){
   const el=$(pair[0]);if(!el)return;
   el.style.display=pair[1]?'':'none';});
  return cfg;}
 function gsignClick(){
  if(typeof Account==='undefined'||!Account.isGoogleConfigured||!Account.isGoogleConfigured()){
-  showAuthError('googleUnavailable');return false;}
+  /* The button is always part of the card, so report what is actually missing
+     instead of the vague "unavailable": a missing client id is a setup step,
+     not an outage, and GOOGLE_SIGNIN.md says where to paste it. */
+  showAuthError('googleNotConfigured');return false;}
   /* GIS is already live, so a click acts immediately. */
   if(googleSignInReady)return googleOpenPrompt(true);
   /* The loader already gave up (see the tries>=40 branch of googleSignInInit):
