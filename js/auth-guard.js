@@ -8,8 +8,10 @@
      remembered and replayed once sign-in/sign-up succeeds.
    - The dialog cannot be dismissed with ✕ / Escape while locked, so there is
      always a path back into the app.
-   - Clicking the dimmed overlay outside the card opens the sign-in modal, and a
-     successful sign-in clears the lock (locked=false).
+   - Clicking the dimmed overlay outside the card dismisses the lock: the veil is
+     removed and the app surfaces go live, so the main content is accessible. The
+     dismissal is sticky (a later feature click must not re-raise the veil), but a
+     real sign-out still re-arms the lock.
    - The lock card hands over to the auth dialog: choosing "Create account" or
      "Already registered? Sign in" hides the veil and shows the matching modal,
      while the app stays inert until the session exists.
@@ -44,6 +46,10 @@ const AuthGuard={
   locked:false,
   _queue:[],
   _wired:false,
+  /* Set when the user dismisses the veil from the overlay click. Kept separate
+     from `locked` because it must SURVIVE the next feature click: require() and
+     sync() both consult it so a dismissed app is never silently re-veiled. */
+  _bypassed:false,
 
   /* Is somebody actually registered and signed in? */
  isAuthed(){
@@ -59,7 +65,7 @@ const AuthGuard={
      When nobody is registered: lock the app, remember the action, and return
      false. unlock() replays it once the user signs in or signs up. */
   require(action){
-   if(this.isAuthed()){
+   if(this.isAuthed()||this._bypassed){
     if(typeof action==='function')action();
     return true;
    }
@@ -76,6 +82,9 @@ const AuthGuard={
  hideVeil(){const v=$('#authLock');if(v)v.classList.remove('open');},
 
  lock(){
+   /* Re-arming the guard always drops any prior dismissal, so a sign-out
+      genuinely re-locks the app instead of leaving a bypassed session open. */
+   this._bypassed=false;
   this.locked=true;
   document.body.classList.add('auth-locked');
   /* The dialog is the sign-in surface once it is up, so re-raising the veil on
@@ -94,13 +103,22 @@ const AuthGuard={
   q.forEach(fn=>{try{fn();}catch(e){}});
  },
 
- sync(){if(this.isAuthed())this.unlock();else this.lock();},
+  sync(){if(this.isAuthed())this.unlock();else if(!this._bypassed)this.lock();},
 
  /* The auth card is the only way out while locked, so hide the dismiss
     affordances and ignore Escape. */
  canCloseAuthDialog(){return !this.locked;},
 
- /* Hand-off from the lock card / veil: open the requested dialog and get the
+ /* Clicking the dimmed backdrop dismisses the lock: the overlay comes down and
+     every app surface becomes interactive again. Mirrors unlock() but also sets
+     _bypassed, so the NEXT require()/sync() does not re-raise the veil over an
+     app the user has already been let into. */
+  dismissLock(){
+   this._bypassed=true;
+   return this.unlock();
+  },
+
+  /* Hand-off from the lock card / veil: open the requested dialog and get the
     veil out of the way so the modal is the only thing on screen. The app stays
     locked (locked===true, body.auth-locked) until the session exists; the
     Account.onChange -> sync() subscription then flips the lock to false and
@@ -123,20 +141,25 @@ const AuthGuard={
   const cta=$('#authLockCta');if(cta)cta.onclick=()=>{this.openFromLock('signup');};
   const alt=$('#authLockSignIn');if(alt)alt.onclick=()=>{this.openFromLock('signin');};
 
-  /* The whole dimmed overlay is a sign-in affordance: clicking the backdrop
-     (anywhere outside .lockCard) opens the sign-in modal. Clicks inside the card
-     are ignored so the two buttons above keep their own behaviour -- otherwise
-     "Create account" would be overridden by the sign-in dialog bubbling up from
-     the very same tap. */
+  /* Clicking anywhere on the dimmed overlay dismisses it: the veil comes down and
+      the app state is updated (locked=false, body.auth-locked cleared), so the
+      main content underneath becomes fully accessible. Clicks inside the card
+      are ignored so the two buttons above keep their own behaviour -- otherwise
+      "Create account" would be overridden by this handler bubbling up from
+      the very same tap. */
   const veil=$('#authLock');
   if(veil)veil.onclick=e=>{
    const t=e&&e.target;
    if(t&&t.closest&&t.closest('.lockCard'))return;
-   this.openFromLock('signin');
+   this.dismissLock();
   };
 
-  /* Account emits on sign-in, sign-up and sign-out. */
-  try{Account.onChange(()=>{renderUserChip();this.sync();});}catch(e){}
+  try{Account.onChange(()=>{
+   /* An account change with nobody signed in IS a sign-out, so it must drop
+      the dismissal too -- otherwise the bypass would outlive the session.
+      Signing in / up still goes straight through sync(). */
+   if(!this.isAuthed())this._bypassed=false;
+   renderUserChip();this.sync();});}catch(e){}
 
   /* Belt and braces: swallow clicks on the app surface while locked. */
   document.addEventListener('click',e=>{

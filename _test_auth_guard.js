@@ -369,30 +369,47 @@ async function testAuthGuard() {
   const after = fire('keydown', makeTarget(['#app']), { key: 's', ctrlKey: true });
   ok(!after.bubbleRan, 'shortcuts are blocked again after sign-out');
 
-  section('auth-guard.js - overlay click opens the login modal');
+
+  section('auth-guard.js - overlay click dismisses the lock');
   ok(typeof els.authLock.onclick === 'function', 'the lock overlay carries an onclick listener');
   /* The real handler receives a click event; the harness passes the target via
      an event-like object, exactly as fire() builds one. */
   sandbox.__opened.length = 0;
   els.authLock.onclick({ target: makeTarget(['#authLock']) });
-  ok(sandbox.__opened[0] === 'signin', 'clicking the dimmed backdrop opens the sign-in modal');
-  ok(api.locked === true, 'the app stays locked until the sign-in succeeds');
-  ok(!els.authLock.classList.contains('open'), 'the backdrop click also hides the veil');
+  ok(!els.authLock.classList.contains('open'), 'the backdrop click removes the overlay');
+  ok(api.locked === false, 'the backdrop click clears the lock state');
+  ok(!document_locked(sandbox), 'body.auth-locked is cleared so the main content is live');
+  ok(sandbox.__opened.length === 0, 'dismissing the lock does not force a modal on the user');
 
-  /* A real tap on the card bubbles to the overlay; it must not hijack the button
-     that was actually pressed (e.g. "Create account"). */
-  sandbox.__opened.length = 0;
+  /* The dismissal has to be STICKY: the next feature click goes through
+     require(), and sync() runs on every account change. Neither may re-veil an
+     app the user has already been let into. */
+  let ran3 = 0;
+  ok(api.require(() => { ran3++; }) === true, 'a feature runs through after the dismissal');
+  ok(ran3 === 1, 'the dismissed action actually executes');
+  api.sync();
+  ok(api.locked === false, 'sync() does not re-lock a dismissed session');
+  ok(!els.authLock.classList.contains('open'), 'sync() does not re-raise the veil');
+
+  /* A real sign-out must still re-arm the guard, otherwise the bypass would be
+     permanent for the rest of the app's life. */
+  signIn(null);
+  ok(api.locked === true, 'signing out re-arms the lock after a dismissal');
+  ok(els.authLock.classList.contains('open'), 'the overlay comes back after the post-dismissal sign-out');
+
+  /* A real tap on the card bubbles to the overlay; it must not dismiss the lock
+     that the button itself was pressed to escape. */
   els.authLock.onclick({ target: makeTarget(['#authLock', '.lockCard']) });
-  ok(sandbox.__opened.length === 0, 'a click inside the card is left to the card buttons');
+  ok(api.locked === true, 'a click inside the card does not dismiss the lock');
+  ok(els.authLock.classList.contains('open'), 'the card buttons stay in charge');
 
-  /* A click with no target (synthetic / programmatic) must not throw. */
-  sandbox.__opened.length = 0;
-  els.authLock.onclick({});
-  ok(sandbox.__opened[0] === 'signin', 'a target-less click still opens the modal');
-
+  /* openLogin() is the programmatic route to the sign-in modal; it must still
+     report the lock as ON, because opening the modal is not a dismissal. */
+  signIn(null);
   sandbox.__opened.length = 0;
   ok(api.openLogin() === true, 'openLogin() keeps the lock while nobody is signed in');
   ok(sandbox.__opened[sandbox.__opened.length - 1] === 'signin', 'openLogin() raises the sign-in modal');
+
 
   signIn({ id: 'u-overlay' });
   ok(api.locked === false, 'a successful login sets the lock state to false');
