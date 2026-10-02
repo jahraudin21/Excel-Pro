@@ -197,22 +197,33 @@ async function main() {
 
   console.log('\n[a click on the Google button reaches the authentication logic]');
   ok(ui.indexOf('function googleOpenPrompt') >= 0, 'a Google prompt helper exists');
-  ok(/googleSignInReady\)return googleOpenPrompt\(\)/.test(ui),
+  ok(/googleSignInReady\)return googleOpenPrompt\(true\)/.test(ui),
     'a click with GIS already loaded opens the prompt immediately');
   ok(/googlePromptPending=true;/.test(ui) && /googleSignInInit\(\)/.test(ui),
     'a click while GIS is still loading records the intent and starts the loader');
-  ok(/if\(googlePromptPending\)\{googlePromptPending=false;googleOpenPrompt\(\);\}/.test(ui),
+  ok(/if\(googlePromptPending\)\{googlePromptPending=false;googleOpenPrompt\(false\);\}/.test(ui),
     'the loader fulfils the pending click the moment GIS is ready');
   ok(/google\.accounts\.id\.prompt\(\)/.test(ui), 'the One Tap prompt is opened as a fallback');
   ok(ui.indexOf("if(typeof googleSignInInit==='function'){googleSignInInit();return;}") < 0,
     'the old handler that returned after a no-op init is gone');
 
   console.log('\n[the click drives the OAuth flow]');
-  ok(ui.indexOf('function googleTriggerOAuthFlow') >= 0, 'the click is forwarded to the GIS control');
-  ok(/querySelector\('div\[role="button"\]'\)/.test(ui) || /querySelector\('iframe'\)/.test(ui),
-    'the rendered Google control is what gets clicked');
-  ok(/if\(googleTriggerOAuthFlow\(\)\)return true;/.test(ui),
-    'the OAuth popup is preferred over the One Tap fallback');
+  ok(ui.indexOf('function googleShowOfficialButton') >= 0,
+    'the click reveals the real GIS control rather than faking one');
+  ok(/querySelector\('div\[role="button"\],iframe'\)/.test(ui),
+    'both the FedCM div and the iframe fallback are detected');
+  ok(/const drawn=googleShowOfficialButton\(\);\s*if\(drawn\)return true;/.test(ui),
+    'the genuine control takes precedence over the One Tap fallback');
+  ok(ui.indexOf('googleTriggerOAuthFlow') < 0,
+    'the synthetic-click helper is gone (it silently no-opped on an iframe)');
+  ok(/function googleOpenPrompt\(fromGesture\)\{/.test(ui),
+    'the prompt helper knows whether a real user gesture is available');
+  ok(/if\(fromGesture\)\{[\s\S]{0,200}?google\.accounts\.id\.prompt\(\)/.test(ui),
+    'One Tap is only attempted where a real click supplies the gesture');
+  ok(/if\(googleSignInReady\)return googleOpenPrompt\(true\)/.test(ui),
+    'a genuine click passes the gesture flag');
+  ok(/if\(googlePromptPending\)\{googlePromptPending=false;googleOpenPrompt\(false\);\}\}/.test(ui),
+    'the deferred post-load call does not pretend to have a gesture');
 
   console.log('\n[successful connection transitions into the app]');
   ok(ui.indexOf('function authTransition') >= 0, 'a single post-auth transition exists');

@@ -110,7 +110,7 @@ function gsignClick(){
   if(typeof Account==='undefined'||!Account.isGoogleConfigured||!Account.isGoogleConfigured()){
     showAuthError('googleUnavailable');return false;}
   /* GIS is already live, so a click acts immediately. */
-  if(googleSignInReady)return googleOpenPrompt();
+  if(googleSignInReady)return googleOpenPrompt(true);
   /* The loader already gave up (see the tries>=40 branch of googleSignInInit):
      say so rather than silently waiting forever. */
   if(googleInitDone){showAuthError('googleUnavailable');return false;}
@@ -123,32 +123,38 @@ function gsignClick(){
   googleSignInInit();
   return true;
 }
-/* GIS draws its own control into #googleBtn, and clicking *that* is what opens
-   the Google account-chooser popup -- the actual OAuth flow. #gsignBtn is our own
-   button, so a click on it has to be forwarded to the rendered control. */
-function googleTriggerOAuthFlow(){
- try{
-  const host=$('#googleBtn');if(!host)return false;
-  const btn=host.querySelector('div[role="button"]');
-  if(btn&&typeof btn.click==='function'){btn.click();return true;}
-  const frame=host.querySelector('iframe');
-  if(frame&&typeof frame.click==='function'){frame.click();return true;}
- }catch(e){}
- return false;
-}
-/* Surface the real Google affordance for a click on #gsignBtn: draw the official
-   button into #googleRow and open the Google account chooser. */
-function googleOpenPrompt(){
+/* Reveal the official Google control and report whether it really rendered.
+   GIS draws its own button into #googleBtn, and clicking *that* is what opens
+   the OAuth consent popup. We cannot open it on the user's behalf:
+     - a synthesised click on a cross-origin <iframe> is ignored outright, and
+     - a popup may only be opened from a transient user gesture, which a
+       setInterval callback (the googlePromptPending branch below) does not have.
+   So the honest implementation makes the genuine control visible and lets the
+   user click it, rather than pretending a programmatic click worked. */
+function googleShowOfficialButton(){
  try{googleRenderButton();}catch(e){}
  const row=$('#googleRow');if(row)row.style.display='';
- /* Preferred path: forward the click to the rendered Google control, which opens
-    the real consent popup. */
- if(googleTriggerOAuthFlow())return true;
- /* It may not be in the DOM yet (GIS still settling), so fall back to One Tap. */
  try{
-  if(typeof google!=='undefined'&&google.accounts&&google.accounts.id
+  const host=$('#googleBtn');if(!host||!host.querySelector)return false;
+  /* FedCM mode renders div[role="button"]; the third-party-cookie fallback
+     renders an <iframe>. Either way the user must click it themselves. */
+  return !!host.querySelector('div[role="button"],iframe');
+ }catch(e){return false;}
+}
+/* Surface the real Google affordance after a click on #gsignBtn.
+   fromGesture=true only for a genuine click; the deferred post-load call passes
+   false so it never attempts a gesture it does not have. */
+function googleOpenPrompt(fromGesture){
+ const drawn=googleShowOfficialButton();
+ if(drawn)return true;
+ /* The control is not in the DOM yet, so fall back to One Tap -- but only
+    where a real click supplies the gesture that it requires. */
+ if(fromGesture){
+  try{
+   if(typeof google!=='undefined'&&google.accounts&&google.accounts.id
     &&typeof google.accounts.id.prompt==='function'){google.accounts.id.prompt();return true;}
- }catch(e){}
+  }catch(e){}
+ }
  showAuthError('googleUnavailable');
  return false;
 }
@@ -349,7 +355,7 @@ function googleSignInInit(){
     const row=$('#googleRow');if(row)row.style.display='';
     if($('#authDialog')&&$('#authDialog').classList.contains('open'))googleRenderButton();
     /* Fulfil a #gsignBtn click that arrived while GIS was still loading. */
-    if(googlePromptPending){googlePromptPending=false;googleOpenPrompt();}}
+    if(googlePromptPending){googlePromptPending=false;googleOpenPrompt(false);}}
    catch(e){console.warn('[Mini Excel] Google Sign-In init failed:',e);}
   }else if(tries>=40){clearInterval(wait);
    console.warn('[Mini Excel] Google Identity Services failed to load');
