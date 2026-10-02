@@ -242,6 +242,23 @@ async function main() {
   ok(/\{enterApp\(\);renderUserChip\(\);/.test(ui) === false,
     'the Google path no longer carries its own copy of the redirect');
 
+  console.log('\n[the button is enabled exactly when it can work]');
+  ok(ui.indexOf('function syncGoogleUi') >= 0,
+    'the Google row is revealed only when a client id is configured');
+  ok(/function syncGoogleUi\(\)\{[\s\S]{0,400}?Account\.isGoogleConfigured/.test(ui),
+    'enablement is driven by Account.isGoogleConfigured()');
+  ok(/\[.?#gsignBtn.,cfg\]/.test(ui) && /\.googleDivider.,cfg\]/.test(ui),
+    'both the button and the "or" divider follow the configured state');
+  ok(/el\.style\.display=pair\[1\]\?..:.none.;/.test(ui),
+    'an unconfigured client id hides the row instead of showing a dead button');
+  ok(/renderUserChip\(\);syncGoogleUi\(\);googleSignInInit\(\);/.test(ui),
+    'enablement is applied during auth UI init');
+  ok(/id="gsignBtn" style="display:none"/.test(html) &&
+     /class="googleDivider" style="display:none"/.test(html),
+    'the button and divider ship hidden, so a flash of dead UI is impossible');
+  ok(/class="googleRow" id="googleRow" style="display:none"/.test(html),
+    'the official GIS row also ships hidden');
+
   console.log('\n' + passed + ' passed, ' + failed + ' failed');
   if (failed) process.exit(1);
 }

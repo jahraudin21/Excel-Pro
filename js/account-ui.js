@@ -102,13 +102,21 @@ Object.assign(STR,{
 });
 
 /* ---------- "Sign in with Google" button in the redesigned dialog ----------
-   The official Google button is rendered by Google Identity Services into
-   #googleBtn when a client id is configured. This visible button is the
-   always-present entry point: it opens the GIS prompt when available, and
-   explains the problem when it is not, rather than silently doing nothing. */
+   GOOGLE_SIGNIN.md promises the Google row stays hidden until a client id is
+   configured, so #gsignBtn, the "or" divider and #googleRow start hidden here
+   and are revealed by syncGoogleUi() only when Account.isGoogleConfigured() is
+   true. That is what "enabled" means for this button: it is offered exactly
+   when it can actually work. Previously it was always visible, so a click could
+   only ever report "Google unavailable". */
+function syncGoogleUi(){
+ const cfg=(typeof Account!=='undefined'&&Account.isGoogleConfigured&&Account.isGoogleConfigured())?true:false;
+ [['#gsignBtn',cfg],['.googleDivider',cfg],['#googleRow',cfg]].forEach(function(pair){
+  const el=$(pair[0]);if(!el)return;
+  el.style.display=pair[1]?'':'none';});
+ return cfg;}
 function gsignClick(){
-  if(typeof Account==='undefined'||!Account.isGoogleConfigured||!Account.isGoogleConfigured()){
-    showAuthError('googleUnavailable');return false;}
+ if(typeof Account==='undefined'||!Account.isGoogleConfigured||!Account.isGoogleConfigured()){
+  showAuthError('googleUnavailable');return false;}
   /* GIS is already live, so a click acts immediately. */
   if(googleSignInReady)return googleOpenPrompt(true);
   /* The loader already gave up (see the tries>=40 branch of googleSignInInit):
@@ -310,7 +318,7 @@ function initAuthUi(){
  }
  document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;const dg=$('#authDialog');if(dg&&dg.classList.contains('open'))closeAuthDialog();});
- renderUserChip();googleSignInInit();}
+ renderUserChip();syncGoogleUi();googleSignInInit();}
 
 /* ---------- Google Sign-In (Google Identity Services) ---------- */
 let googleSignInReady=false,googleInitDone=false,googleBtnDrawn=false,googlePromptPending=false;
