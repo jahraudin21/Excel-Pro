@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "app": {
+    "name": "excel-pro",
+    "productName": "Mini Excel",
+    "appId": "com.miniexcel.spreadsheet",
+    "description": "Mini Excel — a spreadsheet app (Electron shell + browser UI)"
+  },
+  "latest": {
+    "version": "1.0.0",
+    "releasedAt": "2026-10-01T03:08:26.420Z",
+    "gitCommit": "519a1a0cb1a3c0bdd0619ed4ae147df995c57ada",
+    "commitDate": "2026-10-03T06:17:33+05:45",
+    "commitMessage": "update1.0.1",
+    "artifacts": [
+      {
+        "name": "Mini Excel-Setup-1.0.0.exe",
+        "type": "nsis",
+        "platform": "win32",
+        "arch": "x64",
+        "size": 111811449,
+        "sha512": "ZtqoQnr9aaF5tThLWXTwILSzYnY2ILa3zLJs0RR37tiZxHaoEYlWcQc5fZo7Wagl+uQjq1UfFssakWoONGnxCQ=="
+      },
+      {
+        "name": "Mini Excel-1.0.0-portable.exe",
+        "type": "portable",
+        "platform": "win32",
+        "arch": "x64",
+        "size": 111594517,
+        "sha512": "m80121D3IS7Nh7T4O2aVB83Ey3CAlsqAwJcwCg1laFTosiiW8VLXTTO6H+ksWNFatd/ZuYTTamnxX9+G10zLsw=="
+      }
+    ],
+    "updateManifest": {
+      "file": "latest.yml",
+      "path": "Mini-Excel-Setup-1.0.0.exe",
+      "sha512": "ZtqoQnr9aaF5tThLWXTwILSzYnY2ILa3zLJs0RR37tiZxHaoEYlWcQc5fZo7Wagl+uQjq1UfFssakWoONGnxCQ==",
+      "size": 111811449
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jahraudin21/Excel-Pro.git"
+  }
+}
