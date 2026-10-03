@@ -45,6 +45,7 @@ from flask import (
     request,
     send_from_directory,
     session,
+    url_for,
 )
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -276,6 +277,21 @@ def require_login(view):
 @app.get("/")
 def index():
     return render_template("auth.html", providers=oauth.PROVIDERS)
+
+
+@app.get("/landing")
+def landing():
+    """Public marketing page with the "Try Free" registration gate.
+
+    The gated section is a marketing teaser, not licensed content, so this route
+    is deliberately public and does not require a session. ``google_url`` is only
+    rendered when Google is actually configured — linking to an OAuth start
+    route for an unconfigured provider would dead-end on a 503.
+    """
+    return render_template(
+        "landing.html",
+        google_url=url_for("auth_start", provider="google") if oauth.is_configured("google") else None,
+    )
 
 
 @app.get("/api/config")
