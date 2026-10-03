@@ -173,6 +173,51 @@ app.whenReady().then(() => {
         'button carries the 4-colour Google logo -> ' + gs.colours.join(','));
     }
 
+    /* ---- login card renders correctly (regression guard) ----
+       The card once shipped three defects that only show up as *computed*
+       styles, so a source-level check cannot catch them:
+         1. #authSubmit sits in a .frow, and the generic `.frow button` rule
+            outranked .btnPrimary -> white text on a white button, invisible.
+         2. A stale duplicate #authDialog block below the "clean card" rules
+            flattened the inputs back to 3px radius / 6px 8px padding.
+         3. #authDialog stayed display:block, so the dialog's flex `gap` never
+            reached the labels and inputs, and they rendered cramped.
+       Assert on the values the browser actually resolves, not on the CSS text. */
+    const card = await win.webContents.executeJavaScript(`(() => {
+      const dlg = document.getElementById('authDialog');
+      if (!dlg) return null;
+      dlg.classList.add('open');
+      const form = document.getElementById('authForm');
+      const email = document.getElementById('emailField');
+      const submit = document.getElementById('authSubmit');
+      const label = dlg.querySelector('label[for=emailField]');
+      const sc = submit ? getComputedStyle(submit) : null;
+      const ic = email ? getComputedStyle(email) : null;
+      return {
+        formDisplay: form ? getComputedStyle(form).display : null,
+        inputRadius: ic ? ic.borderTopLeftRadius : null,
+        inputPadding: ic ? ic.padding : null,
+        labelDisplay: label ? getComputedStyle(label).display : null,
+        submitInvisible: sc ? sc.color === sc.backgroundColor : null,
+        submitWidth: submit ? Math.round(submit.getBoundingClientRect().width) : null,
+        inputWidth: email ? Math.round(email.getBoundingClientRect().width) : null,
+        /* Labels must read as words, not raw i18n keys ("emailLabel"). */
+        rawKeys: [...dlg.querySelectorAll('[data-i18n]')]
+          .filter(n => n.textContent.trim() === n.dataset.i18n).map(n => n.dataset.i18n)
+      };
+    })()`);
+    ok(!!card, 'the login card is present');
+    if (card) {
+      ok(card.formDisplay === 'flex', 'the form is a flex column, so the card gap reaches the fields -> ' + card.formDisplay);
+      ok(card.inputRadius === '10px', 'fields keep the card\'s 10px radius (no stale override) -> ' + card.inputRadius);
+      ok(card.inputPadding === '10px 12px', 'fields keep the card\'s padding (no stale override) -> ' + card.inputPadding);
+      ok(card.labelDisplay === 'block', 'a label stacks above its input -> ' + card.labelDisplay);
+      ok(card.submitInvisible === false, 'the Sign in button is not white-on-white');
+      ok(card.submitWidth === card.inputWidth,
+        'the Sign in button lines up with the fields above it -> ' + card.submitWidth + ' vs ' + card.inputWidth);
+      ok(card.rawKeys.length === 0, 'no raw i18n keys are rendered in the card -> ' + card.rawKeys.join(','));
+    }
+
     console.log('\n' + pass + ' passed, ' + fail + ' failed');
     app.exit(fail ? 1 : 0);
   });

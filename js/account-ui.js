@@ -234,6 +234,21 @@ function renderUserChip(){
  }catch(e){}}
 
 /* ---------- auth dialog ---------- */
+/* script.js is the earlier defer script, so its init() -> applyLang() sweep runs
+   before this file has registered the dialog's strings. T() then falls through
+   to the key name and the card renders "emailLabel" / "userName" / "authSub"
+   instead of "Email" / "Name" / the subtitle. Re-apply just the dialog's own
+   data-i18n nodes - the same way the start screen and the lock card already do -
+   rather than the global applyLang(), which would needlessly re-render the grid.
+   Later language switches go through applyLang() and pick these keys up. */
+function applyAuthDialogI18n(){
+ const root=$('#authDialog');if(!root||typeof T!=='function')return;
+ try{
+  Array.prototype.forEach.call(root.querySelectorAll('[data-i18n]'),function(n){
+   n.textContent=T(n.dataset.i18n);});
+  Array.prototype.forEach.call(root.querySelectorAll('[data-i18n-ph]'),function(n){
+   n.placeholder=T(n.dataset.i18nPh);});
+ }catch(e){}}
 function showAuthError(msg){const el=$('#formError');if(!el)return;
  el.textContent=msg?T(msg):'';el.style.display=msg?'block':'none';}
 function authSwitchMode(mode){const d=$('#authDialog');if(!d)return;
@@ -323,7 +338,8 @@ function initAuthUi(){
  }
  document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;const dg=$('#authDialog');if(dg&&dg.classList.contains('open'))closeAuthDialog();});
- renderUserChip();syncGoogleUi();googleSignInInit();}
+ applyAuthDialogI18n();
+  renderUserChip();syncGoogleUi();googleSignInInit();}
 
 /* ---------- Google Sign-In (Google Identity Services) ---------- */
 let googleSignInReady=false,googleInitDone=false,googleBtnDrawn=false,googlePromptPending=false;
