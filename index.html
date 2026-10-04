@@ -34,6 +34,10 @@ if ('serviceWorker' in navigator) {
 <symbol id="i-underline" viewBox="0 0 16 16"><path d="M4.6 2.2v5.7a3.4 3.4 0 0 0 6.8 0V2.2"/><path d="M3.4 13.6h9.2"/></symbol>
 <symbol id="i-strike" viewBox="0 0 16 16"><path d="M4.4 6.2a2.6 2.6 0 0 1 2.5-1.7h1.4M11.6 9.6a2.6 2.6 0 0 1-2.5 1.7H7.6"/><path d="M2.4 8h11.2"/></symbol>
 <symbol id="i-border" viewBox="0 0 16 16"><rect x="1.7" y="1.7" width="12.6" height="12.6" rx="1" stroke-dasharray="2 1.7"/><rect x="4.5" y="4.5" width="7" height="7" rx=".7"/></symbol>
+    <!-- Formula Auditing: Evaluate, Error Check, Watch Window -->
+    <symbol id="i-eval" viewBox="0 0 16 16"><path d="M2.5 4h5M2.5 8h3M2.5 12h4" stroke-linecap="round"/><path d="M9 3.5l3.5 4.5L9 12.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-errchk" viewBox="0 0 16 16"><path d="M8 2.2l6 10.6H2z" stroke-linejoin="round"/><path d="M8 6v3.4M8 11.1v.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-watch" viewBox="0 0 16 16"><rect x="1.8" y="3" width="12.4" height="10" rx="1.4"/><path d="M1.8 6.2h12.4" stroke-linecap="round"/><circle cx="8" cy="9.6" r="2.1"/></symbol>
     <!-- Dialog launcher: the small arrow into a corner, matching Excel's. -->
     <symbol id="i-launcher" viewBox="0 0 16 16"><path d="M6 3h7v7" fill="none"/><path d="M13 3L6.5 9.5" fill="none"/><path d="M9.5 13H3V6.5" fill="none"/></symbol>
 <symbol id="i-wrap" viewBox="0 0 16 16"><path d="M2 3.6h12M2 6.6h8.4M2 9.6h6.4M2 12.6h9.4"/><path d="M10.4 8.2v3.4M8.6 10l1.8 1.8 1.8-1.8"/></symbol>
@@ -422,13 +426,18 @@ if ('serviceWorker' in navigator) {
     </div><div class="rrow">
       <button class="rbtn big" id="bShowFormulas" title="Show formulas"><svg class="ic" aria-hidden="true"><use href="#i-show-formulas"></use></svg><span data-i18n="bShowFormulas">Formulas</span></button>
       <button class="rbtn" id="bExplain" title="Explain this formula"><svg class="ic" aria-hidden="true"><use href="#i-explain"></use></svg></button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bEvalFormula" data-i18n-t="tipEval" title="Evaluate Formula"><svg class="ic" aria-hidden="true"><use href="#i-eval"></use></svg><span data-i18n="bEval">Evaluate</span></button>
+      <button class="rbtn" id="bErrorCheck" data-i18n-t="tipErrChk" title="Error Checking"><svg class="ic" aria-hidden="true"><use href="#i-errchk"></use></svg><span data-i18n="bErrChk">Errors</span></button>
+      <button class="rbtn" id="bWatchWindow" data-i18n-t="tipWatch" title="Watch Window"><svg class="ic" aria-hidden="true"><use href="#i-watch"></use></svg><span data-i18n="bWatch">Watch</span></button>
     </div><div class="rlabel" data-i18n="gFnHelp">Formula Auditing</div></div>
     <div class="rgrp"><div class="rrow">
       <button class="rbtn" id="bCalcNow" title="Recalculate now"><svg class="ic" aria-hidden="true"><use href="#i-calc"></use></svg>Calc</button>
       <button class="rbtn" id="bCalcMode" data-i18n-t="bCalcMode"><svg class="ic" aria-hidden="true"><use href="#i-gear"></use></svg> <span data-i18n="bCalcMode">Calc Options</span> ▾</button>
     </div><div class="rlabel" data-i18n="gCalcOpt">Calculation Options</div></div>
     <div class="rgrp"><div class="rrow">
-      <button class="rbtn" id="bNameMgr" title="Named ranges"><svg class="ic" aria-hidden="true"><use href="#i-names"></use></svg> Names</button>
+      <button class="rbtn big" id="bNameMgr" title="Name Manager"><svg class="ic" aria-hidden="true"><use href="#i-names"></use></svg><span data-i18n="bNameMgr">Name Manager</span></button>
+      <button class="rbtn" id="bNameDef" data-i18n-t="bNameDef" title="Define Name"><svg class="ic" aria-hidden="true"><use href="#i-names"></use></svg><span data-i18n="bNameDef">Define Name</span></button>
       <button class="rbtn" id="bNameGo" data-i18n-t="bNameGo"><svg class="ic" aria-hidden="true"><use href="#i-goto"></use></svg> <span data-i18n="bNameGo">Go To</span></button>
     </div><div class="rlabel" data-i18n="gNames">Defined Names</div></div>
    </div>
@@ -597,6 +606,22 @@ if ('serviceWorker' in navigator) {
    </div>
   </div>
 
+   <div id="evalDlg" role="dialog" aria-labelledby="evalTitle">
+    <div class="frow"><span data-i18n="bEval" id="evalTitle">Evaluate Formula</span><span style="flex:1"></span><button type="button" id="evalClose" aria-label="Close"></button></div>
+    <p class="evalHint" data-i18n="evalHint">Values used by the active formula, then its result.</p>
+    <ul class="evalList" id="evalSteps"></ul>
+    <div class="frow"><span data-i18n="evalResultLbl">Result</span><b id="evalResult">—</b></div>
+   </div>
+   <div id="watchDlg" role="dialog" aria-labelledby="watchTitle">
+    <div class="frow"><span data-i18n="bWatch" id="watchTitle">Watch Window</span><span style="flex:1"></span><button type="button" id="watchClose" aria-label="Close"></button></div>
+    <p class="evalHint" data-i18n="watchHint">Cells you are tracking. Click one to jump to it.</p>
+    <ul class="evalList" id="watchList"></ul>
+    <div class="frow">
+     <button type="button" id="watchAdd" data-i18n="watchAdd">Add current cell</button>
+     <span style="flex:1"></span>
+     <button type="button" id="watchClear" data-i18n="watchClear">Clear all</button>
+    </div>
+   </div>
    <div id="fmtDlg" role="dialog" aria-labelledby="fmtTitle">
     <div class="frow"><span data-i18n="fmtTitle" id="fmtTitle">Format Cells</span><span style="flex:1"></span><button type="button" id="fmtClose" aria-label="Close"></button></div>
     <div class="fmtTabs" role="tablist">
@@ -1028,6 +1053,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/drive.js" defer></script>
 <script src="js/script.js" defer></script>
 <script src="js/formatCells.js" defer></script>
+<script src="js/formulaAuditing.js" defer></script>
 <script src="js/drawDesign.js" defer></script>
 <script src="js/start-screen.js" defer></script>
 <script src="js/ribbon-display.js" defer></script>

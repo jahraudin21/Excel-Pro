@@ -218,6 +218,17 @@ async function testServiceWorker() {
     u !== './' && !fs.existsSync(path.join(__dirname, u.replace(/^\.\//, ''))));
   ok(missing.length === 0, 'precache list matches the files on disk' +
     (missing.length ? ' (missing: ' + missing.join(', ') + ')' : ''));
+  /* The reverse direction is what actually bites: a <script> in index.html that
+     the worker never precaches boots fine online and throws offline. The check
+     above cannot see that, because the file does exist on disk. */
+  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  const shipped = [...html.matchAll(/<(?:script[^>]*\ssrc|link[^>]*\shref)="([^"]+)"/g)]
+    .map(m => m[1])
+    .filter(u => u.startsWith('./') === false && /^(\.\/)?(js|css)\//.test(u))
+    .map(u => './' + u.replace(/^\.\//, ''));
+  const uncached = [...new Set(shipped)].filter(u => !api.STATIC_ASSETS.includes(u));
+  ok(uncached.length === 0, 'every script/css the page loads is precached' +
+    (uncached.length ? ' (not precached: ' + uncached.join(', ') + ')' : ''));
 }
 
 /* ============ PART 2 - js/auth-guard.js ============ */

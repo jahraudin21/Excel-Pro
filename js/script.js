@@ -190,6 +190,7 @@ const STR={
  catLogic:{np:'तार्किक',hi:'तार्किक',en:'Logical'},
  catLookup:{np:'खोज',hi:'खोज',en:'Lookup'},
  catDate:{np:'मिति',hi:'तिथि',en:'Date'},
+ catFin:{np:'वित्त',hi:'वित्तीय',en:'Financial'},
  fNoData:{np:'चयनमा कुनै नम्बर छैन',hi:'चयन में कोई नंबर नहीं',en:'No numbers in selection'},
  nameBox:{np:'नाम बाकस',hi:'नाम बॉक्स',en:'Name Box'},
  fbCancel:{np:'रद्द गर्नुहोस् (Esc)',hi:'रद्द करें (Esc)',en:'Cancel (Esc)'},
@@ -348,6 +349,8 @@ const STR={
  calcManual:{np:'मैन्युअल',hi:'मैन्युअल',en:'Manual'},
  calcNow:{np:'अहिले पुनः गणना गर्नुहोस्',hi:'अभी पुनर्गणना करें',en:'Calculate Now'},
  gNames:{np:'परिभाषित नाम',hi:'परिभाषित नाम',en:'Defined Names'},
+ bNameMgr:{np:'नाम व्यवस्थापक',hi:'नाम प्रबंधक',en:'Name Manager'},
+ bNameDef:{np:'नाम परिभाषित गर्नुहोस्',hi:'नाम परिभाषित करें',en:'Define Name'},
  bNameGo:{np:'जाउनुहोस्',hi:'जाएँ',en:'Go To'},
  gDataTypes:{np:'डेटा प्रकार',hi:'डेटा प्रकार',en:'Data Types'},
  bDtNum:{np:'नम्बर निकाल्नुहोस्',hi:'नंबर निकालें',en:'Extract Number'},
@@ -496,7 +499,11 @@ const FN_CATS={
  text:['LEN','UPPER','LOWER','PROPER','TRIM','LEFT','MID','RIGHT','CONCAT','CONCATENATE','TEXT','VALUE','REPT','SUBSTITUTE','REPLACE','FIND','SEARCH','EXACT','CLEAN','CHAR','CODE'],
  logic:['IF','IFS','IFERROR','IFNA','AND','OR','NOT','XOR','TRUE','FALSE','ISBLANK','ISNUMBER','ISTEXT','ISERROR','ISEVEN','ISODD','N'],
  lookup:['VLOOKUP','HLOOKUP','INDEX','MATCH','CHOOSE','ROWS','COLUMNS','XLOOKUP'],
- date:['TODAY','NOW','DATE','YEAR','MONTH','DAY','DAYS','WEEKDAY','EOMONTH','EDATE']
+ date:['TODAY','NOW','DATE','YEAR','MONTH','DAY','DAYS','WEEKDAY','EOMONTH','EDATE'],
+ /* Financial. Excel groups these separately from Math & Trig, and so does the
+    Formulas tab Category list. Rates are annual and payments periodic, matching
+    Excel's defaults: PMT(rate, nper, pv, [fv], [type]). */
+ financial:['PMT','PV','FV','NPER','RATE','IPMT','PPMT','NPV','IRR','XIRR','XNPV','SLN','SYD','DB','DDB','EFFECT','NOMINAL','PDURATION','RRI','CUMIPMT']
 };
 const FN_HELP={
 SUM:'सबका जोड़',AVERAGE:'औसत',COUNT:'गिनती',COUNTA:'भरे सेल गिनो',SUMIF:'शर्त वाला जोड़',COUNTIF:'शर्त वाली गिनती',IF:'शर्त पर चुनाव',VLOOKUP:'पहली column में ढूँढकर value',INDEX:'position से value',MATCH:'value की position',ROUND:'गोल करो',MEDIAN:'बीच का मान',TEXT:'value को text format में',TODAY:'आज की तारीख',PRODUCT:'गुणा',SQRT:'वर्गमूल',POWER:'घात',MOD:'शेषफल',ABS:'निरपेक्ष मान',INT:'पूर्णांक भाग',MAX:'अधिकतम',MIN:'न्यूनतम',LARGE:'k-वीं बड़ी',SMALL:'k-वीं छोटी',RANK:'रैंक',LEFT:'बाएँ से अक्षर',RIGHT:'दाएँ से अक्षर',MID:'बीच से अक्षर',LEN:'लंबाई',UPPER:'बड़े अक्षर',LOWER:'छोटे अक्षर',TRIM:'खाली जगह हटाओ',AND:'सब सत्य?',OR:'कोई सत्य?',NOT:'उल्टा',YEAR:'साल',MONTH:'महीना',DAY:'दिन',DATE:'तारीख बनाओ',NOW:'आज+समय',CONCAT:'जोड़ो text',IFERROR:'error पर वैकल्पिक',SUMIFS:'कई शर्तों वाला जोड़',COUNTIFS:'कई शर्तों वाली गिनती',AVERAGEIF:'शर्त वाला औसत',XLOOKUP:'खोजो (नया)',CHOOSE:'क्रम से चुनो',ROWS:'पंक्तियाँ',COLUMNS:'स्तंभ',RAND:'यादृच्छिक',RANDBETWEEN:'सीमा में यादृच्छिक',ROUNDUP:'ऊपर गोल',ROUNDDOWN:'नीचे गोल',CEILING:'गुणज तक ऊपर',FLOOR:'गुणज तक नीचे',TRUNC:'काटो',SIGN:'चिह्न',EXP:'e की घात',LN:'प्राकृतिक log',LOG:'log',EXACT:'सटीक मिलान',SUBSTITUTE:'बदलो text',REPLACE:'जगह बदलो',FIND:'स्थान ढूँढो',SEARCH:'खोजो',REPT:'दोहराओ',VALUE:'संख्या बनाओ',PROPER:'पहला अक्षर बड़ा',CLEAN:'गंदे अक्षर हटाओ',CHAR:'कोड से अक्षर',CODE:'अक्षर का कोड',N:'संख्या में बदलो',IFS:'कई शर्तें',XOR:'एक ही सत्य',ISBLANK:'खाली?',ISNUMBER:'संख्या?',ISTEXT:'पाठ?',ISERROR:'त्रुटि?',ISEVEN:'सम?',ISODD:'विषम?',IFNA:'N/A पर वैकल्पिक',WEEKDAY:'सप्ताह का दिन',EOMONTH:'महीने का अंत',EDATE:'महीने जोड़ो/घटाओ',DAYS:'दिनों का अंतर',SUBTOTAL:'छिपी rows के साथ जोड़',MODE:'सबसे ज्यादा बार',STDEV:'मानक विचलन',VAR:'प्रसरण',PERCENTILE:'प्रतिशतक',COUNTBLANK:'खाली गिनो',MROUND:'निकटतम गुणज',QUOTIENT:'भागफल'};
@@ -2107,7 +2114,7 @@ function autoSumText(){
 
 /* ================= Excel-like ribbon init (controls + shortcuts) ================= */
 function fillFxCat(sel){sel.innerHTML='';
- [['math','catMath'],['stat','catStat'],['text','catText'],['logic','catLogic'],['lookup','catLookup'],['date','catDate']].forEach(c2=>{
+ [['math','catMath'],['stat','catStat'],['text','catText'],['logic','catLogic'],['lookup','catLookup'],['date','catDate'],['financial','catFin']].forEach(c2=>{
   const o=document.createElement('option');o.value=c2[0];o.textContent=T(c2[1]);sel.appendChild(o);});}
 function setBookName(){const bn=$('#bookName');if(bn)bn.textContent='Book1 · '+sheet().name;}
 function applyView(){const g=$('#grid');if(!g)return;const m=wb.view||'normal';
@@ -2384,6 +2391,7 @@ function initRibbon(){
   if(info)aiMsg(T('explFor')+' '+active+': ='+info.formula+'\n'+T('explFns')+': '+(info.fns||'—')+'\n'+T('explRefs')+': '+(info.refs||'—'),'bot');
   else aiMsg(T('explNone'),'bot');});
  tg('#bNameMgr',()=>nameMgrMenu($('#bNameMgr')));
+ tg('#bNameDef',()=>defineNameDialog($('#bNameDef')));
  tg('#bCalcNow',()=>{renderAll();setStatusMode(T('sbSaved'));});
  /* --- Formulas: calculation options + defined names --- */
  tg('#bCalcMode',()=>popMenu($('#bCalcMode'),[
@@ -3132,6 +3140,21 @@ function explainActive(){const raw=rawOf(active);if(typeof raw!=='string'||raw[0
  const refs=toks.filter(t=>t.t==='ref').map(t=>refOf(t.r,t.c))
   .concat(toks.filter(t=>t.t==='rng').map(t=>refOf(t.r1,t.c1)+':'+refOf(t.r2,t.c2))).join(', ');
  return{formula:raw.slice(1),fns,refs};}
+/* Define Name (Formulas ▸ Defined Names). Separate from Name Manager so the two
+   intents match Excel: this creates a name for the current selection, while the
+   manager lists and removes existing ones. */
+function defineNameDialog(anchor){
+ const suggest=(wb.names&&Object.keys(wb.names).length?'1':'')+(wb.names?'2':'');
+ const key=prompt(T('nameDefAsk'),'');
+ if(!key)return;
+ /* Excel rejects anything that is not a legal name, because a name has to be
+    parseable as an identifier in a formula. Keep it to letters, digits and
+    underscore, not starting with a digit. */
+ if(!/^[A-Za-z_][A-Za-z0-9_.]*$/.test(key)){setStatusMode(T('nameDefBad'));return;}
+ wb.names=wb.names||{};
+ wb.names[key]=rangeA1(rect());
+ saveLS();syncRibbon();
+ setStatusMode(T('nameDefOk')+': '+key+' → '+wb.names[key]);}
 function nameMgrMenu(anchor){const names=wb.names||{},keys=Object.keys(names);
  const item=rg=>{const p=String(rg).split(':');
   active=selA=p[0].toUpperCase();selB=(p[1]||p[0]).toUpperCase();renderAll();syncRibbon();};

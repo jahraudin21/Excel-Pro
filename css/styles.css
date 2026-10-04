@@ -346,10 +346,10 @@ input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--xl-lin
    80px from the top of #app, capped to the window, and scrollable inside it. The
    old rule put a tall dialog (Help, Page Setup) off the bottom of a short window
    and let a 340px min-width overflow a 380px one. */
-#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog,#fmtDlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:var(--z-dialog);display:none;flex-direction:column;padding:10px;gap:8px;
+#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog,#fmtDlg,#evalDlg,#watchDlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:var(--z-dialog);display:none;flex-direction:column;padding:10px;gap:8px;
   min-width:min(340px,calc(100vw - 32px));max-width:calc(100vw - 32px);
   max-height:calc(100vh - 32px);overflow:auto;overscroll-behavior:contain}
-#findDlg.open,#chartDlg.open,#pivotDlg.open,#recDlg.open,#picDlg.open,#helpDlg.open,#psDlg.open,#authDialog.open,#fmtDlg.open{display:flex}
+#findDlg.open,#chartDlg.open,#pivotDlg.open,#recDlg.open,#picDlg.open,#helpDlg.open,#psDlg.open,#authDialog.open,#fmtDlg.open,#evalDlg.open,#watchDlg.open{display:flex}
 .frow{display:flex;gap:6px;align-items:center}
 .frow input{flex:1;border:1px solid #ccc;padding:4px 8px;font-size:13px;outline:none}
 .frow input:focus{border-color:#217346}
@@ -452,6 +452,28 @@ body[data-theme='dark'] .bsInfoBox{background:#2b2b2b;border-color:#555}
 body[data-theme='dark'] .bsRow{border-bottom-color:#444}
 body[data-fx='sharp'] #backstage .bsCard,body[data-fx='sharp'] .bsBack{border-radius:0}
 
+/* ---------- Formula Auditing dialogs (Evaluate / Watch Window) ----------
+   Both are small read-only lists, so they share one presentation: a bordered
+   scroll area and a monospace value column, because the point is to read
+   numbers accurately. */
+#evalDlg,#watchDlg{min-width:min(400px,calc(100vw - 32px))}
+.evalHint{margin:0;font-size:12px;color:var(--xl-text-2)}
+.evalList{
+  list-style:none;margin:0;padding:0;
+  border:1px solid var(--xl-line);border-radius:3px;
+  max-height:190px;overflow:auto;background:#fff}
+.evalList li{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:5px 9px;font-size:12.5px;border-bottom:1px solid var(--xl-line-soft)}
+.evalList li:last-child{border-bottom:none}
+.evalList li.muted{color:var(--xl-text-2);font-style:italic}
+.watchRef{font-family:ui-monospace,Consolas,monospace;white-space:nowrap;cursor:pointer}
+.watchRef:hover{color:var(--accent);text-decoration:underline}
+.watchX{
+  border:0;background:transparent;color:var(--xl-text-2);
+  font-size:14px;line-height:1;cursor:pointer;padding:2px 5px;border-radius:2px;flex:none}
+.watchX:hover{background:var(--xl-hover);color:var(--xl-text)}
+#evalResult{font-family:ui-monospace,Consolas,monospace;font-size:13px}
 /* ---------- Format Cells dialog (Ctrl+1) ----------
    Tabs share one stacked panel: only the active .fmtPane is shown, so the dialog
    is as short as its tallest tab rather than the sum of all four. */

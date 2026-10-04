@@ -15,7 +15,7 @@ const guard = read('js/auth-guard.js');
 /* The ribbon/backstage wiring lives in the engine module, not the UI modules. */
 const jsScript = read('js/script.js');
 /* Every module that ships, so an encoding fault cannot hide in one of them. */
-const extraModules = ['js/drawDesign.js', 'js/drive.js', 'js/ribbon-display.js'].map(read);
+const extraModules = ['js/drawDesign.js', 'js/drive.js', 'js/ribbon-display.js', 'js/formulaAuditing.js'].map(read);
 
 let pass = 0, fail = 0;
 const chk = (label, cond) => { if (cond) { pass++; console.log('  PASS  ' + label); } else { fail++; console.log('  FAIL  ' + label); } };
@@ -159,7 +159,7 @@ const SOURCES = Object.assign({
   'js/start-screen.js': ss, 'js/account-ui.js': accountUi, 'js/account.js': account,
   'js/auth-guard.js': guard
 }, { 'js/drawDesign.js': extraModules[0], 'js/drive.js': extraModules[1],
-  'js/ribbon-display.js': extraModules[2] });
+  'js/ribbon-display.js': extraModules[2], 'js/formulaAuditing.js': extraModules[3] });
 
 /* Windows-1252 0x80-0x9F; 0xA0-0xFF is Latin-1 and needs no table. */
 const CP1252_HIGH = {
@@ -705,10 +705,41 @@ chk('div tags balanced (' + o + '/' + c + ')', o === c);
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 chk('no duplicate ids', new Set(ids).size === ids.length);
 chk('window is full-bleed (no green page padding)', /body\{background:var\(--xl-ribbon\);padding:0/.test(css));
-for (const f of ['js/start-screen.js', 'js/account-ui.js', 'js/ribbon-display.js', 'js/account.js', 'js/auth-guard.js']) {
+for (const f of ['js/start-screen.js', 'js/account-ui.js', 'js/ribbon-display.js', 'js/account.js', 'js/auth-guard.js', 'js/formulaAuditing.js']) {
   let ok = true; try { new Function(read(f)); } catch (e) { ok = false; console.log('        ' + e.message); }
   chk(f + ' parses', ok);
 }
+/* Formula Auditing: the file is module-global code, so a mis-nested brace would
+   still parse but would hide half the commands inside another function, where
+   nothing can reach them. Asserting the real thing - that every entry point is
+   a global after the module runs - is what catches that, where a syntax check
+   cannot. The engine is stubbed because this module only borrows from it. */
+const auditingSrc = read('js/formulaAuditing.js');
+const auditGlobals = (() => {
+  const stub = {
+    document: {
+      readyState: 'complete', getElementById: () => null,
+      createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }),
+      addEventListener() {}
+    },
+    STR: {}, LANG: 'en'
+  };
+  stub.window = stub;
+  const run = new Function('$', 'T', 'STR', 'LANG', 'document', 'active', 'vals', 'wb',
+    'cell', 'sheet', 'dispVal', 'refsInFormula', 'evalFormula', 'isErr',
+    'popMenu', 'saveLS', 'setStatusMode', 'renderAll', 'syncRibbon', 'selA', 'selB',
+    auditingSrc + '\nreturn {evaluateFormula, openEvaluateDialog, findCellErrors, errorCheckMenu, watchList, watchAdd, watchRemove, renderWatchList, openWatchDialog, initFormulaAuditing};');
+  const noop = () => {};
+  return run(noop, (k) => k, stub.STR, 'en', stub.document, 'A1', {}, { cells: {} },
+    () => null, () => ({ cells: {} }), () => '', () => [], () => 0, () => false,
+    noop, noop, noop, noop, 'A1', 'A1');
+})();
+chk('every Formula Auditing entry point is reachable from module scope',
+  ['evaluateFormula', 'openEvaluateDialog', 'findCellErrors', 'errorCheckMenu',
+   'watchList', 'watchAdd', 'watchRemove', 'renderWatchList', 'openWatchDialog',
+   'initFormulaAuditing'].every(k => typeof auditGlobals[k] === 'function'));
+chk('formulaAuditing.js adds no i18n key that collides with the id it fills',
+  /data-i18n="evalResultLbl"/.test(html) && !/data-i18n="evalResult"/.test(html));
 // Every data-i18n key used by the start screen must resolve inside its own module.
 const ssKeys = new Set([...ss.matchAll(/^\s*([A-Za-z0-9_]+):\{/gm)].map(m => m[1]));
 const ssUsed = new Set([
