@@ -49,6 +49,7 @@ function makeSwSandbox() {
   const net = { fail: new Set(), status: {}, calls: [] };
   const store = new Map();
   const listeners = {};
+  const logs = [];
 
   /* The real Cache API keys entries by the *resolved absolute* request URL, so
      './js/script.js' and 'https://host/js/script.js' are the same entry. The stub
@@ -106,10 +107,23 @@ function makeSwSandbox() {
   };
 
   const sandbox = {
-    console, self, caches, URL, Request: FakeRequest,
-    /* store/net/listeners live in this closure, not in the VM global scope, so
-       they must be exposed for the __sw handle appended to the source below. */
-    listeners, store, net,
+    /* console is captured rather than forwarded. The install step deliberately
+       fails one precache (see net.fail.add below) to prove sw.js survives a bad
+       asset, and sw.js reports that with console.warn - which goes to stderr and
+       makes PowerShell wrap the line in a red NativeCommandError block, so a
+       healthy test run looks like it failed. The warning is still collected and
+       asserted on below, which is a stronger check than letting it print. */
+    console: {
+      log: (...a) => { logs.push(['log', ...a]); },
+      warn: (...a) => { logs.push(['warn', ...a]); },
+      error: (...a) => { logs.push(['error', ...a]); },
+      info: (...a) => { logs.push(['info', ...a]); },
+      debug: (...a) => { logs.push(['debug', ...a]); }
+    },
+    self, caches, URL, Request: FakeRequest,
+    /* store/net/listeners/logs live in this closure, not in the VM global scope,
+       so they must be exposed for the __sw handle appended to the source below. */
+    listeners, store, net, logs,
     fetch: (req) => {
       const u = urlOf(req);
       net.calls.push(u);
@@ -119,7 +133,7 @@ function makeSwSandbox() {
   };
   const ctx = vm.createContext(sandbox);
   const src = fs.readFileSync(path.join(__dirname, 'sw.js'), 'utf8') +
-    '\nglobalThis.__sw={STATIC_ASSETS,CACHE_NAME,listeners,store,net,self};';
+    '\nglobalThis.__sw={STATIC_ASSETS,CACHE_NAME,listeners,store,net,self,logs};';
   vm.runInContext(src, ctx, { filename: 'sw.js' });
 
   function fire(type, req) {
@@ -133,13 +147,13 @@ function makeSwSandbox() {
     return { response, waits };
   }
 
-  return { api: sandbox.__sw, net, store, makeRes, fire };
+  return { api: sandbox.__sw, net, store, makeRes, fire, logs };
 }
 
 async function testServiceWorker() {
   section('sw.js - install / activate');
   const h = makeSwSandbox();
-  const { api, net, store, makeRes } = h;
+  const { api, net, store, makeRes, logs } = h;
 
   ok(!!api, 'sw.js evaluates and exposes its constants');
   ok(Array.isArray(api.STATIC_ASSETS) && api.STATIC_ASSETS.indexOf('./index.html') >= 0,
@@ -149,10 +163,22 @@ async function testServiceWorker() {
   net.fail.add(ABS('./js/drive.js'));
   const inst = h.fire('install', {});
   await Promise.all(inst.waits);
-  ok(api.self.__skipped === true, 'install calls skipWaiting()');
+  /* The single injected failure must not abort the install: sw.js adds assets
+     one-by-one behind a per-asset catch, so the other entries still land. This
+     is the property the swallowed warning was reporting, now asserted directly. */
+  const skipped = logs.filter(l => l[0] === 'warn' && /precache skipped/.test(String(l[1])))
+                      .map(l => String(l[2]));
+  ok(skipped.length === 1, 'exactly one failed asset is reported, not an aborted install'
+    + ' (warned: ' + skipped.length + ')');
+  ok(skipped.length === 1 && skipped[0] === './js/drive.js',
+    'the skipped asset is the injected failure, ./js/drive.js'
+    + (skipped.length ? ' (got: ' + skipped[0] + ')' : ''));
+  ok(api.self.__skipped === true, 'install calls skipWaiting() even when an asset fails');
   const own = store.get(api.CACHE_NAME);
   ok(!!own && own.size === api.STATIC_ASSETS.length - 1,
     'every reachable asset is precached (' + (own ? own.size : 0) + ')');
+  ok(!!own && !own.has(ABS('./js/drive.js')),
+    'the failed asset is genuinely absent from the cache, not cached as a bad entry');
   ok(!!own.get(ABS('./js/auth-guard.js')), 'auth-guard.js is precached for offline use');
 
   store.set('excel-pro-v0', new Map([['./index.html', makeRes('./index.html')]]));
