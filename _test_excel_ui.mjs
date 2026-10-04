@@ -90,27 +90,41 @@ const pageHtml = p => {
 const groupsAre = (p, want) => chk(p + ' groups: ' + want.join(' / '),
   JSON.stringify(pageOf(p)) === JSON.stringify(want));
 groupsAre('home', ['gClip', 'gFont', 'gAlign', 'gNumber', 'gStyles', 'gCells', 'gEditing']);
-/* Ink and the shape primitives used to be a Draw tab; they ride at the end of
-   Insert in this layout, after the sheet/row/column group. */
-groupsAre('insert', ['gTables', 'gIllus', 'gAddins', 'gCharts', 'gSpark', 'gLinks', 'gSymbols', 'gText', 'gFilters', 'gSheets', 'gDrawTools', 'gPens', 'gShapes', 'gInsert']);
+/* The reference Insert layout, left to right: Tables, Illustrations, Charts,
+   Tours, Sparklines, Filters, Links, Text, Symbols. */
+groupsAre('insert', ['gTables', 'gIllus', 'gCharts', 'gTours', 'gSpark', 'gFilters', 'gLinks', 'gText', 'gSymbols']);
 groupsAre('pagelayout', ['gThemes', 'gPageSetup', 'gPageBreaks', 'gScaleFit', 'gSheetOpt']);
 groupsAre('formulas', ['gFnLib', 'gFnCat', 'gFnHelp', 'gCalcOpt', 'gNames']);
 groupsAre('data', ['gGetData', 'gSortF', 'gDataTools', 'gDataTypes', 'gSubtotal']);
 groupsAre('review', ['gProofing', 'gA11y', 'gInsights', 'gComments', 'gProtect', 'gLang']);
 groupsAre('view', ['gWbViews', 'gShow', 'gZoom', 'gFreeze', 'gPrint']);
 groupsAre('team', ['gHelpHelp', 'gShare', 'gHelpTools']);
-/* Draw and Help left the tab strip, so their commands must still be reachable
-   somewhere - otherwise the buttons stay in the DOM but nothing can open them. */
-chk('Draw and Help are not tabs; their commands are re-homed',
+/* The ink/shape tools that once rode on Insert are gone from the page - the
+   reference layout has no group for them. The duplicated commands people
+   actually reach for must still exist: row/column insert on Home, the filter on
+   Data, notes on Review, and the sheet "+" (built in JS, not markup). */
+chk('Draw and Help are not tabs, and nothing they carried is left orphaned',
   !tabs.includes('draw') && !tabs.includes('help')
-  && /id="bInkDraw"/.test(pageHtml('insert')) && /id="bShRect"/.test(pageHtml('insert'))
-  && /id="bHelpOpen"/.test(pageHtml('team')) && /id="bShareMail"/.test(pageHtml('team')));
+  && /id="bInsRow"/.test(html) && /id="bInsCol"/.test(html)
+  && /id="bFilter"/.test(pageHtml('data')) && /id="bRComment"/.test(pageHtml('review'))
+  && /addsheet/.test(jsScript));
 /* Every command this build added must be a real, wired control - the repo's
    ribbon check rejects decorative buttons, so pin the wiring here too. */
-chk('Add-ins lives on Insert, not Home',
-  !/id="bAddinAI"/.test(pageHtml('home')) && /id="bAddinAI"/.test(pageHtml('insert')));
+/* Add-ins used to live on Insert. It is no longer one of the reference groups,
+   and the AI panel stays reachable through Explain (Formulas) and Feedback
+   (Team), so assert that neither of those entry points was lost with it. */
+chk('the AI panel is still reachable now that Add-ins left the Insert tab',
+  !/id="bAddinAI"/.test(pageHtml('insert'))
+  && /id="bFeedback"/.test(pageHtml('team')) && /id="bExplain"/.test(pageHtml('formulas')));
+/* The Insert groups the reference shows must each carry a real icon. */
+const insertIcons = [...pageHtml('insert').matchAll(/<use href="#(i-[^"]+)"/g)].map(m => m[1]);
+chk('every Insert group command has a vector icon',
+  insertIcons.length >= 20 && new Set(insertIcons).size >= 15, insertIcons.length + ' refs');
+chk('the chart families each get their own icon',
+  ['i-chart-col', 'i-chart-line', 'i-chart-pie', 'i-chart-area', 'i-chart-scatter']
+    .every(ic => insertIcons.includes(ic)));
 const NEW_CMDS = [
-  ['bDTText', /insertDrawing\('text'\)/], ['bDTPic', /openPic/], ['bDTShapes', /bDTShapes/],
+  ['bDTText', /insertDrawing\('text'\)/], ['bDTPic', /openPic/],
   ['bCalcMode', /calcMode/], ['bNameGo', /bNameGo/], ['bDtNum', /extractType/],
   ['bDtText', /extractType/], ['bLang', /applyLang/], ['bShareCopy', /clip/], ['bShareMail', /mailto/]
 ];

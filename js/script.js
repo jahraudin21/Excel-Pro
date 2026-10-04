@@ -236,6 +236,28 @@ const STR={
  bSmartArt:{np:'स्मार्टआर्ट',hi:'स्मार्टआर्ट',en:'SmartArt'},
  bSShot:{np:'स्क्रिनसट',hi:'स्क्रीनशॉट',en:'Screenshot'},
  gIllus:{np:'चित्रहरू',hi:'चित्र',en:'Illustrations'},
+ gTours:{np:'टुर',hi:'टूर',en:'Tours'},
+ bRecPivot:{np:'सिफारिस गरिएका पिभट',hi:'अनुशंसित पिवट',en:'Recommended PivotTables'},
+ bRecChart:{np:'सिफारिस गरिएका चार्ट',hi:'अनुशंसित चार्ट',en:'Recommended Charts'},
+ bIIcons:{np:'आइकन',hi:'आइकॉन',en:'Icons'},
+ bI3D:{np:'३डी मोडेल',hi:'3D मॉडल',en:'3D Models'},
+ bMaps:{np:'३डी नक्सा',hi:'3D मैप',en:'3D Maps'},
+ bSparkLine:{np:'रेखा',hi:'लाइन',en:'Line'},
+ bSparkCol:{np:'स्तम्भ',hi:'कॉलम',en:'Column'},
+ bSparkWin:{np:'जीत/हार',hi:'जीत/हार',en:'Win/Loss'},
+ bSlicer:{np:'स्लाइसर',hi:'स्लाइसर',en:'Slicer'},
+ bTimeline:{np:'टाइमलाइन',hi:'टाइमलाइन',en:'Timeline'},
+ bEquation:{np:'समीकरण',hi:'समीकरण',en:'Equation'},
+ bSymbol:{np:'चिह्न',hi:'प्रतीक',en:'Symbol'},
+ bChartCol:{np:'स्तम्भ चार्ट',hi:'कॉलम चार्ट',en:'Column chart'},
+ bChartLine:{np:'रेखा चार्ट',hi:'लाइन चार्ट',en:'Line chart'},
+ bChartPie:{np:'पाई चार्ट',hi:'पाई चार्ट',en:'Pie chart'},
+ bChartBar:{np:'बार चार्ट',hi:'बार चार्ट',en:'Bar chart'},
+ bChartArea:{np:'क्षेत्र चार्ट',hi:'एरिया चार्ट',en:'Area chart'},
+ bChartScatter:{np:'स्कैटर चार्ट',hi:'स्कैटर चार्ट',en:'Scatter chart'},
+ bChartType:{np:'चार्ट प्रकार',hi:'चार्ट प्रकार',en:'Chart type'},
+ bHyperlink:{np:'हाइपरलिङ्क',hi:'हाइपरलिंक',en:'Hyperlink'},
+ insSoon:{np:'अहिले उपलब्ध छैन।',hi:'अभी उपलब्ध नहीं है।',en:'Not available in this build yet.'},
  gSpark:{np:'स्पार्कलाइन',hi:'स्पार्कलाइन',en:'Sparklines'},
  gFilters:{np:'फिल्टर',hi:'फ़िल्टर',en:'Filters'},
  bRecPiv:{np:'सिफारिस पिभट तालिका',hi:'अनुशंसित पिवट टेबल',en:'Recommended PivotTables'},
@@ -1418,12 +1440,20 @@ function drawChart(){const d=chartData();const cv=$('#chartCv');
   const iw=(W-pad*2)/d.vals.length;
   ctx.strokeStyle='#bbb';ctx.beginPath();ctx.moveTo(pad,H-pad);ctx.lineTo(W-pad,H-pad);ctx.stroke();
   if(chartType==='line'){ctx.beginPath();ctx.strokeStyle='#217346';ctx.lineWidth=2;}
+  if(chartType==='area'){ctx.beginPath();ctx.moveTo(pad+iw/2,H-pad);}
   d.vals.forEach((v,i)=>{const h2=(v/max)*(H-pad*2);const x=pad+i*iw;
    if(chartType==='bar'){ctx.fillStyle=PAL[i%PAL.length];ctx.fillRect(x+2,H-pad-h2,Math.max(iw-4,2),h2);}
+   else if(chartType==='scatter'){ctx.beginPath();ctx.fillStyle='#217346';
+    ctx.arc(x+iw/2,H-pad-h2,3,0,Math.PI*2);ctx.fill();}
    else{const px=x+iw/2,py=H-pad-h2;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
    const step=Math.max(1,Math.ceil(d.vals.length/10));
    if(i%step===0){ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';
     ctx.fillText(String(d.labels[i]).slice(0,8),x+iw/2,H-10);}});
+  if(chartType==='area'){ctx.lineTo(W-pad-iw/2,H-pad);ctx.closePath();
+   ctx.fillStyle='rgba(33,115,70,.18)';ctx.fill();
+   ctx.beginPath();ctx.strokeStyle='#217346';ctx.lineWidth=2;
+   d.vals.forEach((v,i)=>{const px=pad+i*iw+iw/2,py=H-pad-(v/max)*(H-pad*2);
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);});ctx.stroke();}
   if(chartType==='line')ctx.stroke();
   ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='right';
   ctx.fillText(String(+max.toFixed(2)),pad-4,pad+4);}}
@@ -2470,6 +2500,40 @@ function initRibbon(){
   {label:'→ '+T('bShArrow'),action:()=>insertDrawing('arrow')},
   {label:'△ '+T('bShTri'),action:()=>insertDrawing('triangle')},
   {label:'🅣 '+T('bShText'),action:()=>insertDrawing('text')}]));
+ /* --- Insert page: chart families, tours, filters, symbols --- */
+ const chartDlg=()=>{$('#chartDlg').classList.add('open');drawChart();};
+ const chartAs=t2=>{chartType=t2;
+  document.querySelectorAll('#chartTypes button').forEach(x=>x.classList.toggle('on',x.dataset.ct===t2));
+  chartDlg();};
+ tg('#bChart',chartDlg);
+ tg('#bChartCol',()=>chartAs('bar'));
+ tg('#bChartLine',()=>chartAs('line'));
+ tg('#bChartPie',()=>chartAs('pie'));
+ tg('#bChartBar',()=>chartAs('bar'));
+ tg('#bChartArea',()=>chartAs('area'));
+ tg('#bChartScatter',()=>chartAs('scatter'));
+ /* The three sparkline buttons share one renderer; the family is reported
+    rather than silently ignored. */
+ tg('#bSparkLine',()=>{insertSparkline();setStatusMode(T('bSparkLine'));});
+ tg('#bSparkCol',()=>{insertSparkline();setStatusMode(T('bSparkCol'));});
+ tg('#bSparkWin',()=>{insertSparkline();setStatusMode(T('bSparkWin'));});
+ /* Icons and 3D Models reuse the shape galleries that already exist. */
+ tg('#bIIcons',()=>popMenu($('#bIIcons'),[
+  {head:T('bIIcons')},
+  {label:T('bShRect'),action:()=>insertDrawing('rect')},
+  {label:T('bShEllipse'),action:()=>insertDrawing('ellipse')},
+  {label:T('bShArrow'),action:()=>insertDrawing('arrow')}]));
+ tg('#bI3D',()=>popMenu($('#bI3D'),[
+  {head:T('bI3D')},
+  {label:T('bShRect'),action:()=>insertDrawing('rect')},
+  {label:T('bShTri'),action:()=>insertDrawing('triangle')}]));
+ /* A slicer and a timeline are filter affordances, so they drive the filter. */
+ tg('#bSlicer',()=>{toggleFilter();syncRibbon();setStatusMode(T('bSlicer'));});
+ tg('#bTimeline',()=>{toggleFilter();syncRibbon();setStatusMode(T('bTimeline'));});
+ /* No equation engine and no map service: they report that, not a fake success. */
+ tg('#bEquation',()=>setStatusMode(T('insSoon')));
+ tg('#bMaps',()=>setStatusMode(T('insSoon')));
+
  tg('#bSmartArt',insertSmartArt);
  tg('#bTable',()=>makeTable('#217346'));
  tg('#bRecTbl',openRec);
