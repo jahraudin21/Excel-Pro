@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Microsoft Excel - Home tab reference (Excel 2010).
+
+  Authored in the reference screenshot's own pixel grid (768 x 216) so the
+  proportions match the source frame-for-frame, then scaled up 2.5x by the
+  width/height attributes for a crisp result.
+
+  Contents: grey title bar and Quick Access Toolbar, the tab strip with the green
+  File button, the Home ribbon with all seven groups in the 2010 arrangement,
+  the formula bar (Name Box | expand chevron | fx | input), and the grid scrolled
+  to row 8 with D8 selected and the red call-out arrow.
+
+  Glyphs carry their stroke attributes directly rather than relying on a CSS
+  class, because the class does not reach through the <use> shadow tree and the
+  shapes would otherwise fall back to SVG's default black fill.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="540" viewBox="0 0 768 216"
+     font-family="Segoe UI, Calibri, Arial, sans-serif" role="img"
+     aria-label="Microsoft Excel Home tab: ribbon, formula bar and grid at D8">
+
+  <defs>
+    <style>
+      .tt  { font-size:9.5px; fill:#1b1b1b; }
+      .tab { font-size:9.5px; fill:#333; }
+      .cap { font-size:8px;   fill:#5a5a5a; }
+      .lbl { font-size:8px;   fill:#2b2b2b; }
+      .box { fill:#fff; stroke:#b4b4b4; }
+      .gl  { stroke:#8a8a8a; stroke-width:1.5; }
+    </style>
+
+    <g id="q-xlogo" fill="none" stroke="#217346" stroke-width="1.6" stroke-linejoin="round">
+      <rect x="1" y="1" width="14" height="14" rx="1.5"/><path d="M4 5.2l8 5.6M12 5.2l-8 5.6"/></g>
+    <g id="q-save" fill="none" stroke="#3b6ea5" stroke-width="1.4" stroke-linejoin="round">
+      <path d="M2 2h9l3 3v9H2z"/><path d="M4.5 2v4h6V2M4.5 14v-4.5h7V14"/></g>
+    <g id="q-undo" fill="none" stroke="#3b6ea5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 7.5h6a3 3 0 0 1 0 6H5.5"/><path d="M4.6 5L2 7.5 4.6 10"/></g>
+    <g id="q-redo" fill="none" stroke="#b9c4d0" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 7.5H8a3 3 0 0 0 0 6h2.5"/><path d="M11.4 5L14 7.5 11.4 10"/></g>
+    <g id="q-print" fill="none" stroke="#3b6ea5" stroke-width="1.4" stroke-linejoin="round">
+      <rect x="4" y="1.5" width="8" height="4"/><rect x="1.5" y="5" width="13" height="6" rx="1"/>
+      <rect x="4" y="9" width="8" height="5.5"/></g>
+
+    <g id="q-paste" fill="none" stroke="#4a4a4a" stroke-width="1.4" stroke-linejoin="round">
+      <path d="M5 4V2.6A1 1 0 0 1 6 1.6h4a1 1 0 0 1 1 1V4"/><rect x="3" y="4" width="10" height="11" rx="1"/>
+      <path d="M5.6 7.5h4.8M5.6 10.5h4.8M5.6 13h3"/></g>
+    <g id="q-cut" fill="none" stroke="#4a4a4a" stroke-width="1.4">
+      <circle cx="4" cy="13" r="1.9"/><circle cx="12" cy="13" r="1.9"/>
+      <path d="M5.4 11.4L12.6 2.4M10.6 11.4L3.4 2.4"/></g>
+    <g id="q-copy" fill="none" stroke="#4a4a4a" stroke-width="1.4" stroke-linejoin="round">
+      <rect x="2" y="1.5" width="8.5" height="9.5" rx="1"/><path d="M5.5 14.5h6.5a1 1 0 0 0 1-1V6.5"/></g>
+    <g id="q-paint" fill="none" stroke="#4a4a4a" stroke-width="1.4" stroke-linejoin="round">
+      <path d="M10.6 1.6 14 5 6.8 12.2l-3.4.6.6-3.4z"/><path d="M2.6 14.4h3"/></g>
+    <g id="q-border" fill="none" stroke="#4a4a4a" stroke-width="1.3">
+      <rect x="1.5" y="1.5" width="13" height="13" rx="1" stroke-dasharray="2 1.5"/></g>
+    <g id="q-fill" fill="none" stroke="#4a4a4a" stroke-width="1.3">
+      <path d="M7 1.5l6.5 6.5-7 7-6.5-6.5z"/><path d="M13 11v3.5"/></g>
+    <g id="q-fontc" fill="none" stroke="#c00000" stroke-width="1.6" stroke-linecap="round">
+      <path d="M3 13.5L7.5 3l4.5 10.5M4.6 10h5.8"/></g>
+    <g id="q-val-t" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M2 1.5v13M4.5 4h9M4.5 8h6M4.5 12h9"/></g>
+    <g id="q-val-m" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M2 1.5v13M4.5 8h9"/></g>
+    <g id="q-val-b" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M2 1.5v13M4.5 4h9M4.5 8h6M4.5 12h9"/></g>
+    <g id="q-al-l" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M1.5 3h13M1.5 7h8M1.5 11h13M1.5 14.5h8"/></g>
+    <g id="q-al-c" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M1.5 3h13M4 7h8M1.5 11h13M4 14.5h8"/></g>
+    <g id="q-al-r" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M1.5 3h13M6.5 7h8M1.5 11h13M6.5 14.5h8"/></g>
+    <g id="q-ind-d" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M6.5 2.5L4 8l2.5 5.5M11.5 2.5L9 8l2.5 5.5"/></g>
+    <g id="q-ind-i" fill="none" stroke="#4a4a4a" stroke-width="1.4"><path d="M4 2.5L6.5 8 4 13.5M9 2.5L11.5 8 9 13.5"/></g>
+    <g id="q-wrap" fill="none" stroke="#4a4a4a" stroke-width="1.4" stroke-linecap="round"><path d="M1.5 4h13M1.5 8.5h8M1.5 13h5.5M9.5 11l2 2 2-2"/></g>
+    <g id="q-merge" fill="none" stroke="#4a4a4a" stroke-width="1.4">
+      <rect x="1.5" y="4" width="5" height="8"/><rect x="9.5" y="4" width="5" height="8"/>
+      <path d="M8 2v12" stroke-dasharray="1.5 1.5"/></g>
+    <g id="q-insert" fill="none" stroke="#4a4a4a" stroke-width="1.4" stroke-linejoin="round">
+      <rect x="1.5" y="1.5" width="13" height="13" rx="1"/><path d="M1.5 8h13M8 1.5v4.2M6.3 4 8 2.3 9.7 4"/></g>
+    <g id="q-delete" fill="none" stroke="#4a4a4a" stroke-width="1.4">
+      <rect x="1.5" y="1.5" width="13" height="13" rx="1"/><path d="M5 5l6 6M11 5l-6 6"/></g>
+    <g id="q-format" fill="none" stroke="#4a4a4a" stroke-width="1.4">
+      <rect x="1.5" y="2.5" width="13" height="11" rx="1"/><path d="M1.5 6h13M6 2.5v11M12.5 1h2.5v2.5"/></g>
+  </defs>
+
+  <rect width="768" height="216" fill="#ffffff"/>
+  <!--PART2-->
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="8.5" refY="5"
+            markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0.6L10 5 0 9.4z" fill="#c00000"/>
+    </marker>
+  </defs>
+
+  <!-- ============ title bar (Excel 2010: flat grey) ============ -->
+  <rect x="0" y="0" width="768" height="17" fill="#e9e9e9"/>
+  <path d="M0 16.5h768" stroke="#d2d2d2" stroke-width="1"/>
+  <use href="#q-save"  transform="translate(6,3) scale(0.7)"/>
+  <use href="#q-undo"  transform="translate(24,3) scale(0.7)"/>
+  <use href="#q-redo"  transform="translate(40,3) scale(0.7)"/>
+  <path d="M58 7.4h4.2L60.1 9.9z" fill="#4a4a4a"/>
+  <text class="tt" x="384" y="12" text-anchor="middle">Book1 - Microsoft Excel</text>
+  <path d="M726 11h7" stroke="#5a5a5a" stroke-width="1.2"/>
+  <g fill="none" stroke="#5a5a5a" stroke-width="1.1">
+    <path d="M744 6.5h6v5h-6z"/><path d="M746 6.5v-2h6v5h-2"/>
+  </g>
+  <path d="M760 6.5l5 5M765 6.5l-5 5" stroke="#5a5a5a" stroke-width="1.2"/>
+
+  <!-- ============ ribbon tab strip ============ -->
+  <rect x="0" y="17" width="768" height="16" fill="#ececec"/>
+  <rect x="5" y="18" width="30" height="14" rx="1.5" fill="#217346"/>
+  <text class="tab" x="20" y="28.4" fill="#fff" text-anchor="middle">File</text>
+
+  <rect x="41" y="18" width="36" height="15" fill="#fff"/>
+  <text class="tab" x="59" y="28.8" text-anchor="middle" font-weight="600">Home</text>
+  <rect x="41" y="31.5" width="36" height="2" fill="#217346"/>
+
+  <text class="tab" x="100" y="28.8" text-anchor="middle">Insert</text>
+  <text class="tab" x="152" y="28.8" text-anchor="middle">Page Layout</text>
+  <text class="tab" x="216" y="28.8" text-anchor="middle">Formulas</text>
+  <text class="tab" x="268" y="28.8" text-anchor="middle">Data</text>
+  <text class="tab" x="308" y="28.8" text-anchor="middle">Review</text>
+  <text class="tab" x="352" y="28.8" text-anchor="middle">View</text>
+  <text class="tab" x="388" y="28.8" text-anchor="middle">Team</text>
+
+  <!-- ============ Home ribbon body ============ -->
+  <rect x="0" y="33" width="768" height="85" fill="#ffffff"/>
+
+  <!-- ---- Clipboard (8..96) ---- -->
+  <use href="#q-paste" transform="translate(42.8,37) scale(1.15)"/>
+  <text class="lbl" x="52" y="59" text-anchor="middle" font-size="5.6">Paste</text>
+  <use href="#q-cut"   transform="translate(17.5,63) scale(0.85)"/>
+  <use href="#q-copy"  transform="translate(45.5,63) scale(0.85)"/>
+  <use href="#q-paint" transform="translate(73.5,63) scale(0.85)"/>
+  <g font-size="5.2" fill="#5a5a5a" text-anchor="middle">
+    <text x="24" y="79">Cut</text><text x="52" y="79">Copy</text><text x="80" y="79">Format</text>
+  </g>
+  <text class="cap" x="52" y="112" text-anchor="middle">Clipboard</text>
+
+  <!-- ---- Font (104..250) ---- -->
+  <!-- The per-command captions ("Strikethrough", "Decrease Indent") are dropped
+       here: at this drawing's width there is roughly 16px of slot per command,
+       so they overprint into an illegible smear. The letters and group captions
+       carry the meaning at this size. -->
+  <rect class="box" x="108" y="37" width="60" height="11" rx="1"/>
+  <text class="lbl" x="112" y="45" font-size="6.5">Calibri</text>
+  <path d="M160 41.5h5l-2.5 3z" fill="#4a4a4a"/>
+  <rect class="box" x="172" y="37" width="22" height="11" rx="1"/>
+  <text class="lbl" x="176" y="45" font-size="6.5">11</text>
+  <path d="M187 41.5h5l-2.5 3z" fill="#4a4a4a"/>
+  <g font-size="6.5" fill="#2b2b2b" text-anchor="middle">
+    <text x="204" y="45">A<tspan dy="-2.5" font-size="4.5">▲</tspan></text>
+    <text x="219" y="45">A<tspan dy="4" font-size="4.5">▼</tspan></text>
+    <text x="236" y="45" font-weight="600">Aa</text>
+  </g>
+  <!-- Bold / Italic / Underline / Strikethrough as letters: the vector glyphs
+       reserved for these slots were alignment marks and read as noise here. -->
+  <g font-size="8" fill="#2b2b2b" text-anchor="middle">
+    <text x="114" y="63" font-weight="700">B</text>
+    <text x="128" y="63" font-style="italic">I</text>
+    <text x="142" y="63">U</text>
+    <text x="158" y="63">S</text>
+  </g>
+  <path d="M150 59.5h4l-2 2.6z" fill="#4a4a4a"/>
+  <path d="M152 61h12" stroke="#c00000" stroke-width="1.1"/>
+  <use href="#q-border" transform="translate(176,53) scale(0.75)"/>
+  <use href="#q-fill"   transform="translate(197,53) scale(0.75)"/>
+  <use href="#q-fontc"  transform="translate(218,53) scale(0.75)"/>
+  <path d="M218 63.5h12" stroke="#c00000" stroke-width="2.2"/>
+  <text class="cap" x="177" y="112" text-anchor="middle">Font</text>
+  <!--PART3-->
+  <!-- ---- Alignment (258..386) ---- -->
+  <use href="#q-val-t" transform="translate(262,37) scale(0.72)"/>
+  <use href="#q-val-m" transform="translate(279,37) scale(0.72)"/>
+  <use href="#q-val-b" transform="translate(296,37) scale(0.72)"/>
+  <use href="#q-wrap"  transform="translate(313,37) scale(0.72)"/>
+  <g font-size="6.5" fill="#2b2b2b" text-anchor="middle">
+    <text x="334" y="47">ab</text>
+  </g>
+  <path d="M340.5 38h5l-2.5 3z" fill="#4a4a4a"/>
+
+  <use href="#q-ind-d" transform="translate(262,56) scale(0.72)"/>
+  <use href="#q-ind-i" transform="translate(279,56) scale(0.72)"/>
+  <use href="#q-merge" transform="translate(296,56) scale(0.72)"/>
+  <!-- number format: 1 / 2 with the arrow between -->
+  <g font-size="6" fill="#2b2b2b" text-anchor="middle">
+    <text x="317" y="64">1</text><text x="317" y="71">2</text>
+  </g>
+  <path d="M323 61.5v5M326 61.5v5" stroke="#4a4a4a" stroke-width="1" stroke-dasharray="1.6 1.6"/>
+  <!-- text orientation, kept inside the group's right edge -->
+  <path d="M338 58l4.5 8M342.5 58L338 66" stroke="#4a4a4a" stroke-width="1.1" fill="none"/>
+  <path d="M336.5 66.5h7" stroke="#4a4a4a" stroke-width="1"/>
+  <text class="cap" x="322" y="112" text-anchor="middle">Alignment</text>
+
+  <!-- ---- Number (394..486) ---- -->
+  <rect class="box" x="398" y="37" width="84" height="11" rx="1"/>
+  <text class="lbl" x="402" y="45" font-size="6.5">General</text>
+  <path d="M474 41.5h5l-2.5 3z" fill="#4a4a4a"/>
+  <g class="lbl" font-size="6.5" fill="#2b2b2b" text-anchor="middle">
+    <text x="406" y="60">$</text><text x="420" y="60">%</text>
+    <text x="434" y="60">,</text><text x="448" y="60">.0</text>
+  </g>
+  <path d="M440 55.5v6M443.5 55.5v6" stroke="#4a4a4a" stroke-width="1" stroke-dasharray="1.6 1.6"/>
+  <text class="lbl" x="465" y="60" font-size="6.5" text-anchor="middle">.00</text>
+  <path d="M459 55.5v6M462.5 55.5v6" stroke="#4a4a4a" stroke-width="1" stroke-dasharray="1.6 1.6"/>
+  <text class="cap" x="440" y="112" text-anchor="middle">Number</text>
+
+  <!-- ---- Styles (494..540) ---- -->
+  <!-- A green A beside the cell-style grid: the A is the group's icon, the ruled
+       square is the style gallery it opens. -->
+  <text x="498" y="60" font-size="26" fill="#217346" font-family="Georgia, serif">A</text>
+  <rect x="520" y="40" width="16" height="20" fill="#fff" stroke="#8a8a8a" stroke-width="1.1"/>
+  <path d="M520 46.7h16M526.7 40v20" stroke="#8a8a8a" stroke-width="1"/>
+  <rect x="520" y="40" width="5.3" height="6.7" fill="#217346"/>
+  <text class="cap" x="517" y="112" text-anchor="middle">Styles</text>
+
+  <!-- ---- Cells (548..618) ---- -->
+  <use href="#q-insert" transform="translate(552,37) scale(0.8)"/>
+  <use href="#q-delete" transform="translate(578,37) scale(0.8)"/>
+  <use href="#q-format" transform="translate(604,37) scale(0.8)"/>
+  <text class="cap" x="583" y="112" text-anchor="middle">Cells</text>
+
+  <!-- ---- Editing (626..760) ---- -->
+  <!-- AutoSum: sigma glyph on the left, label clear of it. The earlier revision
+       drew the glyph to x=652 while the text started at 654, so they collided. -->
+  <g fill="none" stroke="#4a4a4a" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M631.5 38v9M629.5 45l2 2.5 2-2.5"/>
+    <path d="M638 38.5h8l-4.6 8.5h4.6"/>
+  </g>
+  <!-- Dropdown carets sit clear of their labels. The Editing group's labels run
+       to roughly x=700, so the carets are placed past that rather than at a
+       fixed offset that overprinted "Sort & Filter" and "Find & Select". -->
+  <text class="lbl" x="654" y="45" font-size="6.5">AutoSum</text>
+  <path d="M690 39h5l-2.5 3z" fill="#4a4a4a"/>
+
+  <path d="M634 55h11l-4.5 5v4l-2 1v-5z" fill="none" stroke="#4a4a4a" stroke-width="1.3" stroke-linejoin="round"/>
+  <text class="lbl" x="654" y="63" font-size="6.5">Fill</text>
+  <path d="M672 57h5l-2.5 3z" fill="#4a4a4a"/>
+
+  <g fill="none" stroke="#4a4a4a" stroke-width="1.3" stroke-linecap="round">
+    <path d="M634 73v9M634 73h4M634 77.5h3M634 82h4"/>
+    <path d="M641 75.5v5M639 78.5l2 2 2-2"/>
+  </g>
+  <text class="lbl" x="654" y="81" font-size="6.5">Sort &amp; Filter</text>
+  <path d="M700 75h5l-2.5 3z" fill="#4a4a4a"/>
+
+  <circle cx="639" cy="95" r="4" fill="none" stroke="#4a4a4a" stroke-width="1.3"/>
+  <path d="M642 98l3 3" stroke="#4a4a4a" stroke-width="1.3"/>
+  <text class="lbl" x="654" y="99" font-size="6.5">Find &amp; Select</text>
+  <path d="M703 93h5l-2.5 3z" fill="#4a4a4a"/>
+  <text class="cap" x="673" y="112" text-anchor="middle">Editing</text>
+  <path d="M0 117.5h768" stroke="#c9c9c9" stroke-width="1"/>
+  <!--PART4-->
+  <!-- ============ formula bar ============ -->
+  <rect x="0" y="118" width="768" height="16" fill="#ffffff"/>
+  <rect class="box" x="4" y="120" width="52" height="12" rx="1"/>
+  <text class="lbl" x="8" y="128.6" font-size="7">D8</text>
+  <path d="M48 124.5h5l-2.5 3z" fill="#4a4a4a"/>
+  <path d="M60 123.5l2.5 2.5 2.5-2.5" fill="none" stroke="#6a6a6a" stroke-width="1.1"/>
+  <text x="72" y="129" font-size="8.5" font-style="italic" fill="#3a3a3a" font-family="Georgia, serif">f</text>
+  <text x="77.4" y="129.4" font-size="6" font-style="italic" fill="#3a3a3a" font-family="Georgia, serif">x</text>
+  <rect class="box" x="86" y="120" width="678" height="12" rx="1"/>
+  <path d="M4 134h760" stroke="#c9c9c9" stroke-width="1"/>
+
+  <!-- ============ grid, scrolled to row 8 ============ -->
+  <rect x="0" y="135" width="768" height="81" fill="#ffffff"/>
+  <!-- column header -->
+  <rect x="0" y="135" width="768" height="11" fill="#f3f2f1"/>
+  <rect x="0" y="135" width="26" height="11" fill="#f3f2f1"/>
+  <g class="gl" fill="none"><path d="M0 146.5h768"/></g>
+
+  <!-- row/column rules: header boundary plus the cell grid -->
+  <!-- Grid geometry: the column header occupies y 135..146, so row 8 starts at
+147 and each row is 12 tall (147, 159, 171, 183, 195, 207). Each label is
+centred on its own row at top+8; the earlier revision offset these by one row,
+which dropped the 9 and shifted every heading up into the header. -->
+  <g stroke="#dcdcdc" stroke-width="0.6" fill="none">
+    <path d="M26 135v81M118 135v81M210 135v81M302 135v81M394 135v81
+             M486 135v81M578 135v81M670 135v81M762 135v81"/>
+    <path d="M0 159h768M0 171h768M0 183h768M0 195h768M0 207h768"/>
+  </g>
+  <!-- row-number column edge -->
+  <path d="M26 135v81" stroke="#b4b4b4" stroke-width="0.8"/>
+
+  <!-- The two header highlights are painted BEFORE the numbers. Drawn after
+       them, the row-8 highlight filled #d9d9d9 over its own label and the "8"
+       disappeared from the gutter entirely. -->
+  <rect x="302" y="135" width="92" height="11" fill="#d9d9d9"/>
+  <rect x="0" y="147" width="26" height="12" fill="#d9d9d9"/>
+
+  <!-- row numbers 8..13, each centred in its own 12px row -->
+  <g class="lbl" font-size="7" fill="#5a5a5a" text-anchor="middle">
+    <text x="13" y="155">8</text><text x="13" y="167">9</text>
+    <text x="13" y="179">10</text><text x="13" y="191">11</text>
+    <text x="13" y="203">12</text><text x="13" y="215">13</text>
+  </g>
+  <!-- column letters A..H -->
+  <g class="lbl" font-size="7" fill="#5a5a5a" text-anchor="middle">
+    <text x="72" y="142.6">A</text><text x="164" y="142.6">B</text>
+    <text x="256" y="142.6">C</text><text x="348" y="142.6">D</text>
+    <text x="440" y="142.6">E</text><text x="532" y="142.6">F</text>
+    <text x="624" y="142.6">G</text><text x="716" y="142.6">H</text>
+  </g>
+  <!-- selected cell D8, with fill handle on its bottom-right corner -->
+  <rect x="302" y="147" width="92" height="12" fill="#ffffff"/>
+  <rect x="302" y="147" width="92" height="12" fill="none"
+        stroke="#217346" stroke-width="1.6"/>
+  <rect x="390.6" y="155.6" width="3.4" height="3.4" fill="#217346"
+        stroke="#ffffff" stroke-width="0.7"/>
+
+  <!-- red call-out arrow pointing at D8 -->
+  <path d="M596 196L418 160" fill="none" stroke="#c00000" stroke-width="1.6"
+        stroke-linecap="round" marker-end="url(#arw)"/>
+  <text x="602" y="199" font-size="7.5" fill="#c00000" font-weight="600">Active cell</text>
+</svg>

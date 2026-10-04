@@ -1,31 +1,47 @@
-/* Render docs/excel-ui-reference.svg to a PNG using the Electron runtime that
- * already ships with this project (Chromium's renderer does the rasterising).
+/* Render an SVG illustration to a PNG using the Electron runtime that already
+ * ships with this project (Chromium's renderer does the rasterising).
  *
  * Doing it in Electron rather than adding an image library keeps the build free
- * of a new dependency for a one-off export. */
-const { app, BrowserWindow } = require('electron');
+ * of a new dependency for a one-off export.
+ *
+ *   npx electron _render_png.js <svg> [png]
+ *
+ * The SVG's own width/height decide the output size, so the drawing is authored
+ * in comfortable CSS pixels and scaled by its own attributes. */
+const { app, BrowserWindow, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
-const SVG = path.join(ROOT, 'docs', 'excel-ui-reference.svg');
-const PNG = path.join(ROOT, 'docs', 'excel-ui-reference.png');
-const W = 1440, H = 820;
+const SVG_PATH = path.resolve(ROOT, process.argv[2] || 'docs/excel-ui-reference.svg');
+const PNG_PATH = path.resolve(ROOT, process.argv[3] || SVG_PATH.replace(/\.svg$/, '.png'));
 
-/* Scale 2 for a crisp result on a high-DPI display. */
-const SCALE = 2;
+const svg = fs.readFileSync(SVG_PATH, 'utf8');
+const W = Number(/width="(\d+)"/.exec(svg)[1]);
+const H = Number(/height="(\d+)"/.exec(svg)[1]);
 
 app.disableHardwareAcceleration();
 
+/* Fit the window to the drawing's aspect ratio within the available work area.
+ * Requesting the drawing's own size is not enough: the window gets clamped to
+ * the work area, and a clamped window of the wrong ratio makes the SVG's
+ * preserveAspectRatio letterbox the drawing, leaving bands of page background
+ * above and below it in the capture. So the size is derived here, up front, from
+ * the ratio the SVG actually needs. */
+function fitWindow(w, h) {
+  const wa = screen.getPrimaryDisplay().workAreaSize;
+  const s = Math.min(wa.width / w, wa.height / h, 1.5);
+  return { width: Math.round(w * s), height: Math.round(h * s) };
+}
+
 app.whenReady().then(async () => {
-  const svg = fs.readFileSync(SVG, 'utf8');
+  const fit = fitWindow(W, H);
 
   /* frame:false so the window size IS the content size, and overflow:hidden on
    * the host page. With a framed window the content area is smaller than the
-   * requested size, which made Chromium add scrollbars and crop the right-hand
-   * column and the bottom rows out of the capture. */
+   * requested size, which makes Chromium add scrollbars and crop the drawing. */
   const win = new BrowserWindow({
-    width: W, height: H, show: false, frame: false, useContentSize: true,
+    ...fit, show: false, frame: false, useContentSize: true,
     webPreferences: { backgroundThrottling: false }
   });
 
@@ -39,25 +55,32 @@ app.whenReady().then(async () => {
   /* Let fonts and the SVG layout settle before the capture. */
   await new Promise(r => setTimeout(r, 900));
 
-  /* The window may end up smaller than requested (the display work area is the
-   * ceiling), which would crop the right-hand column and the sheet tabs. Rather
-   * than hard-code a size, scale the SVG to whatever viewport we actually got.
-   * The viewBox keeps it proportional, so nothing distorts or drops out. */
-  const vp = await win.webContents.executeJavaScript(
-    '({w: document.documentElement.clientWidth, h: document.documentElement.clientHeight})');
+  /* Scale the drawing to fill whatever viewport we actually got. The window can
+   * end up smaller than requested (the display work area is the ceiling), and
+   * measuring first meant the capture could still disagree with that measurement.
+   *
+   * The SVG's width/height attributes are in CSS pixels, NOT device pixels, so
+   * they are set from the raw viewport. Multiplying by the device pixel ratio
+   * here made the drawing larger than the page, and overflow:hidden then cropped
+   * the bottom rows off the capture. The ratio is only reported, for context. */
+  const m = await win.webContents.executeJavaScript(
+    '({w: document.documentElement.clientWidth, h: document.documentElement.clientHeight,' +
+    ' dpr: window.devicePixelRatio})');
+  const cw = m.w, ch = m.h;
   await win.webContents.executeJavaScript(
-    'document.querySelector("svg").setAttribute("width",' + vp.w +
-    ');document.querySelector("svg").setAttribute("height",' + vp.h + ');');
+    'var s=document.querySelector("svg");' +
+    's.setAttribute("width",' + cw + ');s.setAttribute("height",' + ch + ');');
   await new Promise(r => setTimeout(r, 250));
 
-  const img = await win.webContents.capturePage({ x: 0, y: 0, width: vp.w, height: vp.h });
+  const img = await win.webContents.capturePage();
   const buf = img.toPNG();
-  fs.writeFileSync(PNG, buf);
+  fs.writeFileSync(PNG_PATH, buf);
 
   const size = img.getSize();
-  console.log('rendered ' + PNG);
-  console.log('  requested ' + W + 'x' + H + '  viewport ' + vp.w + 'x' + vp.h
-    + '  captured ' + size.width + 'x' + size.height + '  ' + buf.length + ' bytes');
+  console.log('rendered ' + PNG_PATH);
+  console.log('  svg ' + W + 'x' + H + '  viewport ' + m.w + 'x' + m.h
+    + ' @' + m.dpr + 'x  captured ' + size.width + 'x' + size.height
+    + '  ' + buf.length + ' bytes');
   win.destroy();
   app.quit();
 }).catch(e => {

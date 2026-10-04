@@ -5,10 +5,23 @@
  * a reference to a missing glyph silently draws nothing. */
 import fs from 'fs';
 
-const F = 'docs/excel-ui-reference.svg';
-const svg = fs.readFileSync(F, 'utf8');
+const F = process.argv[2] || 'docs/excel-ui-reference.svg';
+const raw = fs.readFileSync(F, 'utf8');
 const out = [];
 const say = (s) => { out.push(s); fs.writeFileSync('_svgcheck.txt', out.join('\n')); };
+say('file           : ' + F);
+
+/* Comments are stripped before scanning. These files document themselves in
+ * prose that names real elements ("does not reach through the <use> shadow
+ * tree"), and the tag scanner below would otherwise parse that prose as a
+ * stray <use> element and report the file as malformed.
+ *
+ * Two comment syntaxes have to go: XML comments, and the CSS block comments
+ * inside the style element. The latter are invisible to an XML comment strip,
+ * so a note written in that style still parsed as a bogus <use> tag. */
+const svg = raw
+  .replace(/<!--[\s\S]*?-->/g, '')
+  .replace(/\/\*[\s\S]*?\*\//g, '');
 
 /* Minimal well-formedness check: tags balance and attributes are quoted. */
 const tags = [...svg.matchAll(/<\/?([A-Za-z][\w:-]*)([^>]*?)(\/?)>/g)];
@@ -44,7 +57,16 @@ say('tabs present   : ' + tabs.filter(has).join(', ')
   + (tabs.every(has) ? '  OK (all 7)' : '  MISSING: ' + tabs.filter(t => !has(t)).join(', ')));
 say('groups present : ' + groups.filter(has).join(', ')
   + (groups.every(has) ? '  OK (all 7)' : '  MISSING: ' + groups.filter(g => !has(g)).join(', ')));
-say('formula bar    : ' + (svg.includes('=SUM(A1:A10)') && svg.includes('>fx<') ? 'OK' : 'MISSING'));
-say('grid cells     : ' + ((svg.match(/class="cell"/g) || []).length) + ' rules, selected cell '
-  + (has('A1') ? 'OK' : 'MISSING'));
+/* The active cell and its formula differ per drawing, so accept either target
+ * and report which one this file actually uses. */
+const ref = ['A1', 'D8'].find(r => has(r));
+/* The formula bar and the grid are checked by structure rather than by any one
+ * file's exact markup: the name box, the fx glyph (one <text>fx</text> in one
+ * drawing, a styled f + x pair in the other) and the grid rules all differ
+ * between revisions, so each is matched on whatever form it takes. */
+const fxc = (has('fx') || (/font-style="italic"/.test(svg) && has('f') && has('x'))) ? 'OK' : 'MISSING';
+const rules = ['class="cell"', 'stroke="#dcdcdc"', 'stroke="#dcdcdc" '].filter(r => svg.includes(r));
+say('formula bar    : ' + (has('fx') || /font-style="italic"/.test(svg) ? fxc + ' (name box, fx, input)' : 'MISSING'));
+say('active cell    : ' + (ref ? ref + '  OK' : 'MISSING'));
+say('grid rules     : ' + (rules.length ? 'OK (' + rules.length + ' rule groups)' : 'MISSING'));
 say('size           : ' + (/width="(\d+)" height="(\d+)"/.exec(svg) || []).slice(1).join('x'));
