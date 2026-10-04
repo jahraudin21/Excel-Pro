@@ -208,13 +208,12 @@ if ('serviceWorker' in navigator) {
    <button class="rtfile" id="rFile" data-i18n="rFile">File</button>
     <button class="rtab on" data-tab="home" data-i18n="rHome">Home</button>
    <button class="rtab" data-tab="insert" data-i18n="rInsert">Insert</button>
-    <button class="rtab" data-tab="draw" data-i18n="rDraw">Draw</button>
    <button class="rtab" data-tab="pagelayout" data-i18n="rPageLayout">Page Layout</button>
     <button class="rtab" data-tab="formulas" data-i18n="rFormulas">Formulas</button>
    <button class="rtab" data-tab="data" data-i18n="rData">Data</button>
    <button class="rtab" data-tab="review" data-i18n="rReview">Review</button>
     <button class="rtab" data-tab="view" data-i18n="rView">View</button>
-    <button class="rtab" data-tab="help" data-i18n="rHelp">Help</button>
+    <button class="rtab" data-tab="team" data-i18n="rTeam">Team</button>
 
     <span class="rtell"><svg class="ic" aria-hidden="true"><use href="#i-find"></use></svg> <input id="rtTellMe" data-i18n-ph="rTellMe" placeholder="Tell me what you want to do"></span>
   </div>
@@ -340,33 +339,31 @@ if ('serviceWorker' in navigator) {
       <button class="rbtn" id="bIInsCol" title="Insert sheet column"><svg class="ic" aria-hidden="true"><use href="#i-insert-col"></use></svg>Col</button>
       <button class="rbtn" id="bNewSheet" title="New sheet"><svg class="ic" aria-hidden="true"><use href="#i-newsheet"></use></svg>Sheet</button>
     </div><div class="rlabel" data-i18n="gSheets">Sheets / Cells</div></div>
+       <div class="rgrp"><div class="rrow">
+        <button class="rbtn big" id="bInkDraw"><svg class="ic" aria-hidden="true"><use href="#i-pen"></use></svg><span data-i18n="bInkDraw">Draw</span></button>
+        <button class="rbtn" id="bInkSelect" data-i18n-t="bInkSelect" title="Select / move shapes"><svg class="ic" aria-hidden="true"><use href="#i-cursor"></use></svg> <span data-i18n="bInkSelect">Select</span></button>
+        <button class="rbtn" id="bInkErase" data-i18n-t="bInkErase" title="Eraser"><svg class="ic" aria-hidden="true"><use href="#i-eraser"></use></svg> <span data-i18n="bInkErase">Erase</span></button>
+        <button class="rbtn" id="bInkClear" data-i18n-t="bInkClear" title="Remove all drawings"><svg class="ic" aria-hidden="true"><use href="#i-clear"></use></svg> <span data-i18n="bInkClear">Clear</span></button>
+       </div><div class="rlabel" data-i18n="gDrawTools">Tools</div></div>
+       <div class="rgrp"><div class="rrow">
+        <input type="color" id="penColor" value="#217346" data-i18n-t="penColorT" title="Pen color">
+        <select class="rsel" id="penWidth" data-i18n-t="penWidthT" title="Pen width"><option value="2" data-i18n="pwThin">Thin</option><option value="4" selected data-i18n="pwMed">Medium</option><option value="8" data-i18n="pwThick">Thick</option></select>
+       </div><div class="rlabel" data-i18n="gPens">Pens</div></div>
+       <div class="rgrp"><div class="rrow">
+        <button class="rbtn" id="bShRect"><svg class="ic" aria-hidden="true"><use href="#i-rect"></use></svg> <span data-i18n="bShRect">Box</span></button>
+        <button class="rbtn" id="bShEllipse"><svg class="ic" aria-hidden="true"><use href="#i-oval"></use></svg> <span data-i18n="bShEllipse">Oval</span></button>
+        <button class="rbtn" id="bShLine"><svg class="ic" aria-hidden="true"><use href="#i-line"></use></svg> <span data-i18n="bShLine">Line</span></button>
+        <button class="rbtn" id="bShArrow"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg> <span data-i18n="bShArrow">Arrow</span></button>
+        <button class="rbtn" id="bShTri"><svg class="ic" aria-hidden="true"><use href="#i-triangle"></use></svg> <span data-i18n="bShTri">Tri</span></button>
+        <button class="rbtn" id="bShText"><svg class="ic" aria-hidden="true"><use href="#i-textbox"></use></svg> <span data-i18n="bShText">Text</span></button>
+       </div><div class="rlabel" data-i18n="gShapes">Shapes</div></div>
+       <div class="rgrp"><div class="rrow">
+        <button class="rbtn" id="bDTText" data-i18n-t="bDTText"><svg class="ic" aria-hidden="true"><use href="#i-textbox"></use></svg> <span data-i18n="bDTText">Text Box</span></button>
+        <button class="rbtn" id="bDTPic" data-i18n-t="bDTPic"><svg class="ic" aria-hidden="true"><use href="#i-picture"></use></svg> <span data-i18n="bDTPic">Pictures</span></button>
+        <button class="rbtn" id="bDTShapes" data-i18n-t="bDTShapes"><svg class="ic" aria-hidden="true"><use href="#i-shapes"></use></svg> <span data-i18n="bDTShapes">Shapes</span></button>
+       </div><div class="rlabel" data-i18n="gInsert">Insert</div></div>
    </div>
-    <div class="rpage" data-page="draw">
-     <div class="rgrp"><div class="rrow">
-      <button class="rbtn big" id="bInkDraw"><svg class="ic" aria-hidden="true"><use href="#i-pen"></use></svg><span data-i18n="bInkDraw">Draw</span></button>
-      <button class="rbtn" id="bInkSelect" data-i18n-t="bInkSelect" title="Select / move shapes"><svg class="ic" aria-hidden="true"><use href="#i-cursor"></use></svg> <span data-i18n="bInkSelect">Select</span></button>
-      <button class="rbtn" id="bInkErase" data-i18n-t="bInkErase" title="Eraser"><svg class="ic" aria-hidden="true"><use href="#i-eraser"></use></svg> <span data-i18n="bInkErase">Erase</span></button>
-      <button class="rbtn" id="bInkClear" data-i18n-t="bInkClear" title="Remove all drawings"><svg class="ic" aria-hidden="true"><use href="#i-clear"></use></svg> <span data-i18n="bInkClear">Clear</span></button>
-     </div><div class="rlabel" data-i18n="gDrawTools">Tools</div></div>
-     <div class="rgrp"><div class="rrow">
-      <input type="color" id="penColor" value="#217346" data-i18n-t="penColorT" title="Pen color">
-      <select class="rsel" id="penWidth" data-i18n-t="penWidthT" title="Pen width"><option value="2" data-i18n="pwThin">Thin</option><option value="4" selected data-i18n="pwMed">Medium</option><option value="8" data-i18n="pwThick">Thick</option></select>
-     </div><div class="rlabel" data-i18n="gPens">Pens</div></div>
-     <div class="rgrp"><div class="rrow">
-      <button class="rbtn" id="bShRect"><svg class="ic" aria-hidden="true"><use href="#i-rect"></use></svg> <span data-i18n="bShRect">Box</span></button>
-      <button class="rbtn" id="bShEllipse"><svg class="ic" aria-hidden="true"><use href="#i-oval"></use></svg> <span data-i18n="bShEllipse">Oval</span></button>
-      <button class="rbtn" id="bShLine"><svg class="ic" aria-hidden="true"><use href="#i-line"></use></svg> <span data-i18n="bShLine">Line</span></button>
-      <button class="rbtn" id="bShArrow"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg> <span data-i18n="bShArrow">Arrow</span></button>
-      <button class="rbtn" id="bShTri"><svg class="ic" aria-hidden="true"><use href="#i-triangle"></use></svg> <span data-i18n="bShTri">Tri</span></button>
-      <button class="rbtn" id="bShText"><svg class="ic" aria-hidden="true"><use href="#i-textbox"></use></svg> <span data-i18n="bShText">Text</span></button>
-     </div><div class="rlabel" data-i18n="gShapes">Shapes</div></div>
-     <div class="rgrp"><div class="rrow">
-      <button class="rbtn" id="bDTText" data-i18n-t="bDTText"><svg class="ic" aria-hidden="true"><use href="#i-textbox"></use></svg> <span data-i18n="bDTText">Text Box</span></button>
-      <button class="rbtn" id="bDTPic" data-i18n-t="bDTPic"><svg class="ic" aria-hidden="true"><use href="#i-picture"></use></svg> <span data-i18n="bDTPic">Pictures</span></button>
-      <button class="rbtn" id="bDTShapes" data-i18n-t="bDTShapes"><svg class="ic" aria-hidden="true"><use href="#i-shapes"></use></svg> <span data-i18n="bDTShapes">Shapes</span></button>
-     </div><div class="rlabel" data-i18n="gInsert">Insert</div></div>
-    </div>
-   <div class="rpage" data-page="pagelayout">
+    <div class="rpage" data-page="pagelayout">
      <div class="rgrp"><div class="rrow">
       <button class="rbtn big" id="bTheme" data-i18n-t="bTheme"><svg class="ic" aria-hidden="true"><use href="#i-theme"></use></svg><span data-i18n="bTheme">Themes</span></button>
       <button class="rbtn big" id="bAccent" data-i18n-t="bAccent"><svg class="ic" aria-hidden="true"><use href="#i-colors"></use></svg><span data-i18n="bAccent">Colors</span></button>
@@ -512,7 +509,7 @@ if ('serviceWorker' in navigator) {
       <button class="rbtn" id="bPageView" title="Page break preview"><svg class="ic" aria-hidden="true"><use href="#i-viewbreak"></use></svg>Page</button>
      </div><div class="rlabel" data-i18n="gPrint">Print</div></div>
     </div>
-    <div class="rpage" data-page="help">
+    <div class="rpage" data-page="team">
      <div class="rgrp"><div class="rrow">
       <button class="rbtn big" id="bHelpOpen"><svg class="ic" aria-hidden="true"><use href="#i-help"></use></svg><span data-i18n="bHelpOpen">Help</span></button>
       <button class="rbtn" id="bShortcuts"><svg class="ic" aria-hidden="true"><use href="#i-keyboard"></use></svg><span data-i18n="bShortcuts">Shortcuts</span></button>
@@ -520,7 +517,7 @@ if ('serviceWorker' in navigator) {
      </div><div class="rlabel" data-i18n="gHelpHelp">Support</div></div>
      <div class="rgrp"><div class="rrow">
       <button class="rbtn" id="bShareCopy" data-i18n-t="bShareCopy"><svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg> <span data-i18n="bShareCopy">Copy Link</span></button>
-      <button class="rbtn" id="bShareMail" data-i18n-t="bShareMail"><svg class="ic" aria-hidden="true"><use href="#i-email"></use></svg>an datai18nbShareMailEmail</span></button>
+      <button class="rbtn" id="bShareMail" data-i18n-t="bShareMail"><svg class="ic" aria-hidden="true"><use href="#i-email"></use></svg><span data-i18n="bShareMail">Email</span></button>
      </div><div class="rlabel" data-i18n="gShare">Share</div></div>
      <div class="rgrp"><div class="rrow">
       <button class="rbtn big" id="bFeedback"><svg class="ic" aria-hidden="true"><use href="#i-feedback"></use></svg><span data-i18n="bFeedback">Feedback</span></button>

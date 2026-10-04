@@ -229,9 +229,13 @@ body[data-rboverflow] .rbOverflow{display:flex}
 .fx{color:#217346;font-weight:bold;padding:0 6px;font-size:13px;font-style:italic}
 button.fx{background:transparent;border:1px solid transparent;border-radius:3px;cursor:pointer;height:22px}
 button.fx:hover{background:#e9e7e7;border-color:#c8c8c8}
-.fbBtn{background:transparent;border:1px solid transparent;border-radius:3px;color:#666;cursor:pointer;font-size:12px;height:22px;min-width:22px;padding:0 4px;margin-left:2px}
+/* The Cancel / Enter pair only belongs on the bar while a value is actually
+   being typed. At rest the bar is Name Box | fx | input, as in the reference,
+   and the buttons fade in on focus so they never widen the idle bar. */
+.fbBtn{background:transparent;border:1px solid transparent;border-radius:3px;color:#666;cursor:pointer;font-size:12px;height:22px;min-width:22px;padding:0 4px;margin-left:2px;visibility:hidden}
 .fbBtn:hover{background:#e9e7e7;border-color:#c8c8c8;color:#217346}
 .fbBtn:active{background:#d6e4dc}
+.formula:focus-within .fbBtn{visibility:visible}
 /* ---------- sheet tabs / status bar ---------- */
 #tabs{display:flex;align-items:stretch;background:#f3f2f1;border-top:1px solid #d4d4d4;padding:0 10px;gap:2px;overflow-x:auto;flex:none;min-height:26px}
 .addsheet{width:20px;height:20px;min-width:20px;border-radius:50%;border:1px solid #c8c8c8;background:#fff;color:#555;cursor:pointer;font-size:14px;line-height:1;align-self:center;margin-left:6px;padding:0}

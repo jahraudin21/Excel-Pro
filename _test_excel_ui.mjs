@@ -69,10 +69,11 @@ const tabs = [...html.matchAll(/data-tab="([^"]+)"/g)].map(m => m[1]);
 const pages = [...html.matchAll(/data-page="([^"]+)"/g)].map(m => m[1]);
 chk('Home, Insert, Page Layout, Formulas tabs exist',
   ['home', 'insert', 'pagelayout', 'formulas'].every(t => tabs.includes(t)));
-/* Excel's own tab order. Draw sits between Insert and Page Layout - the app had
-   it parked between View and Help. */
-const EXCEL_TABS = ['home', 'insert', 'draw', 'pagelayout', 'formulas', 'data', 'review', 'view', 'help'];
-chk('tabs are in Excel order: Home, Insert, Draw, Page Layout, Formulas, Data, Review, View, Help',
+/* The reference layout: File, Home, Insert, Page Layout, Formulas, Data,
+   Review, View, Team. Draw and Help are not tabs in that ribbon - the ink and
+   shape tools ride on Insert, and the sharing/help commands sit on Team. */
+const EXCEL_TABS = ['home', 'insert', 'pagelayout', 'formulas', 'data', 'review', 'view', 'team'];
+chk('tabs are in Excel order: Home, Insert, Page Layout, Formulas, Data, Review, View, Team',
   JSON.stringify(tabs) === JSON.stringify(EXCEL_TABS));
 chk('the command pages follow the tab order', JSON.stringify(tabs) === JSON.stringify(pages));
 /* Excel's group structure per tab, verified against the rendered markup. */
@@ -89,14 +90,21 @@ const pageHtml = p => {
 const groupsAre = (p, want) => chk(p + ' groups: ' + want.join(' / '),
   JSON.stringify(pageOf(p)) === JSON.stringify(want));
 groupsAre('home', ['gClip', 'gFont', 'gAlign', 'gNumber', 'gStyles', 'gCells', 'gEditing']);
-groupsAre('insert', ['gTables', 'gIllus', 'gAddins', 'gCharts', 'gSpark', 'gLinks', 'gSymbols', 'gText', 'gFilters', 'gSheets']);
+/* Ink and the shape primitives used to be a Draw tab; they ride at the end of
+   Insert in this layout, after the sheet/row/column group. */
+groupsAre('insert', ['gTables', 'gIllus', 'gAddins', 'gCharts', 'gSpark', 'gLinks', 'gSymbols', 'gText', 'gFilters', 'gSheets', 'gDrawTools', 'gPens', 'gShapes', 'gInsert']);
 groupsAre('pagelayout', ['gThemes', 'gPageSetup', 'gPageBreaks', 'gScaleFit', 'gSheetOpt']);
 groupsAre('formulas', ['gFnLib', 'gFnCat', 'gFnHelp', 'gCalcOpt', 'gNames']);
 groupsAre('data', ['gGetData', 'gSortF', 'gDataTools', 'gDataTypes', 'gSubtotal']);
 groupsAre('review', ['gProofing', 'gA11y', 'gInsights', 'gComments', 'gProtect', 'gLang']);
 groupsAre('view', ['gWbViews', 'gShow', 'gZoom', 'gFreeze', 'gPrint']);
-groupsAre('draw', ['gDrawTools', 'gPens', 'gShapes', 'gInsert']);
-groupsAre('help', ['gHelpHelp', 'gShare', 'gHelpTools']);
+groupsAre('team', ['gHelpHelp', 'gShare', 'gHelpTools']);
+/* Draw and Help left the tab strip, so their commands must still be reachable
+   somewhere - otherwise the buttons stay in the DOM but nothing can open them. */
+chk('Draw and Help are not tabs; their commands are re-homed',
+  !tabs.includes('draw') && !tabs.includes('help')
+  && /id="bInkDraw"/.test(pageHtml('insert')) && /id="bShRect"/.test(pageHtml('insert'))
+  && /id="bHelpOpen"/.test(pageHtml('team')) && /id="bShareMail"/.test(pageHtml('team')));
 /* Every command this build added must be a real, wired control - the repo's
    ribbon check rejects decorative buttons, so pin the wiring here too. */
 chk('Add-ins lives on Insert, not Home',
