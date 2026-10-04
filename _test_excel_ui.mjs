@@ -69,12 +69,14 @@ const tabs = [...html.matchAll(/data-tab="([^"]+)"/g)].map(m => m[1]);
 const pages = [...html.matchAll(/data-page="([^"]+)"/g)].map(m => m[1]);
 chk('Home, Insert, Page Layout, Formulas tabs exist',
   ['home', 'insert', 'pagelayout', 'formulas'].every(t => tabs.includes(t)));
-/* The reference layout: File, Home, Insert, Page Layout, Formulas, Data,
-   Review, View, Team. Draw and Help are not tabs in that ribbon - the ink and
-   shape tools ride on Insert, and the sharing/help commands sit on Team. */
-const EXCEL_TABS = ['home', 'insert', 'pagelayout', 'formulas', 'data', 'review', 'view', 'team'];
-chk('tabs are in Excel order: Home, Insert, Page Layout, Formulas, Data, Review, View, Team',
+/* The current Microsoft 365 ribbon layout: File, Home, Insert, Page Layout,
+   Formulas, Data, Review, View, Help. This ribbon has no Draw tab, and its
+   last tab is Help - Team was retired from Excel and must not reappear here.
+   The ink/shape tools ride on Insert; the sharing/help commands sit on Help. */
+const EXCEL_TABS = ['home', 'insert', 'pagelayout', 'formulas', 'data', 'review', 'view', 'help'];
+chk('tabs are in Excel order: Home, Insert, Page Layout, Formulas, Data, Review, View, Help',
   JSON.stringify(tabs) === JSON.stringify(EXCEL_TABS));
+chk('the retired Team tab is not in the strip', !tabs.includes('team'));
 chk('the command pages follow the tab order', JSON.stringify(tabs) === JSON.stringify(pages));
 /* Excel's group structure per tab, verified against the rendered markup. */
 const pageOf = p => {
@@ -98,13 +100,13 @@ groupsAre('formulas', ['gFnLib', 'gFnCat', 'gFnHelp', 'gCalcOpt', 'gNames']);
 groupsAre('data', ['gGetData', 'gSortF', 'gDataTools', 'gDataTypes', 'gSubtotal']);
 groupsAre('review', ['gProofing', 'gA11y', 'gInsights', 'gComments', 'gProtect', 'gLang']);
 groupsAre('view', ['gWbViews', 'gShow', 'gZoom', 'gFreeze', 'gPrint']);
-groupsAre('team', ['gHelpHelp', 'gShare', 'gHelpTools']);
-/* The ink/shape tools that once rode on Insert are gone from the page - the
-   reference layout has no group for them. The duplicated commands people
-   actually reach for must still exist: row/column insert on Home, the filter on
+groupsAre('help', ['gHelpHelp', 'gShare', 'gHelpTools']);
+/* Draw is still not a tab - its commands ride on Insert - so nothing it carried
+   may be left orphaned. The duplicated commands people actually reach for must
+   still exist: row/column insert on Home, the filter on Data, notes on Review,
    Data, notes on Review, and the sheet "+" (built in JS, not markup). */
-chk('Draw and Help are not tabs, and nothing they carried is left orphaned',
-  !tabs.includes('draw') && !tabs.includes('help')
+chk('Draw is not a tab, and nothing it carried is left orphaned',
+  !tabs.includes('draw')
   && /id="bInsRow"/.test(html) && /id="bInsCol"/.test(html)
   && /id="bFilter"/.test(pageHtml('data')) && /id="bRComment"/.test(pageHtml('review'))
   && /addsheet/.test(jsScript));
@@ -112,10 +114,10 @@ chk('Draw and Help are not tabs, and nothing they carried is left orphaned',
    ribbon check rejects decorative buttons, so pin the wiring here too. */
 /* Add-ins used to live on Insert. It is no longer one of the reference groups,
    and the AI panel stays reachable through Explain (Formulas) and Feedback
-   (Team), so assert that neither of those entry points was lost with it. */
+   (Help), so assert that neither of those entry points was lost with it. */
 chk('the AI panel is still reachable now that Add-ins left the Insert tab',
   !/id="bAddinAI"/.test(pageHtml('insert'))
-  && /id="bFeedback"/.test(pageHtml('team')) && /id="bExplain"/.test(pageHtml('formulas')));
+   && /id="bFeedback"/.test(pageHtml('help')) && /id="bExplain"/.test(pageHtml('formulas')));
 /* The Insert groups the reference shows must each carry a real icon. */
 const insertIcons = [...pageHtml('insert').matchAll(/<use href="#(i-[^"]+)"/g)].map(m => m[1]);
 chk('every Insert group command has a vector icon',

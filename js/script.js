@@ -85,7 +85,6 @@ const STR={
  rInsert:{np:'इन्सर्ट',hi:'इन्सर्ट',en:'Insert'},
  rFormulas:{np:'सूत्र',hi:'फ़ॉर्मूला',en:'Formulas'},
  rData:{np:'डेटा',hi:'डेटा',en:'Data'},
- rTeam:{np:'टोली',hi:'टीम',en:'Team'},
  rView:{np:'भ्यू',hi:'व्यू',en:'View'},
  gClip:{np:'क्लिपबोर्ड',hi:'क्लिपबोर्ड',en:'Clipboard'},
  gFont:{np:'फन्ट',hi:'फ़ॉन्ट',en:'Font'},
