@@ -34,6 +34,8 @@ if ('serviceWorker' in navigator) {
 <symbol id="i-underline" viewBox="0 0 16 16"><path d="M4.6 2.2v5.7a3.4 3.4 0 0 0 6.8 0V2.2"/><path d="M3.4 13.6h9.2"/></symbol>
 <symbol id="i-strike" viewBox="0 0 16 16"><path d="M4.4 6.2a2.6 2.6 0 0 1 2.5-1.7h1.4M11.6 9.6a2.6 2.6 0 0 1-2.5 1.7H7.6"/><path d="M2.4 8h11.2"/></symbol>
 <symbol id="i-border" viewBox="0 0 16 16"><rect x="1.7" y="1.7" width="12.6" height="12.6" rx="1" stroke-dasharray="2 1.7"/><rect x="4.5" y="4.5" width="7" height="7" rx=".7"/></symbol>
+    <!-- Dialog launcher: the small arrow into a corner, matching Excel's. -->
+    <symbol id="i-launcher" viewBox="0 0 16 16"><path d="M6 3h7v7" fill="none"/><path d="M13 3L6.5 9.5" fill="none"/><path d="M9.5 13H3V6.5" fill="none"/></symbol>
 <symbol id="i-wrap" viewBox="0 0 16 16"><path d="M2 3.6h12M2 6.6h8.4M2 9.6h6.4M2 12.6h9.4"/><path d="M10.4 8.2v3.4M8.6 10l1.8 1.8 1.8-1.8"/></symbol>
 <symbol id="i-merge" viewBox="0 0 16 16"><rect x="1.7" y="3" width="5" height="10" rx=".8"/><rect x="9.3" y="3" width="5" height="10" rx=".8"/><path d="M8 1.8v12.4" stroke-dasharray="1.5 1.5"/></symbol>
 <symbol id="i-percent" viewBox="0 0 16 16"><circle cx="4.7" cy="4.7" r="1.9"/><circle cx="11.3" cy="11.3" r="1.9"/><path d="M12.8 3.2 3.2 12.8"/></symbol>
@@ -221,7 +223,7 @@ if ('serviceWorker' in navigator) {
       <button class="rbtn" id="bCopy" title="Copy (Ctrl+C)"><svg class="ic" aria-hidden="true"><use href="#i-copy"></use></svg></button>
       <button class="rbtn" id="bFPainter" title="Format Painter"><svg class="ic" aria-hidden="true"><use href="#i-paint"></use></svg></button>
     </div><div class="rlabel" data-i18n="gClip">Clipboard</div></div>
-    <div class="rgrp"><div class="rrow">
+    <div class="rgrp hasLauncher"><div class="rrow">
       <select class="rsel" id="fontFam" title="Font"></select>
       <select class="rsel" id="fontSize" title="Font size"></select>
       <button class="rbtn" id="bGrowFont" title="Grow font"><svg class="ic" aria-hidden="true"><use href="#i-grow"></use></svg></button>
@@ -234,7 +236,9 @@ if ('serviceWorker' in navigator) {
       <button class="rbtn" id="bBorder" title="Borders"><svg class="ic" aria-hidden="true"><use href="#i-border"></use></svg></button>
       <input type="color" id="colBg" value="#ffffff" title="Fill color">
       <input type="color" id="colFont" value="#000000" title="Font color">
-    </div><div class="rlabel" data-i18n="gFont">Font</div></div>
+    </div><div class="rlabel" data-i18n="gFont">Font</div>
+      <button class="rlauncher" id="bFmtCells" type="button" title="Format Cells (Ctrl+1)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
     <div class="rgrp"><div class="rrow">
       <button class="rbtn" id="bVaTop" data-va="top" title="Top align"><svg class="ic" aria-hidden="true"><use href="#i-align-top"></use></svg></button>
       <button class="rbtn" id="bVaMid" data-va="mid" title="Middle align"><svg class="ic" aria-hidden="true"><use href="#i-align-middle"></use></svg></button>
@@ -593,8 +597,128 @@ if ('serviceWorker' in navigator) {
    </div>
   </div>
 
+   <div id="fmtDlg" role="dialog" aria-labelledby="fmtTitle">
+    <div class="frow"><span data-i18n="fmtTitle" id="fmtTitle">Format Cells</span><span style="flex:1"></span><button type="button" id="fmtClose" aria-label="Close"></button></div>
+    <div class="fmtTabs" role="tablist">
+     <button type="button" class="on" data-fmt-tab="font" role="tab" aria-selected="true" data-i18n="fmtTabFont">Font</button>
+     <button type="button" data-fmt-tab="fill" role="tab" aria-selected="false" data-i18n="fmtTabFill">Fill</button>
+     <button type="button" data-fmt-tab="border" role="tab" aria-selected="false" data-i18n="fmtTabBorder">Border</button>
+     <button type="button" data-fmt-tab="align" role="tab" aria-selected="false" data-i18n="fmtTabAlign">Alignment</button>
+    </div>
+
+    <!-- Font: family, size, style, underline, strike, colour -->
+    <div class="fmtPane on" data-fmt-pane="font">
+     <div class="fmtGrid">
+      <label for="fmtFont" data-i18n="fmtFontName">Font</label>
+      <select id="fmtFont"></select>
+      <label for="fmtSize" data-i18n="fmtFontSize">Font size</label>
+      <select id="fmtSize"></select>
+      <label for="fmtStyle" data-i18n="fmtFontStyle">Font style</label>
+      <select id="fmtStyle">
+       <option value="normal" data-i18n="fmtStyleNormal">Normal</option>
+       <option value="italic" data-i18n="fmtStyleItalic">Italic</option>
+       <option value="bold" data-i18n="fmtStyleBold">Bold</option>
+       <option value="bold italic" data-i18n="fmtStyleBoldItalic">Bold Italic</option>
+      </select>
+      <label for="fmtUnderline" data-i18n="fmtUnderline">Underline</label>
+      <select id="fmtUnderline">
+       <option value="none" data-i18n="fmtNone">None</option>
+       <option value="single" data-i18n="fmtUSingle">Single</option>
+       <option value="double" data-i18n="fmtUDouble">Double</option>
+      </select>
+      <label for="fmtFontColor" data-i18n="fmtColor">Color</label>
+      <div class="fmtSwatch"><input type="color" id="fmtFontColor" value="#000000"><span data-i18n="fmtColorPick">Automatic</span></div>
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtStrike"><span data-i18n="fmtStrike">Strikethrough</span></label>
+      </div>
+      <div class="fmtSample" id="fmtSample" data-i18n="fmtSampleTxt">Sample</div>
+     </div>
+    </div>
+
+    <!-- Fill: background colour -->
+    <div class="fmtPane" data-fmt-pane="fill">
+     <div class="fmtGrid">
+      <label for="fmtBgColor" data-i18n="fmtBgColor">Background color</label>
+      <div class="fmtSwatch"><input type="color" id="fmtBgColor" value="#ffffff"><span data-i18n="fmtBgPick">Choose a color</span></div>
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtNoFill"><span data-i18n="fmtNoFill">No fill</span></label>
+      </div>
+      <div class="fmtSample" id="fmtFillSample" data-i18n="fmtSampleTxt">Sample</div>
+     </div>
+    </div>
+   <!-- Border: Excel's 3x3 edge grid plus line style and colour -->
+    <div class="fmtPane" data-fmt-pane="border">
+     <div class="fmtGrid">
+      <div class="fmtBorderWrap">
+       <div class="fmtBGrid" id="fmtBGrid">
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="t" aria-label="Top border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="l" aria-label="Left border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="r" aria-label="Right border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="b" aria-label="Bottom border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+       </div>
+       <div class="fmtBorderOpts">
+        <label for="fmtBorderStyle" data-i18n="fmtLineStyle">Line style</label>
+        <select id="fmtBorderStyle">
+         <option value="" data-i18n="fmtLineNone">None</option>
+         <option value="thin" data-i18n="fmtLineThin">Thin</option>
+         <option value="medium" data-i18n="fmtLineMedium">Medium</option>
+         <option value="thick" data-i18n="fmtLineThick">Thick</option>
+        </select>
+        <label for="fmtBorderColor" data-i18n="fmtBorderColor">Color</label>
+        <div class="fmtSwatch"><input type="color" id="fmtBorderColor" value="#323130"></div>
+       </div>
+      </div>
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtBorderAll"><span data-i18n="fmtBorderAll">Apply to all four sides</span></label>
+      </div>
+     </div>
+    </div>
+
+    <!-- Alignment: horizontal / vertical / wrap / indent / rotation -->
+    <div class="fmtPane" data-fmt-pane="align">
+     <div class="fmtGrid">
+      <label for="fmtHAlign" data-i18n="fmtHAlign">Horizontal</label>
+      <select id="fmtHAlign">
+       <option value="" data-i18n="fmtHGeneral">General</option>
+       <option value="left" data-i18n="fmtHLeft">Left</option>
+       <option value="center" data-i18n="fmtHCenter">Center</option>
+       <option value="right" data-i18n="fmtHRight">Right</option>
+      </select>
+      <label for="fmtVAlign" data-i18n="fmtVAlign">Vertical</label>
+      <select id="fmtVAlign">
+       <option value="" data-i18n="fmtVBottom">Bottom</option>
+       <option value="top" data-i18n="fmtVTop">Top</option>
+       <option value="mid" data-i18n="fmtVMiddle">Middle</option>
+      </select>
+      <label for="fmtRotate" data-i18n="fmtRotate">Text rotation</label>
+      <select id="fmtRotate">
+       <option value="0" data-i18n="fmtRot0">0 degrees</option>
+       <option value="45" data-i18n="fmtRot45">45 degrees</option>
+       <option value="90" data-i18n="fmtRot90">90 degrees</option>
+       <option value="-45" data-i18n="fmtRotNeg45">-45 degrees</option>
+       <option value="-90" data-i18n="fmtRotNeg90">-90 degrees</option>
+      </select>
+      <label for="fmtIndent" data-i18n="fmtIndent">Indent</label>
+      <input type="number" id="fmtIndent" min="0" max="50" step="1">
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtWrap"><span data-i18n="fmtWrapText">Wrap text</span></label>
+      </div>
+     </div>
+    </div>
+
+    <div class="frow"><span style="flex:1"></span>
+     <button type="button" id="fmtReset" data-i18n="fmtReset">Reset</button>
+     <button type="button" id="fmtOk" class="btnPrimary" data-i18n="fmtOk">OK</button>
+     <button type="button" id="fmtCancel" data-i18n="fmtCancel">Cancel</button></div>
+   </div>
+
    <div id="psDlg">
-   <div class="frow"><span data-i18n="psTitle">Page Setup</span><span style="flex:1"></span><button type="button" id="psClose" data-close="close" aria-label="Close"></button></div>
+    <div class="frow"><span data-i18n="psTitle">Page Setup</span><span style="flex:1"></span><button type="button" id="psClose" data-close="close" aria-label="Close"></button></div>
    <div class="psGrid">
     <label for="psOrient" data-i18n="pgOrient">Orientation</label>
     <select id="psOrient"><option value="portrait" data-i18n="orientP">Portrait</option><option value="landscape" data-i18n="orientL">Landscape</option></select>
@@ -903,6 +1027,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/account.js" defer></script>
 <script src="js/drive.js" defer></script>
 <script src="js/script.js" defer></script>
+<script src="js/formatCells.js" defer></script>
 <script src="js/drawDesign.js" defer></script>
 <script src="js/start-screen.js" defer></script>
 <script src="js/ribbon-display.js" defer></script>

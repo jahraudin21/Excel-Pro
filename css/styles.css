@@ -346,10 +346,10 @@ input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--xl-lin
    80px from the top of #app, capped to the window, and scrollable inside it. The
    old rule put a tall dialog (Help, Page Setup) off the bottom of a short window
    and let a 340px min-width overflow a 380px one. */
-#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:var(--z-dialog);display:none;flex-direction:column;padding:10px;gap:8px;
+#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog,#fmtDlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:var(--z-dialog);display:none;flex-direction:column;padding:10px;gap:8px;
   min-width:min(340px,calc(100vw - 32px));max-width:calc(100vw - 32px);
   max-height:calc(100vh - 32px);overflow:auto;overscroll-behavior:contain}
-#findDlg.open,#chartDlg.open,#pivotDlg.open,#recDlg.open,#picDlg.open,#helpDlg.open,#psDlg.open,#authDialog.open{display:flex}
+#findDlg.open,#chartDlg.open,#pivotDlg.open,#recDlg.open,#picDlg.open,#helpDlg.open,#psDlg.open,#authDialog.open,#fmtDlg.open{display:flex}
 .frow{display:flex;gap:6px;align-items:center}
 .frow input{flex:1;border:1px solid #ccc;padding:4px 8px;font-size:13px;outline:none}
 .frow input:focus{border-color:#217346}
@@ -451,6 +451,67 @@ body[data-theme='dark'] .bsCard .bsD{color:#aaa}
 body[data-theme='dark'] .bsInfoBox{background:#2b2b2b;border-color:#555}
 body[data-theme='dark'] .bsRow{border-bottom-color:#444}
 body[data-fx='sharp'] #backstage .bsCard,body[data-fx='sharp'] .bsBack{border-radius:0}
+
+/* ---------- Format Cells dialog (Ctrl+1) ----------
+   Tabs share one stacked panel: only the active .fmtPane is shown, so the dialog
+   is as short as its tallest tab rather than the sum of all four. */
+#fmtDlg{min-width:min(460px,calc(100vw - 32px))}
+.fmtTabs{display:flex;gap:2px;border-bottom:1px solid var(--xl-line);padding:0 2px}
+.fmtTabs button{
+  background:transparent;border:0;border-bottom:2px solid transparent;
+  font:inherit;font-size:12px;color:var(--xl-text-2);
+  padding:6px 11px;cursor:pointer;border-radius:0}
+.fmtTabs button:hover{color:var(--xl-text)}
+.fmtTabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.fmtPane{display:none;padding:12px 4px 2px}
+.fmtPane.on{display:block}
+.fmtGrid{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.fmtGrid label{font-size:12px;color:var(--xl-text-2);white-space:nowrap}
+.fmtGrid select,.fmtGrid input[type=text],.fmtGrid input[type=number]{
+  height:24px;border:1px solid var(--xl-line);border-radius:2px;padding:0 6px;
+  font:inherit;font-size:12.5px;color:var(--xl-text);background:#fff;width:100%}
+.fmtGrid select:focus,.fmtGrid input:focus{outline:none;border-color:var(--accent)}
+.fmtChecks{display:flex;flex-wrap:wrap;gap:6px 16px;grid-column:1/-1;padding-top:2px}
+.fmtChecks label{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--xl-text);cursor:pointer}
+/* The font tab previews the pending choice exactly as the cell will render it:
+   same point-to-pixel conversion the grid uses (PT), so the sample never lies. */
+.fmtSample{
+  grid-column:1/-1;margin-top:4px;
+  border:1px solid var(--xl-line);border-radius:2px;padding:9px 11px;
+  min-height:34px;display:flex;align-items:center;font-size:11pt;color:var(--xl-text)}
+.fmtSwatch{display:inline-flex;align-items:center;gap:6px}
+.fmtSwatch i{width:22px;height:16px;border:1px solid var(--xl-line);border-radius:2px;display:inline-block}
+/* Border preview: a 3x3 grid of edges, as Excel draws it. Each button is one
+   edge of the box; the centre is inert, so a misclick cannot clear a border. */
+.fmtBorderWrap{display:flex;gap:16px;align-items:flex-start;grid-column:1/-1;padding-top:4px}
+.fmtBEdge{
+  width:22px;height:22px;border:0;background:transparent;cursor:pointer;padding:0;position:relative}
+.fmtBEdge:hover{background:var(--accent-soft);border-radius:2px}
+.fmtBEdge::after{content:"";position:absolute;background:transparent;transition:background .12s ease}
+.fmtBEdge[data-edge=t]::after{left:3px;right:3px;top:9px;height:2px}
+.fmtBEdge[data-edge=b]::after{left:3px;right:3px;bottom:9px;height:2px}
+.fmtBEdge[data-edge=l]::after{top:3px;bottom:3px;left:9px;width:2px}
+.fmtBEdge[data-edge=r]::after{top:3px;bottom:3px;right:9px;width:2px}
+.fmtBEdge[data-edge=a]::after{inset:3px;border:2px solid transparent}
+.fmtBEdge.on::after{background:var(--xl-text)}
+.fmtBEdge[data-edge=a].on::after{border-color:var(--xl-text);background:transparent}
+.fmtBEdge.on[data-edge=t]::after,.fmtBEdge.on[data-edge=b]::after,
+.fmtBEdge.on[data-edge=l]::after,.fmtBEdge.on[data-edge=r]::after{background:var(--xl-text)}
+.fmtBGrid{display:grid;grid-template-columns:repeat(3,22px);grid-template-rows:repeat(3,22px)}
+.fmtBGrid .fmtBSpacer{visibility:hidden}
+.fmtBorderOpts{display:flex;flex-direction:column;gap:8px;min-width:150px}
+.fmtBorderOpts select,.fmtBorderOpts input{height:24px;font-size:12.5px}
+#fmtDlg input[type=color]{width:34px;height:24px;padding:1px;border:1px solid var(--xl-line);border-radius:2px;background:#fff}
+/* The dialog launcher: the tiny corner arrow Excel puts on a ribbon group that
+   has a full dialog behind it. Sits under the group caption, bottom-right. */
+.rlauncher{
+  position:absolute;right:1px;bottom:14px;width:14px;height:14px;
+  border:0;background:transparent;cursor:pointer;padding:0;color:var(--xl-text-2);
+  display:grid;place-items:center;border-radius:2px}
+.rlauncher:hover{background:var(--xl-hover);color:var(--xl-text)}
+.rlauncher:focus-visible{outline:1px dotted var(--xl-text);outline-offset:-2px}
+/* Group must be the positioning context for the launcher. */
+.rgrp.hasLauncher{position:relative}
 
 /* ---------- Auth dialog: clean, professional card ---------- */
 #authDialog{min-width:380px;max-width:400px;border:none;border-radius:16px;padding:22px 22px 18px;
