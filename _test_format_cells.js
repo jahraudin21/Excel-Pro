@@ -46,7 +46,18 @@ ok(/id="psOrient"/.test(html) && /id="psScale"/.test(html), 'Page Setup fields i
 
 console.log('\n--- sprite + stylesheet wiring ---');
 ok(/id="i-launcher"/.test(html), 'launcher icon defined in the sprite');
-ok(count(/href="#i-launcher"/g) === 1, 'launcher icon used by the launcher button');
+/* Excel puts a dialog launcher on the corner of every group that has a full
+   dialog behind it, and the reference shows one on Font, Alignment, Number,
+   Styles, Cells and Editing alike. So the count is no longer 1: what still has
+   to hold is that every launcher draws the same sprite icon and that no two
+   share an id. */
+const launcherIds = [...html.matchAll(/class="rlauncher"[^>]*\bid="([^"]+)"/g)].map(m => m[1]);
+const launcherUses = count(/href="#i-launcher"/g);
+ok(launcherIds.length >= 6, 'every dialog-backed Home group has a launcher (' + launcherIds.length + ')');
+ok(launcherUses === launcherIds.length,
+  'every launcher draws the shared #i-launcher icon (' + launcherUses + '/' + launcherIds.length + ')');
+ok(new Set(launcherIds).size === launcherIds.length, 'launcher ids are unique: ' + launcherIds.join(', '));
+ok(launcherIds.includes('bFmtCells'), 'the Font group still owns the original launcher');
 
 const css = fs.readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8');
 ok(/#fmtDlg/.test(css), 'fmtDlg styled');

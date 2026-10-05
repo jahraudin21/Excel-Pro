@@ -168,6 +168,13 @@ body[data-rboverflow] .rbOverflow{display:flex}
 /* Rows take their natural height so a group's commands stay top-aligned, the way
    Excel draws them; only the caption is pushed to the foot of the group. */
 .rrow{display:flex;align-items:center;gap:0;flex:none;flex-wrap:wrap;justify-content:center}
+/* A vertical pair of commands beside a large tile, the shape Excel uses in
+   Styles (Cell Styles + its gallery) and Editing (AutoSum + Fill/Clear and
+   Sort/Find). The pair is one flex child of the row so it lines up with the tile
+   instead of wrapping under it. */
+.rstack{display:flex;flex-direction:column;gap:0}
+/* Number's format box spans the whole group, as in the reference. */
+.rsel.wide{max-width:none;width:100%}
 /* Command labels are 9pt, the size Office uses for every ribbon command; group
    captions sit a step below at 10px so the hierarchy survives at 100% scaling. */
 .rlabel{font-size:10px;color:var(--xl-text-2);line-height:13px;min-height:13px;white-space:nowrap;font-weight:400;margin-top:auto}
@@ -190,9 +197,28 @@ body[data-rboverflow] .rbOverflow{display:flex}
    Verified across all nine tabs by _probe_metrics.js. */
 .rrow:has(>.rbtn.big){align-items:flex-start}
 .rrow:has(>.rbtn.big)>.rbtn:not(.big){margin-top:6.2px}
+/* Same correction for the stacked pairs. A .rstack beside a 48px tile is 44px
+   tall, so it starts 2px lower than a bare button row and the first command in it
+   needs 4.2px (not 6.2px) to reach the tile's icon line. Without this the pair
+   hangs half a control too low next to AutoSum and Cell Styles. */
+.rrow:has(>.rbtn.big)>.rstack>.rbtn:first-child{margin-top:4.2px}
 /* Large buttons: a 48px tile - an 18px glyph over a 12px caption - as wide as its
    own label, the way Excel sizes Paste, AutoSum and Format. */
 .rbtn.big{flex-direction:column;justify-content:center;height:48px;width:auto;min-width:56px;font-size:12px;line-height:1.05;gap:1px;padding:2px 4px}
+/* ---------- dropdown caret ----------
+   A command that opens a menu carries a caret, exactly as Excel splits Paste,
+   Underline, Borders and the Cells commands. The caret is a plain character in the
+   button's own text - never an entity, never a picture - and these rules give
+   every one of them the same size and colour. On a large tile it is positioned in
+   the bottom-right corner the way Excel draws Paste and AutoSum; on the small
+   buttons it simply follows the caption. */
+.rdrop .rcaret{font-size:9px;line-height:1;color:var(--xl-text-2);margin-left:1px;flex:none}
+/* On a large tile the caret belongs in the bottom-right corner, clear of the icon
+   and the caption, as Excel draws Paste / Cell Styles / AutoSum. The trailing
+   character is pulled out of the caption's flow and parked in the corner, so the
+   caption keeps its own size and stays centred under the glyph. */
+.rbtn.big.rdrop{position:relative}
+.rbtn.big.rdrop .rcaret{position:absolute;right:3px;bottom:2px;margin:0;font-size:10px;line-height:1}
 /* Ribbon icons are real vector line art in a <symbol> sprite, referenced with
    <use>. One fixed box on one baseline, and they take the button's colour, so a
    latched command tints its own icon exactly as Office does. */

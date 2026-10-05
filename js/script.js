@@ -328,6 +328,7 @@ const STR={
  aboutLine:{np:'मिनी एक्सेल',hi:'मिनी एक्सेल',en:'Mini Excel'},
  gThemes:{np:'थिम',hi:'थीम',en:'Themes'},
  bFormat:{np:'फरम्याट',hi:'फ़ॉर्मैट',en:'Format'},
+  bAcct:{np:'लेखा',hi:'लेखा',en:'Accounting'},
  colWidth:{np:'स्तम्भ चौडाइ…',hi:'कॉलम चौड़ाई…',en:'Column width…'},
  autoFit:{np:'स्वतः फिट',hi:'ऑटोफ़िट करें',en:'AutoFit column'},
  defWidth:{np:'पूर्वनिर्धारित चौडाइ',hi:'डिफ़ॉल्ट चौड़ाई',en:'Default width'},
@@ -1914,7 +1915,7 @@ function setZoom(z){wb.zoom=clamp(Math.round(z*10)/10,0.5,2);applyZoom();saveLS(
 function syncRibbon(){
  const s=styleOf(active);
  const t=(id,on)=>{const el=$(id);if(el)el.classList.toggle('on',!!on);};
- t('#bB',s.b);t('#bI',s.i);t('#bU',s.u);t('#bStrike',s.st);t('#bWrap',s.wrap);
+ t('#bB',s.b);t('#bI',s.i);t('#bU',s.u);t('#bWrap',s.wrap);
  const q=rect();t('#bMerge',!!mergesOf().filter(mg=>{const p=String(mg).split(':');if(p.length<2)return false;
   const a=refToRC(p[0]),b=refToRC(p[1]);return a.r===q.r1&&a.c===q.c1&&b.r===q.r2&&b.c===q.c2;}).length);
  t('#bTglGrid',wb.showGrid!==false);t('#bTglHead',wb.showHead!==false);
@@ -2313,7 +2314,6 @@ function initRibbon(){
  on('#bB',()=>applyStyle({b:!styleOf(active).b}));
  on('#bI',()=>applyStyle({i:!styleOf(active).i}));
  on('#bU',()=>applyStyle({u:!styleOf(active).u}));
- on('#bStrike',()=>applyStyle({st:!styleOf(active).st}));
  on('#bWrap',()=>applyStyle({wrap:!styleOf(active).wrap}));
  on('#bMerge',toggleMerge);
  on('#bBorder',e=>borderMenu($('#bBorder')));
@@ -2323,11 +2323,22 @@ function initRibbon(){
  on('#bDecDec',()=>applyNumDec(-1));
  on('#bPct',()=>applyStyle({numfmt:'pct'}));
  on('#bComma',()=>applyStyle({numfmt:'comma'}));
+ /* Accounting Number Format: currency, two decimals, the $ / ₹ / रु symbols the
+    workbook already formats with, offered as a menu because Excel's button is a
+    split command too. */
+ on('#bAcct',e=>popMenu($('#bAcct'),[
+  {head:T('bAcct')},
+  {label:T('nf_usd'),action:()=>applyStyle({numfmt:'usd'})},
+  {label:T('nf_inr'),action:()=>applyStyle({numfmt:'inr'})},
+  {label:T('nf_npr'),action:()=>applyStyle({numfmt:'npr'})}]));
  const ff=$('#fontFam');if(ff){ff.onchange=e=>{if(e.target.value)applyStyle({ff:e.target.value});};}
  const fs2=$('#fontSize');if(fs2){fs2.onchange=e=>{if(e.target.value)applyStyle({fs:+e.target.value});};}
  on('#bGrowFont',()=>applyStyle({fs:sizeStep(active,1)}));
  on('#bShrinkFont',()=>applyStyle({fs:sizeStep(active,-1)}));
- on('#bAutoSum',()=>doAutoSum());on('#bAutoSum2',()=>doAutoSum());
+ /* AutoSum is a split command: the tile inserts a plain SUM, and the caret opens
+    the function gallery Excel shows beside it. */
+ on('#bAutoSum',e=>{if(e.target.closest('.rcaret'))autoSumMenu($('#bAutoSum'));else doAutoSum();});
+ on('#bAutoSum2',()=>doAutoSum());
  on('#bFill',fillDown);on('#bClear',clearSel);
  on('#bSort',e=>sortMenu($('#bSort')));
  on('#bSortAz',()=>sortAz(false));on('#bSortZa',()=>sortAz(true));
@@ -2407,6 +2418,15 @@ function initRibbon(){
  tg('#bTraceClear',removeTraces);
  tg('#bShowFormulas',toggleShowFormulas);
  tg('#bAutoTotal',insertTotalRow);
+ /* Home group launchers. Each opens Format Cells on the pane that owns the group,
+    the way Excel's corner arrow does - Alignment lands on the Alignment tab, and
+    Number, Styles and Cells on the Font tab, which is where their settings live
+    in this dialog. Editing's arrow opens Find & Select. */
+ tg('#bFmtAlign',()=>fmtOpen('align'));
+ tg('#bFmtNum',()=>fmtOpen('font'));
+ tg('#bFmtStyles',()=>fmtOpen('font'));
+ tg('#bFmtCellsGroup',()=>fmtOpen('font'));
+ tg('#bFindSelectDlg',()=>{$('#findDlg').classList.add('open');$('#findTxt').focus();});
  tg('#bVwN',()=>setViewMode('normal'));
  tg('#bVwP',()=>setViewMode('page'));
  tg('#bVwB',()=>setViewMode('break'));

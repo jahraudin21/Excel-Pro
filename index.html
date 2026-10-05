@@ -44,6 +44,7 @@ if ('serviceWorker' in navigator) {
 <symbol id="i-merge" viewBox="0 0 16 16"><rect x="1.7" y="3" width="5" height="10" rx=".8"/><rect x="9.3" y="3" width="5" height="10" rx=".8"/><path d="M8 1.8v12.4" stroke-dasharray="1.5 1.5"/></symbol>
 <symbol id="i-percent" viewBox="0 0 16 16"><circle cx="4.7" cy="4.7" r="1.9"/><circle cx="11.3" cy="11.3" r="1.9"/><path d="M12.8 3.2 3.2 12.8"/></symbol>
 <symbol id="i-comma" viewBox="0 0 16 16"><path d="M7.4 2.8h3.6v3.9c0 2.5-1.4 4.4-3.1 5.6L6.8 11c1.3-1 2.1-2.4 2.1-4.1H7.4z"/></symbol>
+<symbol id="i-accounting" viewBox="0 0 16 16"><rect x="1.4" y="4.4" width="13.2" height="7.2" rx="1"/><circle cx="8" cy="8" r="1.9"/><path d="M8 6.1v-.9M8 10.9v.9"/></symbol>
 <symbol id="i-dec-inc" viewBox="0 0 16 16"><circle cx="3.4" cy="12.4" r=".85" fill="currentColor" stroke="none"/><circle cx="7.2" cy="12.4" r="1.7"/><circle cx="11.2" cy="12.4" r="1.7"/><path d="M9.4 4.2h4.8M12.3 2.5l1.9 1.7-1.9 1.7"/></symbol>
 <symbol id="i-dec-dec" viewBox="0 0 16 16"><circle cx="3.4" cy="12.4" r=".85" fill="currentColor" stroke="none"/><circle cx="7.2" cy="12.4" r="1.7"/><circle cx="11.2" cy="12.4" r="1.7"/><path d="M14.2 4.2H9.4M11.3 2.5 9.4 4.2l1.9 1.7"/></symbol>
 <symbol id="i-styles" viewBox="0 0 16 16"><rect x="2" y="2" width="8.6" height="11" rx="1"/><path d="M4 5h4.6M4 7.4h4.6M4 9.8h3"/><path d="M11.4 9.4l3 3-1.7 1.7-3-3z"/></symbol>
@@ -238,7 +239,7 @@ if ('serviceWorker' in navigator) {
   <div class="rbody">
    <div class="rpage on" data-page="home">
     <div class="rgrp"><div class="rrow">
-      <button class="rbtn big" id="bPaste"><svg class="ic" aria-hidden="true"><use href="#i-paste"></use></svg>Paste</button>
+      <button class="rbtn big rdrop" id="bPaste"><svg class="ic" aria-hidden="true"><use href="#i-paste"></use></svg>Paste▾</button>
     </div><div class="rrow">
       <button class="rbtn" id="bCut" title="Cut (Ctrl+X)"><svg class="ic" aria-hidden="true"><use href="#i-cut"></use></svg></button>
       <button class="rbtn" id="bCopy" title="Copy (Ctrl+C)"><svg class="ic" aria-hidden="true"><use href="#i-copy"></use></svg></button>
@@ -252,32 +253,33 @@ if ('serviceWorker' in navigator) {
     </div><div class="rrow">
       <button class="rbtn" id="bB" title="Bold (Ctrl+B)"><b>B</b></button>
       <button class="rbtn" id="bI" title="Italic (Ctrl+I)"><i>I</i></button>
-      <button class="rbtn" id="bU" title="Underline (Ctrl+U)"><u>U</u></button>
-      <button class="rbtn" id="bStrike" title="Strikethrough"><s>S</s></button>
-      <button class="rbtn" id="bBorder" title="Borders"><svg class="ic" aria-hidden="true"><use href="#i-border"></use></svg></button>
+      <button class="rbtn rdrop" id="bU" title="Underline (Ctrl+U)"><u>U</u> ▾</button>
+      <button class="rbtn rdrop" id="bBorder" title="Borders"><svg class="ic" aria-hidden="true"><use href="#i-border"></use></svg> ▾</button>
       <input type="color" id="colBg" value="#ffffff" title="Fill color">
       <input type="color" id="colFont" value="#000000" title="Font color">
     </div><div class="rlabel" data-i18n="gFont">Font</div>
       <button class="rlauncher" id="bFmtCells" type="button" title="Format Cells (Ctrl+1)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
     </div>
-    <div class="rgrp"><div class="rrow">
+    <div class="rgrp hasLauncher"><div class="rrow">
       <button class="rbtn" id="bVaTop" data-va="top" title="Top align"><svg class="ic" aria-hidden="true"><use href="#i-align-top"></use></svg></button>
       <button class="rbtn" id="bVaMid" data-va="mid" title="Middle align"><svg class="ic" aria-hidden="true"><use href="#i-align-middle"></use></svg></button>
       <button class="rbtn" id="bVaBot" data-va="bot" title="Bottom align"><svg class="ic" aria-hidden="true"><use href="#i-align-bottom"></use></svg></button>
       <span class="rsep"></span>
+      <button class="rbtn" id="bWrap" title="Wrap text"><svg class="ic" aria-hidden="true"><use href="#i-wrap"></use></svg>Wrap</button>
+      <button class="rbtn rdrop" id="bMerge" title="Merge &amp; Center"><svg class="ic" aria-hidden="true"><use href="#i-merge"></use></svg>Merge ▾</button>
+      <button class="rbtn rdrop" id="bOrientCell" title="Text orientation"><svg class="ic" aria-hidden="true"><use href="#i-orient"></use></svg> ▾</button>
+    </div><div class="rrow">
       <button class="rbtn" id="bAlLeft" data-al="left" title="Align left"><svg class="ic" aria-hidden="true"><use href="#i-align-left"></use></svg></button>
       <button class="rbtn" id="bAlCenter" data-al="center" title="Center"><svg class="ic" aria-hidden="true"><use href="#i-align-center"></use></svg></button>
       <button class="rbtn" id="bAlRight" data-al="right" title="Align right"><svg class="ic" aria-hidden="true"><use href="#i-align-right"></use></svg></button>
-    </div><div class="rrow">
-      <button class="rbtn" id="bWrap" title="Wrap text"><svg class="ic" aria-hidden="true"><use href="#i-wrap"></use></svg>Text</button>
-      <button class="rbtn" id="bMerge" title="Merge &amp; Center"><svg class="ic" aria-hidden="true"><use href="#i-merge"></use></svg>Merge</button>
-      <button class="rbtn" id="bOrientCell" title="Text orientation"><svg class="ic" aria-hidden="true"><use href="#i-orient"></use></svg></button>
-    </div><div class="rrow">
+      <span class="rsep"></span>
       <button class="rbtn" id="bIndentDec" title="Decrease indent"><svg class="ic" aria-hidden="true"><use href="#i-indent-dec"></use></svg></button>
       <button class="rbtn" id="bIndentInc" title="Increase indent"><svg class="ic" aria-hidden="true"><use href="#i-indent-inc"></use></svg></button>
-    </div><div class="rlabel" data-i18n="gAlign">Alignment</div></div>
-    <div class="rgrp"><div class="rrow">
-      <select class="rsel" id="numfmt" title="Number format">
+    </div><div class="rlabel" data-i18n="gAlign">Alignment</div>
+      <button class="rlauncher" id="bFmtAlign" type="button" title="Format Cells (Alignment)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <select class="rsel wide" id="numfmt" title="Number format">
        <option value="gen" data-i18n="nf_gen">सामान्य</option>
        <option value="dec2" data-i18n="nf_dec2">123.45</option>
        <option value="inr" data-i18n="nf_inr">₹ (INR)</option>
@@ -287,34 +289,52 @@ if ('serviceWorker' in navigator) {
        <option value="comma" data-i18n="nf_comma">1,234</option>
       </select>
     </div><div class="rrow">
-      <button class="rbtn" id="bPct" title="Percent style">%</button>
-      <button class="rbtn" id="bComma" title="Comma style">,</button>
+      <button class="rbtn rdrop" id="bAcct" title="Accounting number format"><svg class="ic" aria-hidden="true"><use href="#i-accounting"></use></svg> ▾</button>
+      <button class="rbtn" id="bPct" title="Percent style"><svg class="ic" aria-hidden="true"><use href="#i-percent"></use></svg></button>
+      <button class="rbtn" id="bComma" title="Comma style"><svg class="ic" aria-hidden="true"><use href="#i-comma"></use></svg></button>
+    </div><div class="rrow">
       <button class="rbtn" id="bDecInc" title="Increase decimal"><svg class="ic" aria-hidden="true"><use href="#i-dec-inc"></use></svg></button>
       <button class="rbtn" id="bDecDec" title="Decrease decimal"><svg class="ic" aria-hidden="true"><use href="#i-dec-dec"></use></svg></button>
-    </div><div class="rlabel" data-i18n="gNumber">Number</div></div>
-    <div class="rgrp"><div class="rrow">
-      <button class="rbtn" id="bStyles" title="Cell styles"><svg class="ic" aria-hidden="true"><use href="#i-styles"></use></svg>Styles</button>
-      <button class="rbtn" id="bCond" title="Conditional formatting"><svg class="ic" aria-hidden="true"><use href="#i-rules"></use></svg>Rules</button>
-      <button class="rbtn" id="bFmtTable" title="Format as Table"><svg class="ic" aria-hidden="true"><use href="#i-table"></use></svg>Table ▾</button>
-    </div><div class="rlabel" data-i18n="gStyles">Styles</div></div>
-    <div class="rgrp"><div class="rrow">
-      <button class="rbtn" id="bInsRow" title="Insert row"><svg class="ic" aria-hidden="true"><use href="#i-insert-row"></use></svg>Row</button>
-      <button class="rbtn" id="bInsCol" title="Insert column"><svg class="ic" aria-hidden="true"><use href="#i-insert-col"></use></svg>Col</button>
-      <button class="rbtn" id="bDel" title="Delete row / column"><svg class="ic" aria-hidden="true"><use href="#i-delete"></use></svg>Del</button>
-      <button class="rbtn" id="bFormat" title="Format"><svg class="ic" aria-hidden="true"><use href="#i-format"></use></svg>Format ▾</button>
-    </div><div class="rlabel" data-i18n="gCells">Cells</div></div>
-    <!-- Excel gives the two large commands in this group their own row. Mixing a
-         48px tile in with 22px buttons lifts its icon off the group's baseline,
-         so the row is split rather than left ragged. -->
-    <div class="rgrp"><div class="rrow">
-      <button class="rbtn big" id="bAutoSum"><svg class="ic" aria-hidden="true"><use href="#i-autosum"></use></svg>AutoSum</button>
-      <button class="rbtn big" id="bAutoTotal" title="Auto-calculating total row for the selected data columns"><svg class="ic" aria-hidden="true"><use href="#i-subtotal"></use></svg>Total Row</button>
-    </div><div class="rrow">
-      <button class="rbtn" id="bFill" title="Fill down"><svg class="ic" aria-hidden="true"><use href="#i-fill"></use></svg>Fill</button>
-      <button class="rbtn" id="bClear" title="Clear contents"><svg class="ic" aria-hidden="true"><use href="#i-clear"></use></svg>Clear</button>
-      <button class="rbtn" id="bSort" title="Sort &amp; Filter"><svg class="ic" aria-hidden="true"><use href="#i-sort"></use></svg>Sort</button>
-      <button class="rbtn" id="bFind" title="Find &amp; Replace (Ctrl+F)"><svg class="ic" aria-hidden="true"><use href="#i-find"></use></svg><span data-i18n="bFind"></span></button>
-    </div><div class="rlabel" data-i18n="gEditing">Editing</div></div>
+    </div><div class="rlabel" data-i18n="gNumber">Number</div>
+      <button class="rlauncher" id="bFmtNum" type="button" title="Format Cells (Number)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <button class="rbtn big rdrop" id="bStyles" title="Cell styles"><svg class="ic" aria-hidden="true"><use href="#i-styles"></use></svg>Cell Styles<span class="rcaret">▾</span></button>
+      <span class="rstack">
+       <button class="rbtn rdrop" id="bCond" title="Conditional formatting"><svg class="ic" aria-hidden="true"><use href="#i-rules"></use></svg>Conditional Formatting ▾</button>
+       <button class="rbtn rdrop" id="bFmtTable" title="Format as Table"><svg class="ic" aria-hidden="true"><use href="#i-table"></use></svg>Format as Table ▾</button>
+      </span>
+    </div><div class="rlabel" data-i18n="gStyles">Styles</div>
+      <button class="rlauncher" id="bFmtStyles" type="button" title="Format Cells (Styles)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <span class="rstack">
+       <button class="rbtn rdrop" id="bInsRow" title="Insert row"><svg class="ic" aria-hidden="true"><use href="#i-insert-row"></use></svg>Insert ▾</button>
+       <button class="rbtn" id="bInsCol" title="Insert column"><svg class="ic" aria-hidden="true"><use href="#i-insert-col"></use></svg></button>
+      </span>
+      <span class="rstack">
+       <button class="rbtn rdrop" id="bDel" title="Delete row / column"><svg class="ic" aria-hidden="true"><use href="#i-delete"></use></svg>Delete ▾</button>
+       <button class="rbtn rdrop" id="bFormat" title="Format"><svg class="ic" aria-hidden="true"><use href="#i-format"></use></svg>Format ▾</button>
+      </span>
+    </div><div class="rlabel" data-i18n="gCells">Cells</div>
+      <button class="rlauncher" id="bFmtCellsGroup" type="button" title="Format Cells" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <!-- Editing: AutoSum is the one large command, the rest are stacked pairs, so
+         every stack's two 22px buttons line up with the tile's icon exactly as
+         Excel draws them. -->
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <button class="rbtn big rdrop" id="bAutoSum"><svg class="ic" aria-hidden="true"><use href="#i-autosum"></use></svg>AutoSum<span class="rcaret">▾</span></button>
+      <span class="rstack">
+       <button class="rbtn rdrop" id="bFill" title="Fill down"><svg class="ic" aria-hidden="true"><use href="#i-fill"></use></svg>Fill ▾</button>
+       <button class="rbtn rdrop" id="bClear" title="Clear contents"><svg class="ic" aria-hidden="true"><use href="#i-clear"></use></svg>Clear ▾</button>
+      </span>
+      <span class="rstack">
+       <button class="rbtn rdrop" id="bSort" title="Sort &amp; Filter"><svg class="ic" aria-hidden="true"><use href="#i-sort"></use></svg>Sort &amp; Filter ▾</button>
+       <button class="rbtn rdrop" id="bFind" title="Find &amp; Select (Ctrl+F)"><svg class="ic" aria-hidden="true"><use href="#i-find"></use></svg><span data-i18n="bFind"></span> ▾</button>
+      </span>
+    </div><div class="rlabel" data-i18n="gEditing">Editing</div>
+      <button class="rlauncher" id="bFindSelectDlg" type="button" title="Find &amp; Select" data-i18n-t="tipFmtCells" aria-label="Find and Select"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
    </div>
 <div class="rpage" data-page="insert">
      <!-- Tables -->
@@ -470,6 +490,7 @@ if ('serviceWorker' in navigator) {
      </div><div class="rlabel" data-i18n="gDataTypes">Data Types</div></div>
      <div class="rgrp"><div class="rrow">
       <button class="rbtn" id="bSubtotal" title="Subtotal of selection"><svg class="ic" aria-hidden="true"><use href="#i-subtotal"></use></svg>Subtotal</button>
+      <button class="rbtn" id="bAutoTotal" title="Auto-calculating total row for the selected data columns"><svg class="ic" aria-hidden="true"><use href="#i-subtotal"></use></svg>Total Row</button>
       <button class="rbtn" id="bCountA" title="Count non-empty cells"><svg class="ic" aria-hidden="true"><use href="#i-count"></use></svg>Count</button>
      </div><div class="rlabel" data-i18n="gSubtotal">Outline</div></div>
     </div>
