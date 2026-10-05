@@ -45,7 +45,10 @@ body{background:var(--xl-ribbon);padding:0;height:100vh;display:flex;overflow:hi
 /* ---------- title bar (Excel: light strip, quick actions left, account right) ---------- */
 .titlebar{display:flex;align-items:center;gap:1px;background:var(--xl-ribbon);color:var(--xl-text);
   padding:2px 6px;font-size:12px;flex:none;border-bottom:1px solid var(--xl-line)}
-.titlebar .appTitle{font-weight:600;white-space:nowrap;padding-left:2px}
+/* The app name and the document name are two separate pieces of text, so the bar's
+   1px gap is not enough between them - they ran together as "Mini ExcelBook1".
+   Excel separates the document title from the brand with real space. */
+.titlebar .appTitle{font-weight:600;white-space:nowrap;padding-left:2px;margin-right:6px}
 .titlebar .bookName{color:var(--xl-text-2);font-size:12px;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;max-width:190px}
 /* Spacer that pushes the language picker and the account pill into the right
@@ -160,10 +163,13 @@ body[data-rboverflow] .rbOverflow{display:flex}
 .rbody{background:var(--xl-ribbon);display:flex;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}
 .rbody::-webkit-scrollbar{height:0;width:0}
 /* Command area: Excel gives each group a little air and separates them with a
-   full-height hairline, with the group name centred underneath. */
+   full-height hairline, with the group name centred underneath. The horizontal
+   padding is 3px rather than 4px so all seven Home groups fit beside each other
+   on a 1240px window, the width the reference photo was taken at - without it
+   Editing slides off the right edge and the tab can no longer be seen whole. */
 .rpage{display:none;padding:1px 0;align-items:stretch}
 .rpage.on{display:flex}
-.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--xl-divider);padding:1px 4px;flex:none;position:relative}
+.rgrp{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--xl-divider);padding:1px 3px;flex:none;position:relative}
 .rgrp:last-child{border-right:none}
 /* Rows take their natural height so a group's commands stay top-aligned, the way
    Excel draws them; only the caption is pushed to the foot of the group. */
@@ -175,6 +181,11 @@ body[data-rboverflow] .rbOverflow{display:flex}
 .rstack{display:flex;flex-direction:column;gap:0}
 /* Number's format box spans the whole group, as in the reference. */
 .rsel.wide{max-width:none;width:100%}
+/* The Styles gallery carries the longest captions in the ribbon ("Conditional
+   Formatting"). Excel insets them just enough for the text to clear the icon, and
+   holding the same 4px here is what pushes the group - and with it the whole
+   Editing group - past the right edge. */
+.rstack>.rbtn{padding:0 3px}
 /* Command labels are 9pt, the size Office uses for every ribbon command; group
    captions sit a step below at 10px so the hierarchy survives at 100% scaling. */
 .rlabel{font-size:10px;color:var(--xl-text-2);line-height:13px;min-height:13px;white-space:nowrap;font-weight:400;margin-top:auto}
@@ -322,6 +333,13 @@ th.filterTh{position:relative;padding-right:14px}
 #helpBody td{border:1px solid #e2e2e2;padding:3px 8px;font-size:12.5px}
 #helpBody kbd{background:#f3f2f1;border:1px solid #ccc;border-bottom-width:2px;border-radius:3px;padding:0 5px;font-family:inherit;font-size:11.5px}
 table{border-collapse:collapse;table-layout:fixed}
+/* The sheet is as wide as its columns, never as wide as the window. With only
+   `table-layout:fixed` the table shrink-wraps to #gridwrap and the colgroup widths
+   are discarded - every column rendered at the window's share of the space rather
+   than the 88px the app asked for, so a resized column snapped back on the next
+   repaint and the header letters no longer sat where the column edges were.
+   Excel sizes the table from its columns and scrolls the rest into view. */
+#grid{width:max-content;min-width:100%}
 th,td{border:1px solid #d4d4d4;width:88px;height:22px;font-size:13px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Row and column headers are window furniture, so they take Office Background 1
    (#f3f2f1) like the sheet-tab strip rather than a generic grey. */
