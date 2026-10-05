@@ -1,0 +1,2 @@
+caret characters found: 24
+carets wrapped in a span: 24

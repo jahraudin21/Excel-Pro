@@ -1,0 +1,21 @@
+
+node.exe : (node:17280) electron: Failed to load URL: file:///C:/Users/zedi/OneDrive/%E3%83%89%E3%82%AD%E
+3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/GitHub/Excel-Pro/index.html with error: ERR_FAILED
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:17280) el...ror: ERR_FAILED:String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `electron --trace-warnings ...` to show where the warning was created)
+(node:17280) UnhandledPromiseRejectionWarning: Error: ERR_FAILED (-2) loading 'file:///C:/Users/zedi/OneD
+rive/%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/GitHub/Excel-Pro/index.html'
+    at rejectAndCleanup (node:electron/js2c/browser_init:1:94793)
+    at WebContents.finishListener (node:electron/js2c/browser_init:1:94955)
+    at WebContents.emit (node:events:514:28)
+(node:17280) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either 
+by throwing inside of an async function without a catch block, or by rejecting a promise which was not 
+handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag 
+`--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). 
+(rejection id: 1)

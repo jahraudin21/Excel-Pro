@@ -1,0 +1,613 @@
+
+> excel-pro@1.0.0 test
+> node _test_auth_guard.js && node _test_google_signin.js && node _test_drive.js && node _test_new_account_reset.js && node _test_state_sync.js && node _test_excel_ui.mjs
+
+========================================
+ Service Worker + Auth Guard tests
+========================================
+
+[sw.js - install / activate]
+  PASS sw.js evaluates and exposes its constants
+  PASS precache list contains the app shell
+  PASS exactly one failed asset is reported, not an aborted install (warned: 1)
+  PASS the skipped asset is the injected failure, ./js/drive.js (got: ./js/drive.js)
+  PASS install calls skipWaiting() even when an asset fails
+  PASS every reachable asset is precached (12)
+  PASS the failed asset is genuinely absent from the cache, not cached as a bad entry
+  PASS auth-guard.js is precached for offline use
+  PASS activate deletes stale cache versions
+  PASS activate keeps the current cache
+  PASS activate claims open clients
+
+[sw.js - fetch strategies]
+  PASS POST requests are not intercepted
+  PASS cross-origin (Google Sign-In) traffic bypasses the cache
+  PASS navigation served from network when online
+  PASS navigation response is written to cache
+  PASS offline navigation falls back to the cached shell
+  PASS any offline navigation resolves to the cached app shell
+  PASS static asset served from cache (cache-first)
+  PASS cached asset is still revalidated in the background
+  PASS uncached static asset fetched from network
+  PASS network response backfills the cache
+  PASS no-store responses are not cached
+  PASS error responses still reach the page
+  PASS non-200 responses are not cached
+  PASS precache list matches the files on disk
+  PASS every script/css the page loads is precached
+
+[auth-guard.js - boot state]
+  PASS auth-guard.js evaluates and exposes AuthGuard
+  PASS lock UI strings are added to STR
+  PASS app starts locked when nobody is registered
+  PASS lock overlay #authLock is shown
+  PASS body.auth-locked is set (drives the CSS inertness)
+
+[auth-guard.js - gating features]
+  PASS require() blocks a feature while locked
+  PASS blocked feature does not run
+  PASS status bar explains why
+  PASS require() does not spam the auth dialog
+  PASS the same blocked action is queued only once
+  PASS the queued feature is replayed once the user registers
+  PASS app unlocks after registration
+  PASS lock overlay is hidden after registration
+  PASS body.auth-locked is cleared
+  PASS require() passes through when registered
+  PASS feature runs immediately when registered
+
+[auth-guard.js - cannot be dismissed while locked]
+  PASS auth dialog is dismissible when registered
+  PASS auth dialog is NOT dismissible while locked
+
+[auth-guard.js - event interception]
+  PASS clicks on the app surface are swallowed while locked
+  PASS click interceptor leaves unrelated listeners alone
+  PASS the auth dialog stays clickable while locked
+  PASS the lock overlay stays clickable
+  PASS keyboard shortcuts are blocked while locked
+  PASS script.js document shortcuts never fire while locked
+  PASS typing inside the auth dialog is not blocked
+  PASS Tab is allowed so focus can cycle in the dialog
+
+[auth-guard.js - lock card wiring & sign-out]
+  PASS lock CTA opens the sign-up form
+  PASS the lock overlay is hidden once the CTA hands over to the sign-up modal
+  PASS the app stays locked while the sign-up modal is open
+  PASS app surfaces stay inert until a session exists
+  PASS lock secondary button opens the sign-in form
+  PASS the lock overlay stays hidden for the sign-in hand-off
+  PASS lock() does not re-raise the veil over an open dialog
+  PASS signing out re-locks the app
+  PASS lock overlay returns after sign-out
+  PASS shortcuts are blocked again after sign-out
+
+[auth-guard.js - overlay click dismisses the lock]
+  PASS the lock overlay carries an onclick listener
+  PASS the backdrop click removes the overlay
+  PASS the backdrop click clears the lock state
+  PASS body.auth-locked is cleared so the main content is live
+  PASS dismissing the lock does not force a modal on the user
+  PASS a feature runs through after the dismissal
+  PASS the dismissed action actually executes
+  PASS sync() does not re-lock a dismissed session
+  PASS sync() does not re-raise the veil
+  PASS signing out re-arms the lock after a dismissal
+  PASS the overlay comes back after the post-dismissal sign-out
+  PASS a click inside the card does not dismiss the lock
+  PASS the card buttons stay in charge
+  PASS openLogin() keeps the lock while nobody is signed in
+  PASS openLogin() raises the sign-in modal
+  PASS a successful login sets the lock state to false
+  PASS the overlay is hidden once unlocked
+  PASS body.auth-locked is cleared once unlocked
+
+[index.html / styles.css wiring]
+  PASS index.html registers ./sw.js
+  PASS service worker registration lives in the <head>
+  PASS auth-guard.js is loaded by index.html
+  PASS lock overlay markup is present
+  PASS styles.css has body.auth-locked rules
+  PASS styles.css styles the lock overlay
+  PASS locked CSS makes app surfaces inert without disabling the auth dialog
+
+========================================
+ 87 passed, 0 failed
+========================================
+  PASS account engine loads in sandbox
+
+[configuration]
+  PASS configured when meta has a real client ID
+  PASS unconfigured when meta is empty
+  PASS unconfigured for placeholder ID
+
+[claim validation]
+  PASS sign-in rejected while unconfigured
+  PASS malformed token rejected
+  PASS token without iss/aud/exp rejected
+  PASS wrong audience rejected
+  PASS wrong issuer rejected
+  PASS expired token rejected
+  PASS unverified email rejected
+  PASS missing email rejected
+
+[sign-in flow]
+  PASS valid token signs in
+  PASS session user email set
+  PASS display name taken from Google profile
+  PASS provider/sub recorded
+  PASS change listeners notified
+  PASS session persisted to localStorage
+  PASS exactly one user stored
+  PASS repeat sign-in with same sub succeeds
+  PASS repeat sign-in does not duplicate the user
+  PASS existing display name not overwritten by Google
+
+[linking an existing password account]
+  PASS local sign-up works
+  PASS google sign-in with matching email succeeds
+  PASS existing account reused (same user id)
+  PASS account linked to Google
+  PASS local password hash retained after linking
+  PASS original password still signs in after linking
+
+[password rules: pure-google vs linked]
+  PASS password change blocked for Google-only account
+  PASS linked account can still change password
+  PASS new password works for linked account
+
+[profile sanitation]
+  PASS non-googleusercontent picture dropped
+  PASS unicode name decodes correctly
+  PASS sign out clears session
+
+[google drive is the primary cloud backend]
+  PASS password accounts keep the local-first default
+  PASS google sign-in stamps drive as the storage preference
+  PASS google accounts resolve to Drive as their provider
+  PASS an explicit storage choice wins over the google default
+  PASS falls back to the local provider when Drive is not connected
+  PASS re-signing in does not re-stamp an explicit choice
+
+[page wiring]
+  PASS index.html contains meta name="google-client-id"
+  PASS index.html contains accounts.google.com/gsi/client
+  PASS index.html contains id="googleRow"
+  PASS index.html contains id="googleBtn"
+  PASS index.html contains id="googlePasswordNote"
+  PASS index.html contains data-i18n="orLabel"
+  PASS styles.css contains .googleRow
+  PASS styles.css contains .googleDivider
+  PASS styles.css contains .googleBtn
+  PASS styles.css contains .userAvatar{background-size:cover
+  PASS account-ui.js contains googleSignInInit
+  PASS account-ui.js contains googleCredentialHandler
+  PASS account-ui.js contains renderButton
+  PASS account-ui.js contains paintAvatar
+  PASS account-ui.js contains googleSignInFailed
+  PASS account-ui.js contains googleNoPasswordNote
+
+[auth dialog layout: Google button closes the card]
+  PASS both the Google button and the sign-up link are present
+  PASS the Google button sits below the "no account" link
+  PASS the Google button is still inside the sign-in form
+  PASS no form field or submit button follows the Google button
+  PASS exactly one "or" divider remains
+
+[a click on the Google button reaches the authentication logic]
+  PASS a Google prompt helper exists
+  PASS a click with GIS already loaded opens the prompt immediately
+  PASS a click while GIS is still loading records the intent and starts the loader
+  PASS the loader fulfils the pending click the moment GIS is ready
+  PASS the One Tap prompt is opened as a fallback
+  PASS the old handler that returned after a no-op init is gone
+
+[the click drives the OAuth flow]
+  PASS the click reveals the real GIS control rather than faking one
+  PASS both the FedCM div and the iframe fallback are detected
+  PASS the genuine control takes precedence over the One Tap fallback
+  PASS the synthetic-click helper is gone (it silently no-opped on an iframe)
+  PASS the prompt helper knows whether a real user gesture is available
+  PASS One Tap is only attempted where a real click supplies the gesture
+  PASS a genuine click passes the gesture flag
+  PASS the deferred post-load call does not pretend to have a gesture
+
+[successful connection transitions into the app]
+  PASS a single post-auth transition exists
+  PASS the transition dismisses the dialog and start screen and focuses the grid
+  PASS the transition re-syncs the storage UI
+  PASS a Google credential runs the transition
+  PASS the Google credential is exchanged for an account session
+  PASS a Google sign-in hands the account to its Drive backend
+  PASS a granted Drive connection is reported
+  PASS the Google path no longer carries its own copy of the redirect
+
+[the Google component is always part of the modal]
+  PASS the Google row state is synced from one place
+  PASS the sync is driven by Account.isGoogleConfigured()
+  PASS the button and the "or" divider are always shown
+  PASS only the empty GIS host is gated on configuration
+  PASS #gsignBtn ships visible, so the component is present without a client id
+  PASS the "or" divider ships visible alongside it
+  PASS the GIS host still ships hidden, since it stays empty until GIS draws
+  PASS the component sits below the sign-up form, closing the modal
+  PASS an unconfigured client id reports the actual missing setup step
+  PASS that message is translated for all three languages
+  PASS the sync is applied during auth UI init
+
+94 passed, 0 failed
+=== drive provider ===
+
+[configuration]
+  PASS configured when the meta tag holds a client id
+  PASS unconfigured when the meta tag is empty
+  PASS unconfigured for the placeholder id
+
+[connect]
+  PASS a granted token connects
+  PASS isConnected reflects the live token
+  PASS connecting does not hit the Drive API
+  PASS disconnect drops the token
+  PASS a denied grant resolves driveNeedConnect instead of hanging
+  PASS connect without a client id resolves immediately
+
+[folder resolution]
+  PASS the folder lookup filters on the app folder name
+  PASS the folder lookup filters on the folder mime type
+  PASS the folder lookup skips trashed folders
+  PASS a missing folder is created
+  PASS the created folder uses the folder mime type
+  PASS the created folder is named for the app
+
+[upload envelope]
+  PASS the request declares multipart/related
+  PASS the request declares a boundary
+  PASS the body opens with the boundary delimiter
+  PASS the body is closed with the terminating boundary
+  PASS the envelope carries exactly two parts
+  PASS each part is separated by a blank CRLF line
+  PASS the metadata part declares application/json
+  PASS the media part declares the app mime type
+  PASS the metadata part names the file with the app suffix
+  PASS the metadata part records the parent folder
+  PASS the body is a MIME envelope, not bare JSON
+  PASS the upload carries the bearer token
+
+[id round-trip]
+  PASS save returns a g:-prefixed id, so providerFor routes updates back to Drive
+  PASS save records the remote file id
+  PASS the local mirror is keyed by the same g: id, so the merged list de-duplicates
+  PASS re-saving mirrors over the record instead of duplicating it
+
+[list scoping]
+  PASS list is restricted to the resolved app folder
+  PASS list filters on the app mime type, so unrelated user files never appear
+  PASS list skips trashed files
+  PASS list maps remote files to g: ids
+  PASS list never walks the whole Drive
+
+[get / update / delete]
+  PASS get resolves straight from the file id in the g: id
+  PASS update patches in place
+  PASS update issues a PATCH against the existing file
+  PASS update targets the file id from the g: id
+  PASS update does not re-list the folder to find a file it was already handed
+  PASS delete removes the remote file
+  PASS delete also drops the local mirror so the row does not linger
+  PASS mirror exists before the delete under test
+  PASS a 204 empty-body delete is not reported as a failure
+  PASS a 204 empty-body delete still drops the local mirror
+  PASS a delete that does return a JSON body drops the mirror too
+
+[local-only books]
+  PASS updating a locally-saved book uploads it and hands back a g: id
+  PASS get on an unknown local id resolves null
+
+[error handling]
+  PASS a rejected upload resolves driveSaveFailed, which the UI can translate
+  PASS list resolves driveNeedConnect when not connected
+  PASS save resolves driveNeedConnect when not connected
+  PASS get resolves driveNeedConnect when not connected
+  PASS update resolves driveNeedConnect when not connected
+  PASS delete resolves driveNeedConnect when not connected
+
+========================================
+  55 passed, 0 failed
+========================================
+=== clearHeadersForNewAccount ===
+  PASS clearHeadersForNewAccount extracted and evaluated
+
+[a new account starts from a clean sheet]
+  PASS reports that it reset the sheet
+  PASS header/body cells are cleared
+  PASS a single fresh Sheet1 remains
+  PASS column header widths reset to the 88px default
+  PASS widths also stored on the workbook for persistence
+  PASS undo and redo history cleared
+  PASS selection returned to A1
+  PASS remembers which account the sheet belongs to
+  PASS the grid is saved and re-rendered
+
+[a returning account keeps its own sheet]
+  PASS same account is a no-op
+  PASS the returning user's own cells survive
+  PASS the returning user's own column widths survive
+
+[switching accounts does not leak the previous sheet]
+  PASS a different account triggers a reset
+  PASS previous account cells are not inherited
+  PASS previous account column widths are not inherited
+
+[no session is left alone]
+  PASS no user means no reset
+  PASS the sheet is untouched while signed out
+
+18 passed, 0 failed
+=== auth state sync ===
+
+[session tokens that name a vanished account are dropped]
+  PASS a session for a deleted account signs nobody in
+  PASS the dead session token is removed instead of re-read on every boot
+  PASS a valid session still resolves to its user
+  PASS a valid session is kept
+
+[the storage UI follows the signed-in account]
+  PASS the Drive radio reflects the account preference
+  PASS the other radios are cleared
+  PASS the backstage account row shows the email
+  PASS the backstage storage row shows the preference
+  PASS the Drive connect/disconnect button is repainted
+  PASS the cloud-save count comes from the live provider
+  PASS signed out, the account row falls back to a dash
+  PASS signed out, the cloud-save count is zero
+
+[drive status strings are translatable]
+  PASS disconnectDrive is defined in the i18n table
+  PASS driveConnected is defined in the i18n table
+  PASS driveSaved is defined in the i18n table
+  PASS driveSaveFailed is defined in the i18n table
+  PASS driveNeedConnect is defined in the i18n table
+  PASS AUTH_ERR maps the Drive error codes so failures are not a bare "Error"
+
+[signing in no longer mints an API key]
+  PASS the account-change handler no longer calls Account.getApiKey()
+  PASS it only resets the masked placeholder
+
+[the sync is wired into the account lifecycle]
+  PASS an account change re-syncs the storage UI
+  PASS the profile panel syncs the storage UI at boot
+  PASS the OneDrive backstage page refreshes the cloud rows
+  PASS a language switch repaints the Drive connect/disconnect label
+
+24 passed, 0 failed
+
+--- start screen (Excel Backstage) ---
+  PASS  recent, favorites AND templates tabs present
+  PASS  each tab has its own pane
+  PASS  the templates pane is only shown on its own tab
+  PASS  both panes have their own .ssList host
+  PASS  favorites list is filled, not just recent (regression guard)
+  PASS  templates section rendered
+  PASS  backstage left rail present
+  PASS  rail is Templates / Recent / Favorites, once each
+  PASS  no duplicate tab strip above the panes
+  PASS  the rail is what the active section is mirrored onto
+  PASS  rail nav items are wired to the tab handler
+  PASS  search box filters the list
+  PASS  rows show name + location + last opened
+  PASS  favorite star + remove buttons still rendered
+  PASS  template tiles have a preview block
+  PASS  start screen is a full-bleed view, not a card
+
+--- account profile (top corner) ---
+  PASS  account pill lives in the titlebar
+  PASS  pill shows name and email
+  PASS  pill is pinned right via flex order
+  PASS  renderUserChip fills the email
+  PASS  start screen rail mirrors the account
+
+--- ribbon ---
+  PASS  Home, Insert, Page Layout, Formulas tabs exist
+  PASS  tabs are in Excel order: Home, Insert, Page Layout, Formulas, Data, Review, View, Help
+  PASS  the retired Team tab is not in the strip
+  PASS  the command pages follow the tab order
+  PASS  home groups: gClip / gFont / gAlign / gNumber / gStyles / gCells / gEditing
+  PASS  insert groups: gTables / gIllus / gCharts / gTours / gSpark / gFilters / gLinks / gText / gSymbols
+  PASS  pagelayout groups: gThemes / gPageSetup / gPageBreaks / gScaleFit / gSheetOpt
+  PASS  formulas groups: gFnLib / gFnCat / gFnHelp / gCalcOpt / gNames
+  PASS  data groups: gGetData / gSortF / gDataTools / gDataTypes / gSubtotal
+  PASS  review groups: gProofing / gA11y / gInsights / gComments / gProtect / gLang
+  PASS  view groups: gWbViews / gShow / gZoom / gFreeze / gPrint
+  PASS  help groups: gHelpHelp / gShare / gHelpTools
+  PASS  Draw is not a tab, and nothing it carried is left orphaned
+  PASS  the AI panel is still reachable now that Add-ins left the Insert tab
+  PASS  every Insert group command has a vector icon
+  PASS  the chart families each get their own icon
+  PASS  added command #bDTText exists and is wired
+  PASS  added command #bDTPic exists and is wired
+  PASS  added command #bCalcMode exists and is wired
+  PASS  added command #bNameGo exists and is wired
+  PASS  added command #bDtNum exists and is wired
+  PASS  added command #bDtText exists and is wired
+  PASS  added command #bLang exists and is wired
+  PASS  added command #bShareCopy exists and is wired
+  PASS  added command #bShareMail exists and is wired
+  PASS  Accessibility and Languages stand as their own Review groups
+
+--- icons, fonts, colours, sidebar rail ---
+  PASS  ribbon body has no colour emoji
+  PASS  ribbon body has no icons left as HTML entities
+  PASS  backstage rail has no colour emoji
+  PASS  backstage rail has no icons left as HTML entities
+  PASS  start rail has no colour emoji
+  PASS  start rail has no icons left as HTML entities
+  PASS  no poorly-supported U+2Bxx glyphs remain in the ribbon
+  PASS  every ribbon icon is vector line art, not a glyph
+  PASS  the sprite defines 149 icons and all 162 references resolve
+  PASS  both rails use the same sprite icons
+  PASS  no cp1252 damage in any shipped file (11 checked)
+  PASS  no U+FFFD or C0 control character anywhere in the bundle
+  PASS  index.html is valid UTF-8 with no C0 control characters
+  PASS  no double-encoded (mojibake) sequences in the markup
+  PASS  dropdown carets and arrows are single code points
+  PASS  no button carries more than one icon
+  PASS  rail icons sit outside the element data-i18n writes to
+  PASS  the backstage rail is in Excel order, one icon per item
+  PASS  no icon-bearing button lets the translation pass delete its icon
+  PASS  no label in the string table still leads with an emoji
+  PASS  every Alignment command in Excel has an id and a vector icon
+  PASS  alignment is driven by data-va / data-al, not baked into the button
+  PASS  applying a style re-latches the ribbon, so the active alignment shows
+  PASS  the active horizontal alignment latches, not just the vertical one
+  PASS  Formula Auditing holds Excel auditing commands, not function buttons
+  PASS  tracing parses real references, expands ranges and skips string literals
+  PASS  precedents and dependents are two different walks
+  PASS  Show Formulas swaps the cell text for the formula and latches
+  PASS  traced cells are visibly outlined
+  PASS  indent steps 3 characters per click and rotation is applied to the cell
+  PASS  every new command is wired and every new label is translated
+  PASS  every data-va value has a matching vertical-align rule (top, mid, bot)
+  PASS  the horizontal alignment values map through AL, not through a class name
+  PASS  every ribbon command, tab and title-bar item is Segoe UI 12px
+  PASS  group captions are one step below the commands, in Office grey
+  PASS  no fractional font sizes survive in the ribbon chrome
+  PASS  the grid defaults to Calibri at 11pt, Excel's own workbook default
+  PASS  the ribbon, tab strip and title bar share Office Background 1 (#f3f2f1)
+  PASS  the active tab and the grid are white, the text is Office Text 1
+  PASS  group dividers are lighter than the ribbon border, as in Office
+  PASS  every rail metric comes from one shared token block
+  PASS  a row with a 48px tile lines its 22px commands up with the tile icon
+  PASS  the default tab never mixes a 48px tile with 22px commands
+  PASS  the ribbon gives off-screen commands a way out, as Excel does
+  PASS  the overflow pair appears only on real overflow and greys out at each end
+  PASS  it re-measures on resize, on tab change and while scrolling
+  PASS  the chevron takes a discrete, clamped step
+  PASS  row and column headers use Office Background 1, not a generic grey
+  PASS  every grid surface is either the Office grey or white
+  PASS  every popup layer comes from the scale, not a hard-coded number
+  PASS  the scale is declared once and strictly ordered
+  PASS  menus float above every full-screen view
+  PASS  the auth dialog and lock are lifted above the start screen by a token
+  PASS  every dialog is centred on the viewport, capped to it, and scrollable
+  PASS  a dialog cannot be wider than the window on a small one
+  PASS  both menus are placed by one shared helper, and neither guesses its size
+  PASS  that helper measures the real box, clamps once, flips, and re-places on resize
+  PASS  both menus can scroll and cap themselves to the window
+  PASS  the replaced File dropdown is gone rather than left as dead CSS
+  PASS  the docked panel and the profile flyout are capped to the window too
+  PASS  all twelve close / back controls exist
+  PASS  every close control has an accessible name and the shared glyph
+  PASS  the glyph comes from one rule, not from each dialog
+  PASS  every close button targets its own container
+  PASS  the start screen close is bound by delegation, and that is allowed
+  PASS  the auth dialog refuses to close only while the guard holds it
+  PASS  Page Layout wiring is actually invoked, not just defined
+  PASS  every popup open/close path is null-guarded on its container
+  PASS  the auth helpers they call are themselves guarded
+  PASS  the service worker serves the app shell network-first
+  PASS  no cache-first path is left for same-origin assets
+  PASS  the navigation path was already network-first and stays that way
+  PASS  the service worker registration degrades quietly where it is unsupported
+  PASS  the brand mark exists as a sprite symbol, not as text or an emoji
+  PASS  both placeholders are gone
+  PASS  the mark is used in the title bar and on the start-screen rail
+  PASS  it is sized for both places and sized once, in CSS
+  PASS  the mark uses the app green, not a Microsoft-style X
+  PASS  it carries its own fills rather than the line-art rules
+  PASS  rail items are a fixed 32px row with a 12px label
+  PASS  rail icons sit in a 16px column and the active row carries a 4px bar
+  PASS  the active rail row is a white overlay, not a second green
+  PASS  the three rail labels each appear exactly once
+  PASS  Office neutral palette is declared as literals
+  PASS  the UI font stack is Segoe UI with Office fallbacks, in one token
+  PASS  every tab has a matching command page
+  PASS  ribbon body uses the Excel #f3f2f1 surface
+  PASS  active tab is white like Excel
+  PASS  compact spacing (22px controls, 10px group labels)
+  PASS  chrome is Segoe UI; only the grid follows the workbook font
+  PASS  tab strip is 26px, 12px labels, hairline drawn inside the strip
+  PASS  the active tab is a white block with a 2px green bar over the hairline
+  PASS  large buttons are 48px tiles: 18px glyph over a 12px caption
+  PASS  group captions share one 13px line so they line up across tabs
+  PASS  group content is top-aligned and only the caption is pinned to the foot
+  PASS  the Home Clipboard group has Excel's shape: big command, then the rest below
+  PASS  corner controls are pinned to the tab strip, not the ribbon bottom
+  PASS  the collapse chevron and the display-options button do not overlap
+  PASS  the tab strip reserves room for them
+  PASS  the display-options menu drops from the tab strip, not the ribbon bottom
+  PASS  a collapsed ribbon keeps a single hairline, not two stacked ones
+  PASS  latched commands and keyboard focus use the Excel fills
+  PASS  select boxes are 22px and the size box width lives in the stylesheet
+  PASS  fill/font colour read as Excel split buttons: 22px with a colour band
+  PASS  the dark theme still paints the strip, the active tab and the corner controls
+
+--- File menu (backstage) ---
+  PASS  rail follows Excel's Backstage order (Info before Save, Account last)
+  PASS  Home is the default page, like Excel
+  PASS  every rail entry has a matching page
+  PASS  Home offers blank / open / OneDrive cards
+  PASS  OneDrive page offers sign-in, cloud saves and Drive
+  PASS  Recent list is rendered on the Home page
+  PASS  rendering the list escapes workbook names
+  PASS  the new cards are wired to actions
+  PASS  clicking a recent row re-opens that workbook
+  PASS  openCloudBook is exported for the File menu to reuse
+  PASS  recent-list styling is defined
+  PASS  all backstage i18n keys are defined
+
+--- Windows launcher (PowerShell execution policy) ---
+  PASS  start.cmd exists
+  PASS  it is plain cmd, so the execution policy does not apply
+  PASS  it calls npm.cmd explicitly, defeating PowerShell ps1-first resolution
+  PASS  the root cause is documented in the file
+  PASS  the REM/? footgun is documented so it is not reintroduced
+  PASS  it is ASCII with CRLF and no BOM (cmd requirements)
+
+--- launch, sign-in and Google storage ---
+  PASS  start screen is opened at launch
+  PASS  unauthenticated launch raises the sign-in dialog
+  PASS  start screen stays clickable while the guard is locked
+  PASS  auth dialog + lock card stack above the start screen
+  PASS  lock veil spares the start screen (no blur / no pointer-events:none)
+  PASS  start-open flag is set and cleared
+  PASS  enterApp() redirects to the dashboard
+  PASS  both sign-in paths funnel through the shared auth transition
+  PASS  "Sign in with Google" button present
+  PASS  Google button carries the 4-colour logo
+  PASS  Google Identity Services loader is wired
+  PASS  Google accounts default to Drive as the cloud backend
+  PASS  Google sign-in persists the Drive preference
+  PASS  an explicit storage choice is never overwritten
+  PASS  Drive falls back safely when not connected
+  PASS  clearHeadersForNewAccount resets cells, widths and history for a new account
+  PASS  a returning account keeps their own sheet
+  PASS  it runs on every account change
+
+--- electron launch (npm start) ---
+  PASS  HTTP disk cache disabled (the stderr noise PowerShell surfaced)
+  PASS  GPU program + shader disk caches disabled
+  PASS  switches are applied before the app is ready
+  PASS  the root cause is documented next to the fix
+
+--- integrity ---
+  PASS  div tags balanced (424/424)
+  PASS  no duplicate ids
+  PASS  window is full-bleed (no green page padding)
+  PASS  js/start-screen.js parses
+  PASS  js/account-ui.js parses
+  PASS  js/ribbon-display.js parses
+  PASS  js/account.js parses
+  PASS  js/auth-guard.js parses
+  PASS  js/formulaAuditing.js parses
+  PASS  every Formula Auditing entry point is reachable from module scope
+  PASS  formulaAuditing.js adds no i18n key that collides with the id it fills
+  PASS  all start-screen i18n keys defined
+
+204 passed, 0 failed
+tabs : home, insert, pagelayout, formulas, data, review, view, help
+pages: home, insert, pagelayout, formulas, data, review, view, help
+uncalled wire*/init* functions: none
+alignment wired via data-va/data-al: bVaTop, bVaMid, bVaBot, bAlLeft, bAlCenter, bAlRight
+unwired buttons: none
+missing i18n keys: none
+RIBBON CHECK OK

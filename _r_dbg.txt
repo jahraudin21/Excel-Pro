@@ -1,0 +1,10 @@
+row 1 STILL MIXED: bCut,bCopy,bFPainter
+row 2 STILL MIXED: fontFam,fontSize,bGrowFont,bShrinkFont
+row 3 STILL MIXED: bB,bI,bU,bBorder,colBg,colFont
+row 4 STILL MIXED: bVaTop,bVaMid,bVaBot,bWrap,bMerge,bOrientCell
+row 5 STILL MIXED: bAlLeft,bAlCenter,bAlRight,bIndentDec,bIndentInc
+row 7 STILL MIXED: bAcct,bPct,bComma
+row 8 STILL MIXED: bDecInc,bDecDec
+row 9 STILL MIXED: bStyles,bCond,bFmtTable
+row 10 STILL MIXED: bInsRow,bDel,bFormat,bInsCol
+row 11 STILL MIXED: bAutoSum,bFill,bClear,bSort,bFind

@@ -2347,8 +2347,13 @@ function initRibbon(){
  on('#bFilterClear',()=>{const s=sheet();s.filters={};s.hiddenRows=[];applyFilters();saveLS();renderAll();});
  on('#bDup',removeDups);on('#bTxtCol',textToCols);
  on('#bSubtotal',subtotalSel);on('#bCountA',countNonEmptySel);
- on('#bInsRow',()=>{insertRow(refToRC(active).r);});
- on('#bInsCol',()=>{insertCol(refToRC(active).c);});
+ /* Cells mirrors the reference: three commands, each a split button. Insert and
+    Delete both open a menu; Format launches the dialog. The insert choices live
+    in the menu rather than on a second, label-less button, which is how Excel
+    draws the group and keeps the row to the three captions the photo shows. */
+ on('#bInsRow',e=>popMenu($('#bInsRow'),[
+  {label:T('ctxRowAbove'),action:()=>insertRow(refToRC(active).r)},
+  {label:T('ctxColLeft'),action:()=>insertCol(refToRC(active).c)}]));
  on('#bIInsRow',()=>{insertRow(refToRC(active).r);});
  on('#bIInsCol',()=>{insertCol(refToRC(active).c);});
  on('#bDel',e=>popMenu($('#bDel'),[

@@ -1,0 +1,61 @@
+
+node.exe : [24548:1005/111629.989:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 
+The operation completed successfully. (0x0)
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([24548:1005/111...essfully. (0x0):String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[24548:1005/111629.990:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[24548:1005/111629.989:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[24548:1005/111629.991:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[24548:1005/111629.991:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[24548:1005/111629.991:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[24548:1005/111629.991:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[24548:1005/111629.991:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[24548:1005/111629.991:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[24548:1005/111629.991:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[24548:1005/111629.991:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[24548:1005/111629.991:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[24548:1005/111630.076:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[24548:1005/111630.076:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[24548:1005/111630.076:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[24548:1005/111632.979:ERROR:components\services\storage\service_worker\service_worker_storage.cc:1814] 
+Failed to delete the database: Database IO error
+home page width : 1228px (scrollWidth 1342)
+groups summed   : 1341px
+fits without scrolling: NO
+
+  Clipboard  (84px)
+     56px [bPaste]
+     77px [bCut, bCopy, bFPainter]
+
+  Font  (211px)
+     205px [fontFam, fontSize, bGrowFont, bShrinkFont]
+     162px [bB, bI, bU, bBorder, colBg, colFont]
+
+  Alignment  (193px)
+     186px [bVaTop, bVaMid, bVaBot, rsep, bWrap, bMerge, bOrientCell]
+     134px [bAlLeft, bAlCenter, bAlRight, rsep, bIndentDec, bIndentInc]
+
+  Number  (121px)
+     114px [numfmt]
+     91px [bAcct, bPct, bComma]
+     52px [bDecInc, bDecDec]
+
+  Styles  (246px)
+     239px [bStyles, rstack]
+
+  Cells  (235px)
+     228px [bInsRow, bDel, bFormat]
+
+  Editing  (250px)
+     244px [bAutoSum, rstack, rstack]
+
+wrote C:\Users\zedi\OneDrive\??????????????????\GitHub\Excel-Pro\_home_v8.png

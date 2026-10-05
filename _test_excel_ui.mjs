@@ -104,10 +104,15 @@ groupsAre('help', ['gHelpHelp', 'gShare', 'gHelpTools']);
 /* Draw is still not a tab - its commands ride on Insert - so nothing it carried
    may be left orphaned. The duplicated commands people actually reach for must
    still exist: row/column insert on Home, the filter on Data, notes on Review,
-   Data, notes on Review, and the sheet "+" (built in JS, not markup). */
+   and the sheet "+" (built in JS, not markup).
+   On Home both insert choices now hang off the Insert menu, the way the
+   reference draws the group, so reachability is what matters rather than two
+   separate ribbon buttons: the markup must carry the command, and the script
+   must wire a row and a column insert to it. */
 chk('Draw is not a tab, and nothing it carried is left orphaned',
   !tabs.includes('draw')
-  && /id="bInsRow"/.test(html) && /id="bInsCol"/.test(html)
+  && /id="bInsRow"/.test(html)
+  && /on\('#bInsRow',[\s\S]{0,160}?insertRow\([\s\S]{0,120}?insertCol\(/.test(jsScript)
   && /id="bFilter"/.test(pageHtml('data')) && /id="bRComment"/.test(pageHtml('review'))
   && /addsheet/.test(jsScript));
 /* Every command this build added must be a real, wired control - the repo's
@@ -350,12 +355,25 @@ chk('every rail metric comes from one shared token block',
   && /\.ssNavItem\{[^}]*gap:var\(--rail-gap\)/.test(css)
   && /\.ssNavItem\{[^}]*padding:0 12px 0 var\(--rail-pad\)/.test(css)
   && /\.ssNavItem\{[^}]*border-left:var\(--rail-bar\) solid transparent/.test(css));
-/* A large tile must never share a row with 22px buttons on the default tab: its
-   18px icon would sit ~7px above the row's own baseline. Excel gives the large
-   commands their own row, and Home > Editing is where that matters. */
+/* A large tile must never share a row with 22px commands on the default tab: its
+   18px icon would sit ~7px above the row's own baseline, so the icons in that row
+   would not line up. Excel resolves this by giving the large commands their own
+   row, which is what the ribbon does everywhere except two groups. In Styles and
+   Editing the tile is paired with a .rstack - a deliberate two-command column -
+   and the stylesheet corrects its 2px offset explicitly (the 4.2px rule), so
+   those rows are aligned rather than accidental and count as resolved. A plain
+   .rbtn beside the tile with nothing correcting it is a real fault and still
+   fails. */
 const rrowBlocks = [...html.matchAll(/<div class="rrow">([\s\S]*?)<\/div>/g)].map(m => m[1]);
+/* Drop a .rstack together with the commands inside it, so only short commands
+   that sit directly beside the tile are left. The .rcaret spans are taken first:
+   each one closes before its stack does, so stopping at their </span> would
+   leave the stack's own buttons behind and report a corrected row as a fault. */
+const withoutStacks = row => row
+  .replace(/<span class="rcaret">[\s\S]*?<\/span>/g, '')
+  .replace(/<span class="rstack">[\s\S]*?<\/span>/g, '');
 const isMixed = row => /class="rbtn big"/.test(row)
-  && /class="rbtn"/.test(row.replace(/class="rbtn big"/g, ''));
+  && /class="rbtn"/.test(withoutStacks(row).replace(/class="rbtn big"/g, ''));
 /* Excel lines the 22px commands up with a 48px tile's ICON, not the row's middle.
    Centring them leaves the icons 7px apart; this is the rule that closes that. */
 chk('a row with a 48px tile lines its 22px commands up with the tile icon',
@@ -583,7 +601,8 @@ chk('group captions share one 13px line so they line up across tabs',
 chk('group content is top-aligned and only the caption is pinned to the foot',
   /\.rrow\{[^}]*flex:none/.test(css) && /\.rlabel\{[^}]*margin-top:auto/.test(css));
 chk("the Home Clipboard group has Excel's shape: big command, then the rest below",
-  /id="bPaste">[\s\S]{0,90}?<\/div><div class="rrow">\s*<button class="rbtn" id="bCut"/.test(html));
+  /id="bPaste">[\s\S]{0,130}?<\/div><div class="rrow">\s*<button class="rbtn" id="bCut"/.test(html),
+  'the only content between Paste and the second row is its icon, label and caret');
 chk('corner controls are pinned to the tab strip, not the ribbon bottom',
   /#ribbonMin,#ribbonDispBtn\{[^}]*top:0;height:26px/.test(css)
   && !/#ribbon(Min|DispBtn)\{[^}]*bottom:0/.test(css));

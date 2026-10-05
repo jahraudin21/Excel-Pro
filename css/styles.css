@@ -217,19 +217,14 @@ body[data-rboverflow] .rbOverflow{display:flex}
    own label, the way Excel sizes Paste, AutoSum and Format. */
 .rbtn.big{flex-direction:column;justify-content:center;height:48px;width:auto;min-width:56px;font-size:12px;line-height:1.05;gap:1px;padding:2px 4px}
 /* ---------- dropdown caret ----------
-   A command that opens a menu carries a caret, exactly as Excel splits Paste,
-   Underline, Borders and the Cells commands. The caret is a plain character in the
-   button's own text - never an entity, never a picture - and these rules give
-   every one of them the same size and colour. On a large tile it is positioned in
-   the bottom-right corner the way Excel draws Paste and AutoSum; on the small
-   buttons it simply follows the caption. */
-.rdrop .rcaret{font-size:9px;line-height:1;color:var(--xl-text-2);margin-left:1px;flex:none}
-/* On a large tile the caret belongs in the bottom-right corner, clear of the icon
-   and the caption, as Excel draws Paste / Cell Styles / AutoSum. The trailing
-   character is pulled out of the caption's flow and parked in the corner, so the
-   caption keeps its own size and stays centred under the glyph. */
-.rbtn.big.rdrop{position:relative}
-.rbtn.big.rdrop .rcaret{position:absolute;right:3px;bottom:2px;margin:0;font-size:10px;line-height:1}
+   A command that opens a menu carries a caret, the way Excel splits Paste,
+   Underline, Borders and the Cells commands. The caret is the plain character in
+   the button's own text - never an entity, never a picture - wrapped only so it
+   can be drawn one step smaller than the caption, which is what Excel does and
+   which keeps the widest captions (Conditional Formatting, Sort & Filter) from
+   pushing Editing off the right edge. It stays in the caption's flow: no
+   positioning, no overlay, no split-button chrome. */
+.rcaret{font-size:9px;color:var(--xl-text-2)}
 /* Ribbon icons are real vector line art in a <symbol> sprite, referenced with
    <use>. One fixed box on one baseline, and they take the button's colour, so a
    latched command tints its own icon exactly as Office does. */

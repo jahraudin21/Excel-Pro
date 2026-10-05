@@ -1,0 +1,14 @@
+row 9: bStyles, bCond, bFmtTable   ok: corrected .rstack beside the tile
+row 11: bAutoSum, bFill, bClear, bSort, bFind   ok: corrected .rstack beside the tile
+row 12: bTable, bRecTbl, bPivot   <- FAULT: uncorrected .rbtn beside the tile
+row 28: bAutoSum2, bFnRecent, bFnAll   <- FAULT: uncorrected .rbtn beside the tile
+row 30: bTracePre, bTraceDep, bTraceClear   <- FAULT: uncorrected .rbtn beside the tile
+row 31: bShowFormulas, bExplain   <- FAULT: uncorrected .rbtn beside the tile
+row 34: bNameMgr, bNameDef, bNameGo   <- FAULT: uncorrected .rbtn beside the tile
+row 36: bSortAz, bSortZa, bSortMore   <- FAULT: uncorrected .rbtn beside the tile
+row 37: bFilter, bFilterClear   <- FAULT: uncorrected .rbtn beside the tile
+row 50: bFreeze, bUnfreeze   <- FAULT: uncorrected .rbtn beside the tile
+row 52: bHelpOpen, bShortcuts, bFnRef   <- FAULT: uncorrected .rbtn beside the tile
+row 54: bFeedback, bAbout   <- FAULT: uncorrected .rbtn beside the tile
+
+default-tab rows mixing a tile with 22px commands: 0  (the UI test needs 0)

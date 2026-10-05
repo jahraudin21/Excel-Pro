@@ -1,0 +1,62 @@
+
+node.exe : [42048:1005/113403.643:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 
+Access is denied. (0x5)
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([42048:1005/113...s denied. (0x5):String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[42048:1005/113403.643:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[42048:1005/113403.643:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[42048:1005/113403.643:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[42048:1005/113403.643:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[42048:1005/113403.643:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[42048:1005/113403.645:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[42048:1005/113403.645:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[42048:1005/113403.645:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[42048:1005/113403.645:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[42048:1005/113403.646:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[42048:1005/113403.646:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[42048:1005/113403.723:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is 
+denied. (0x5)
+[42048:1005/113403.723:ERROR:net\disk_cache\disk_cache.cc:290] Unable to create cache
+[42048:1005/113403.723:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+[42048:1005/113406.624:ERROR:components\services\storage\service_worker\service_worker_storage.cc:1814] 
+Failed to delete the database: Database IO error
+home page width : 1228px (scrollWidth 1292)
+groups summed   : 1291px
+fits without scrolling: NO
+
+  Clipboard  (84px)
+     56px [bPaste]
+     77px [bCut, bCopy, bFPainter]
+
+  Font  (211px)
+     205px [fontFam, fontSize, bGrowFont, bShrinkFont]
+     157px [bB, bI, bU, bBorder, colBg, colFont]
+
+  Alignment  (188px)
+     181px [bVaTop, bVaMid, bVaBot, rsep, bWrap, bMerge, bOrientCell]
+     134px [bAlLeft, bAlCenter, bAlRight, rsep, bIndentDec, bIndentInc]
+
+  Number  (121px)
+     114px [numfmt]
+     88px [bAcct, bPct, bComma]
+     52px [bDecInc, bDecDec]
+
+  Styles  (230px)
+     223px [bStyles, rstack]
+
+  Cells  (226px)
+     219px [bInsRow, bDel, bFormat]
+
+  Editing  (231px)
+     225px [bAutoSum, rstack, rstack]
+
+wrote C:\Users\zedi\OneDrive\??????????????????\GitHub\Excel-Pro\_home_f.png
+wrote C:\Users\zedi\OneDrive\??????????????????\GitHub\Excel-Pro\_home_f.png  (ribbon strip, 1228x87)

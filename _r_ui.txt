@@ -1,0 +1,224 @@
+
+--- start screen (Excel Backstage) ---
+  PASS  recent, favorites AND templates tabs present
+  PASS  each tab has its own pane
+  PASS  the templates pane is only shown on its own tab
+  PASS  both panes have their own .ssList host
+  PASS  favorites list is filled, not just recent (regression guard)
+  PASS  templates section rendered
+  PASS  backstage left rail present
+  PASS  rail is Templates / Recent / Favorites, once each
+  PASS  no duplicate tab strip above the panes
+  PASS  the rail is what the active section is mirrored onto
+  PASS  rail nav items are wired to the tab handler
+  PASS  search box filters the list
+  PASS  rows show name + location + last opened
+  PASS  favorite star + remove buttons still rendered
+  PASS  template tiles have a preview block
+  PASS  start screen is a full-bleed view, not a card
+
+--- account profile (top corner) ---
+  PASS  account pill lives in the titlebar
+  PASS  pill shows name and email
+  PASS  pill is pinned right via flex order
+  PASS  renderUserChip fills the email
+  PASS  start screen rail mirrors the account
+
+--- ribbon ---
+  PASS  Home, Insert, Page Layout, Formulas tabs exist
+  PASS  tabs are in Excel order: Home, Insert, Page Layout, Formulas, Data, Review, View, Help
+  PASS  the retired Team tab is not in the strip
+  PASS  the command pages follow the tab order
+  PASS  home groups: gClip / gFont / gAlign / gNumber / gStyles / gCells / gEditing
+  PASS  insert groups: gTables / gIllus / gCharts / gTours / gSpark / gFilters / gLinks / gText / gSymbols
+  PASS  pagelayout groups: gThemes / gPageSetup / gPageBreaks / gScaleFit / gSheetOpt
+  PASS  formulas groups: gFnLib / gFnCat / gFnHelp / gCalcOpt / gNames
+  PASS  data groups: gGetData / gSortF / gDataTools / gDataTypes / gSubtotal
+  PASS  review groups: gProofing / gA11y / gInsights / gComments / gProtect / gLang
+  PASS  view groups: gWbViews / gShow / gZoom / gFreeze / gPrint
+  PASS  help groups: gHelpHelp / gShare / gHelpTools
+  PASS  Draw is not a tab, and nothing it carried is left orphaned
+  PASS  the AI panel is still reachable now that Add-ins left the Insert tab
+  PASS  every Insert group command has a vector icon
+  PASS  the chart families each get their own icon
+  PASS  added command #bDTText exists and is wired
+  PASS  added command #bDTPic exists and is wired
+  PASS  added command #bCalcMode exists and is wired
+  PASS  added command #bNameGo exists and is wired
+  PASS  added command #bDtNum exists and is wired
+  PASS  added command #bDtText exists and is wired
+  PASS  added command #bLang exists and is wired
+  PASS  added command #bShareCopy exists and is wired
+  PASS  added command #bShareMail exists and is wired
+  PASS  Accessibility and Languages stand as their own Review groups
+
+--- icons, fonts, colours, sidebar rail ---
+  PASS  ribbon body has no colour emoji
+  PASS  ribbon body has no icons left as HTML entities
+  PASS  backstage rail has no colour emoji
+  PASS  backstage rail has no icons left as HTML entities
+  PASS  start rail has no colour emoji
+  PASS  start rail has no icons left as HTML entities
+  PASS  no poorly-supported U+2Bxx glyphs remain in the ribbon
+  PASS  every ribbon icon is vector line art, not a glyph
+  PASS  the sprite defines 149 icons and all 161 references resolve
+  PASS  both rails use the same sprite icons
+  PASS  no cp1252 damage in any shipped file (11 checked)
+  PASS  no U+FFFD or C0 control character anywhere in the bundle
+  PASS  index.html is valid UTF-8 with no C0 control characters
+  PASS  no double-encoded (mojibake) sequences in the markup
+  PASS  dropdown carets and arrows are single code points
+  PASS  no button carries more than one icon
+  PASS  rail icons sit outside the element data-i18n writes to
+  PASS  the backstage rail is in Excel order, one icon per item
+  PASS  no icon-bearing button lets the translation pass delete its icon
+  PASS  no label in the string table still leads with an emoji
+  PASS  every Alignment command in Excel has an id and a vector icon
+  PASS  alignment is driven by data-va / data-al, not baked into the button
+  PASS  applying a style re-latches the ribbon, so the active alignment shows
+  PASS  the active horizontal alignment latches, not just the vertical one
+  PASS  Formula Auditing holds Excel auditing commands, not function buttons
+  PASS  tracing parses real references, expands ranges and skips string literals
+  PASS  precedents and dependents are two different walks
+  PASS  Show Formulas swaps the cell text for the formula and latches
+  PASS  traced cells are visibly outlined
+  PASS  indent steps 3 characters per click and rotation is applied to the cell
+  PASS  every new command is wired and every new label is translated
+  PASS  every data-va value has a matching vertical-align rule (top, mid, bot)
+  PASS  the horizontal alignment values map through AL, not through a class name
+  PASS  every ribbon command, tab and title-bar item is Segoe UI 12px
+  PASS  group captions are one step below the commands, in Office grey
+  PASS  no fractional font sizes survive in the ribbon chrome
+  PASS  the grid defaults to Calibri at 11pt, Excel's own workbook default
+  PASS  the ribbon, tab strip and title bar share Office Background 1 (#f3f2f1)
+  PASS  the active tab and the grid are white, the text is Office Text 1
+  PASS  group dividers are lighter than the ribbon border, as in Office
+  PASS  every rail metric comes from one shared token block
+  PASS  a row with a 48px tile lines its 22px commands up with the tile icon
+  PASS  the default tab never mixes a 48px tile with 22px commands
+  PASS  the ribbon gives off-screen commands a way out, as Excel does
+  PASS  the overflow pair appears only on real overflow and greys out at each end
+  PASS  it re-measures on resize, on tab change and while scrolling
+  PASS  the chevron takes a discrete, clamped step
+  PASS  row and column headers use Office Background 1, not a generic grey
+  PASS  every grid surface is either the Office grey or white
+  PASS  every popup layer comes from the scale, not a hard-coded number
+  PASS  the scale is declared once and strictly ordered
+  PASS  menus float above every full-screen view
+  PASS  the auth dialog and lock are lifted above the start screen by a token
+  PASS  every dialog is centred on the viewport, capped to it, and scrollable
+  PASS  a dialog cannot be wider than the window on a small one
+  PASS  both menus are placed by one shared helper, and neither guesses its size
+  PASS  that helper measures the real box, clamps once, flips, and re-places on resize
+  PASS  both menus can scroll and cap themselves to the window
+  PASS  the replaced File dropdown is gone rather than left as dead CSS
+  PASS  the docked panel and the profile flyout are capped to the window too
+  PASS  all twelve close / back controls exist
+  PASS  every close control has an accessible name and the shared glyph
+  PASS  the glyph comes from one rule, not from each dialog
+  PASS  every close button targets its own container
+  PASS  the start screen close is bound by delegation, and that is allowed
+  PASS  the auth dialog refuses to close only while the guard holds it
+  PASS  Page Layout wiring is actually invoked, not just defined
+  PASS  every popup open/close path is null-guarded on its container
+  PASS  the auth helpers they call are themselves guarded
+  PASS  the service worker serves the app shell network-first
+  PASS  no cache-first path is left for same-origin assets
+  PASS  the navigation path was already network-first and stays that way
+  PASS  the service worker registration degrades quietly where it is unsupported
+  PASS  the brand mark exists as a sprite symbol, not as text or an emoji
+  PASS  both placeholders are gone
+  PASS  the mark is used in the title bar and on the start-screen rail
+  PASS  it is sized for both places and sized once, in CSS
+  PASS  the mark uses the app green, not a Microsoft-style X
+  PASS  it carries its own fills rather than the line-art rules
+  PASS  rail items are a fixed 32px row with a 12px label
+  PASS  rail icons sit in a 16px column and the active row carries a 4px bar
+  PASS  the active rail row is a white overlay, not a second green
+  PASS  the three rail labels each appear exactly once
+  PASS  Office neutral palette is declared as literals
+  PASS  the UI font stack is Segoe UI with Office fallbacks, in one token
+  PASS  every tab has a matching command page
+  PASS  ribbon body uses the Excel #f3f2f1 surface
+  PASS  active tab is white like Excel
+  PASS  compact spacing (22px controls, 10px group labels)
+  PASS  chrome is Segoe UI; only the grid follows the workbook font
+  PASS  tab strip is 26px, 12px labels, hairline drawn inside the strip
+  PASS  the active tab is a white block with a 2px green bar over the hairline
+  PASS  large buttons are 48px tiles: 18px glyph over a 12px caption
+  PASS  group captions share one 13px line so they line up across tabs
+  PASS  group content is top-aligned and only the caption is pinned to the foot
+  PASS  the Home Clipboard group has Excel's shape: big command, then the rest below
+  PASS  corner controls are pinned to the tab strip, not the ribbon bottom
+  PASS  the collapse chevron and the display-options button do not overlap
+  PASS  the tab strip reserves room for them
+  PASS  the display-options menu drops from the tab strip, not the ribbon bottom
+  PASS  a collapsed ribbon keeps a single hairline, not two stacked ones
+  PASS  latched commands and keyboard focus use the Excel fills
+  PASS  select boxes are 22px and the size box width lives in the stylesheet
+  PASS  fill/font colour read as Excel split buttons: 22px with a colour band
+  PASS  the dark theme still paints the strip, the active tab and the corner controls
+
+--- File menu (backstage) ---
+  PASS  rail follows Excel's Backstage order (Info before Save, Account last)
+  PASS  Home is the default page, like Excel
+  PASS  every rail entry has a matching page
+  PASS  Home offers blank / open / OneDrive cards
+  PASS  OneDrive page offers sign-in, cloud saves and Drive
+  PASS  Recent list is rendered on the Home page
+  PASS  rendering the list escapes workbook names
+  PASS  the new cards are wired to actions
+  PASS  clicking a recent row re-opens that workbook
+  PASS  openCloudBook is exported for the File menu to reuse
+  PASS  recent-list styling is defined
+  PASS  all backstage i18n keys are defined
+
+--- Windows launcher (PowerShell execution policy) ---
+  PASS  start.cmd exists
+  PASS  it is plain cmd, so the execution policy does not apply
+  PASS  it calls npm.cmd explicitly, defeating PowerShell ps1-first resolution
+  PASS  the root cause is documented in the file
+  PASS  the REM/? footgun is documented so it is not reintroduced
+  PASS  it is ASCII with CRLF and no BOM (cmd requirements)
+
+--- launch, sign-in and Google storage ---
+  PASS  start screen is opened at launch
+  PASS  unauthenticated launch raises the sign-in dialog
+  PASS  start screen stays clickable while the guard is locked
+  PASS  auth dialog + lock card stack above the start screen
+  PASS  lock veil spares the start screen (no blur / no pointer-events:none)
+  PASS  start-open flag is set and cleared
+  PASS  enterApp() redirects to the dashboard
+  PASS  both sign-in paths funnel through the shared auth transition
+  PASS  "Sign in with Google" button present
+  PASS  Google button carries the 4-colour logo
+  PASS  Google Identity Services loader is wired
+  PASS  Google accounts default to Drive as the cloud backend
+  PASS  Google sign-in persists the Drive preference
+  PASS  an explicit storage choice is never overwritten
+  PASS  Drive falls back safely when not connected
+  PASS  clearHeadersForNewAccount resets cells, widths and history for a new account
+  PASS  a returning account keeps their own sheet
+  PASS  it runs on every account change
+
+--- electron launch (npm start) ---
+  PASS  HTTP disk cache disabled (the stderr noise PowerShell surfaced)
+  PASS  GPU program + shader disk caches disabled
+  PASS  switches are applied before the app is ready
+  PASS  the root cause is documented next to the fix
+
+--- integrity ---
+  PASS  div tags balanced (424/424)
+  PASS  no duplicate ids
+  PASS  window is full-bleed (no green page padding)
+  PASS  js/start-screen.js parses
+  PASS  js/account-ui.js parses
+  PASS  js/ribbon-display.js parses
+  PASS  js/account.js parses
+  PASS  js/auth-guard.js parses
+  PASS  js/formulaAuditing.js parses
+  PASS  every Formula Auditing entry point is reachable from module scope
+  PASS  formulaAuditing.js adds no i18n key that collides with the id it fills
+  PASS  all start-screen i18n keys defined
+
+204 passed, 0 failed
