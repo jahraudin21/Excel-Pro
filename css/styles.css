@@ -389,10 +389,10 @@ input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--xl-lin
    80px from the top of #app, capped to the window, and scrollable inside it. The
    old rule put a tall dialog (Help, Page Setup) off the bottom of a short window
    and let a 340px min-width overflow a 380px one. */
-#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog,#fmtDlg,#evalDlg,#watchDlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:var(--z-dialog);display:none;flex-direction:column;padding:10px;gap:8px;
+#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#helpDlg,#psDlg,#authDialog,#fmtDlg,#evalDlg,#watchDlg,#fnDlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:var(--z-dialog);display:none;flex-direction:column;padding:10px;gap:8px;
   min-width:min(340px,calc(100vw - 32px));max-width:calc(100vw - 32px);
   max-height:calc(100vh - 32px);overflow:auto;overscroll-behavior:contain}
-#findDlg.open,#chartDlg.open,#pivotDlg.open,#recDlg.open,#picDlg.open,#helpDlg.open,#psDlg.open,#authDialog.open,#fmtDlg.open,#evalDlg.open,#watchDlg.open{display:flex}
+#findDlg.open,#chartDlg.open,#pivotDlg.open,#recDlg.open,#picDlg.open,#helpDlg.open,#psDlg.open,#authDialog.open,#fmtDlg.open,#evalDlg.open,#watchDlg.open,#fnDlg.open{display:flex}
 .frow{display:flex;gap:6px;align-items:center}
 .frow input{flex:1;border:1px solid #ccc;padding:4px 8px;font-size:13px;outline:none}
 .frow input:focus{border-color:#217346}
@@ -443,7 +443,7 @@ body[data-theme='solar'] td.act{outline-color:#b58900}
 /* accent color swatches */
 .accent{width:18px;height:18px;border-radius:3px;border:1px solid #999;cursor:pointer;padding:0}
 .accent:hover{outline:2px solid #217346}
-@media print{body{background:#fff;padding:0}#app{box-shadow:none;border-radius:0}.titlebar,.ribbon,.formula,#tabs,#statusbar,#aiPanel,#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#psDlg,#ctxMenu,#popMenu,#drawLayer,#backstage,#authDialog,#profilePanel{display:none!important}#gridwrap{overflow:visible}th{position:static!important}td{position:static!important}}
+@media print{body{background:#fff;padding:0}#app{box-shadow:none;border-radius:0}.titlebar,.ribbon,.formula,#tabs,#statusbar,#aiPanel,#findDlg,#chartDlg,#pivotDlg,#recDlg,#picDlg,#psDlg,#fnDlg,#ctxMenu,#popMenu,#drawLayer,#backstage,#authDialog,#profilePanel{display:none!important}#gridwrap{overflow:visible}th{position:static!important}td{position:static!important}}
 
 /* ---------- File backstage view (Excel-style full-page overlay) ---------- */
 #backstage{position:absolute;inset:0;z-index:var(--z-overlay);display:none;background:#fff;color:#222}
@@ -517,6 +517,27 @@ body[data-fx='sharp'] #backstage .bsCard,body[data-fx='sharp'] .bsBack{border-ra
   font-size:14px;line-height:1;cursor:pointer;padding:2px 5px;border-radius:2px;flex:none}
 .watchX:hover{background:var(--xl-hover);color:var(--xl-text)}
 #evalResult{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+/* ---------- Insert Function dialog (function library) ----------
+   Search + category over the shared bordered list, with the selected
+   function's syntax and description parked below it. The rows are clickable
+   and dbl-clickable, so both the keyboard path (arrows + Enter) and the mouse
+   path (click + OK, or dbl-click) insert through the same insertFn(). */
+#fnDlg{min-width:min(460px,calc(100vw - 32px))}
+#fnDlg .frow input[type=search]{flex:1;min-width:0}
+#fnDlg .frow select{flex:none;max-width:160px}
+.fnList{max-height:240px}
+.fnList li{cursor:pointer;user-select:none}
+.fnList li:hover{background:#f3f7fc}
+.fnList li.on,.fnList li.on:hover{background:#cfe3f7}
+.fnName{font-weight:600;white-space:nowrap}
+.fnHelpTxt{
+  color:var(--xl-text-2);font-size:12px;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fnMeta{display:flex;flex-direction:column;gap:3px;min-height:34px}
+#fnSyn{
+  font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--xl-text);
+  word-break:break-word}
+#fnDesc{font-size:12px;color:var(--xl-text-2)}
 /* ---------- Format Cells dialog (Ctrl+1) ----------
    Tabs share one stacked panel: only the active .fmtPane is shown, so the dialog
    is as short as its tallest tab rather than the sum of all four. */

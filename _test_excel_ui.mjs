@@ -15,7 +15,7 @@ const guard = read('js/auth-guard.js');
 /* The ribbon/backstage wiring lives in the engine module, not the UI modules. */
 const jsScript = read('js/script.js');
 /* Every module that ships, so an encoding fault cannot hide in one of them. */
-const extraModules = ['js/drawDesign.js', 'js/drive.js', 'js/ribbon-display.js', 'js/formulaAuditing.js'].map(read);
+const extraModules = ['js/drawDesign.js', 'js/drive.js', 'js/ribbon-display.js', 'js/formulaAuditing.js', 'js/insertFunction.js'].map(read);
 
 let pass = 0, fail = 0;
 const chk = (label, cond) => { if (cond) { pass++; console.log('  PASS  ' + label); } else { fail++; console.log('  FAIL  ' + label); } };
@@ -188,7 +188,8 @@ const SOURCES = Object.assign({
   'js/start-screen.js': ss, 'js/account-ui.js': accountUi, 'js/account.js': account,
   'js/auth-guard.js': guard
 }, { 'js/drawDesign.js': extraModules[0], 'js/drive.js': extraModules[1],
-  'js/ribbon-display.js': extraModules[2], 'js/formulaAuditing.js': extraModules[3] });
+  'js/ribbon-display.js': extraModules[2], 'js/formulaAuditing.js': extraModules[3],
+  'js/insertFunction.js': extraModules[4] });
 
 /* Windows-1252 0x80-0x9F; 0xA0-0xFF is Latin-1 and needs no table. */
 const CP1252_HIGH = {
@@ -748,7 +749,7 @@ chk('div tags balanced (' + o + '/' + c + ')', o === c);
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 chk('no duplicate ids', new Set(ids).size === ids.length);
 chk('window is full-bleed (no green page padding)', /body\{background:var\(--xl-ribbon\);padding:0/.test(css));
-for (const f of ['js/start-screen.js', 'js/account-ui.js', 'js/ribbon-display.js', 'js/account.js', 'js/auth-guard.js', 'js/formulaAuditing.js']) {
+for (const f of ['js/start-screen.js', 'js/account-ui.js', 'js/ribbon-display.js', 'js/account.js', 'js/auth-guard.js', 'js/formulaAuditing.js', 'js/insertFunction.js']) {
   let ok = true; try { new Function(read(f)); } catch (e) { ok = false; console.log('        ' + e.message); }
   chk(f + ' parses', ok);
 }

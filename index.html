@@ -645,6 +645,17 @@ if ('serviceWorker' in navigator) {
      <button type="button" id="watchClear" data-i18n="watchClear">Clear all</button>
     </div>
    </div>
+   <!-- Insert Function (the fx dialog): Excel's function library behind the
+        formula-bar fx and the Formulas tab's fx Insert. Insertion goes through
+        insertFn(), so the cell gets the same text the old popMenu produced. -->
+   <div id="fnDlg" role="dialog" aria-labelledby="fnDlgTitle">
+    <div class="frow"><span data-i18n="fbFx" id="fnDlgTitle">Insert Function</span><span style="flex:1"></span><button type="button" id="fnDlgClose" data-close="close" aria-label="Close"></button></div>
+    <p class="evalHint" data-i18n="fnDlgHint">Search or pick a category, choose a function, then OK to insert it.</p>
+    <div class="frow"><input type="search" id="fnSearch" data-i18n-ph="fnSearchPh" placeholder="Search functions"><select id="fnDlgCat" class="rsel" data-i18n-t="gFnCat" title="Category"></select></div>
+    <ul class="evalList fnList" id="fnList"></ul>
+    <div class="fnMeta"><code id="fnSyn"></code><span id="fnDesc"></span></div>
+    <div class="frow"><span style="flex:1"></span><button type="button" id="fnDlgOk" data-i18n="fnOk">OK</button><button type="button" id="fnDlgCancel" data-i18n="fnCancel">Cancel</button></div>
+   </div>
    <div id="fmtDlg" role="dialog" aria-labelledby="fmtTitle">
     <div class="frow"><span data-i18n="fmtTitle" id="fmtTitle">Format Cells</span><span style="flex:1"></span><button type="button" id="fmtClose" aria-label="Close"></button></div>
     <div class="fmtTabs" role="tablist">
@@ -1077,6 +1088,7 @@ if ('serviceWorker' in navigator) {
 <script src="js/script.js" defer></script>
 <script src="js/formatCells.js" defer></script>
 <script src="js/formulaAuditing.js" defer></script>
+<script src="js/insertFunction.js" defer></script>
 <script src="js/drawDesign.js" defer></script>
 <script src="js/start-screen.js" defer></script>
 <script src="js/ribbon-display.js" defer></script>

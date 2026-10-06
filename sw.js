@@ -1,7 +1,7 @@
 /* Bumped whenever the app shell (index.html / css) changes, so returning web users
    get the new ribbon on their next load instead of the stale cached copy. The
    activate handler below drops the previous version. */
-const CACHE_NAME = 'excel-pro-v11';
+const CACHE_NAME = 'excel-pro-v12';
 
 /* Same-origin files the app needs to boot offline. Kept in sync with the
    <link>/<script> tags in index.html. */
@@ -14,6 +14,7 @@ const STATIC_ASSETS = [
   './js/script.js',
   './js/formatCells.js',
   './js/formulaAuditing.js',
+  './js/insertFunction.js',
   './js/drawDesign.js',
   './js/account-ui.js',
   './js/auth-guard.js',
