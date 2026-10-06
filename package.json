@@ -11,7 +11,7 @@
     "find:exe": "node find_exe.js",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
-    "test": "node _test_auth_guard.js && node _test_google_signin.js && node _test_drive.js && node _test_new_account_reset.js && node _test_state_sync.js && node _test_excel_ui.mjs",
+    "test": "node _test_auth_guard.js && node _test_google_signin.js && node _test_drive.js && node _test_new_account_reset.js && node _test_state_sync.js && node _test_excel_ui.mjs && node _test_insert_function.js",
     "test:regression": "node _test_no_regression.mjs",
     "test:ribbon": "node _ribboncheck.mjs",
     "test:smoke": "electron _smoke.js",
