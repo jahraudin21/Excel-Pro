@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Excel-Pro Icon - 2D to 3D (Three.js)</title>
+<style>
+  :root { --accent:#217346; --ink:#323130; --line:#d2d0ce; --bg:#f3f2f1; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'Segoe UI',Tahoma,Calibri,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:#fff; border-bottom:1px solid var(--line); padding:14px 20px; }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header h1 .chip { display:inline-block; background:var(--accent); color:#fff; font-size:11px; font-weight:700;
+    border-radius:4px; padding:2px 8px; vertical-align:middle; margin-left:8px; letter-spacing:.04em; }
+  header p { margin:0; font-size:13px; color:#605e5c; max-width:900px; }
+  header code { background:#f3f2f1; border:1px solid var(--line); border-radius:4px; padding:0 5px; font-size:12px; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:14px; padding:14px 20px 24px; max-width:1200px; margin:0 auto; }
+  #stage { background:#fff; border:1px solid var(--line); border-radius:8px; min-height:480px; position:relative; overflow:hidden; }
+  #stage canvas { display:block; width:100%; height:100%; }
+  #fallback { padding:40px 24px; text-align:center; font-size:14px; }
+  aside { display:flex; flex-direction:column; gap:12px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:13px; }
+  .card h2 { margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:#605e5c; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0; }
+  .row label { color:#605e5c; }
+  input[type=range] { width:140px; accent-color:var(--accent); }
+  .btns { display:flex; flex-wrap:wrap; gap:8px; }
+  button, a.btn { appearance:none; border:1px solid var(--accent); background:var(--accent); color:#fff;
+    border-radius:6px; padding:7px 12px; font-size:13px; cursor:pointer; text-decoration:none; display:inline-block; }
+  button.ghost, a.btn.ghost { background:#fff; color:var(--accent); }
+  .swatch { display:inline-block; width:12px; height:12px; border-radius:3px; border:1px solid rgba(0,0,0,.2); vertical-align:-1px; margin-right:6px; }
+  #err { display:none; background:#fdecea; border:1px solid #e5a19a; color:#7a2e26; border-radius:8px; padding:10px 12px; font-size:13px; }
+  footer { max-width:1200px; margin:0 auto; padding:0 20px 26px; font-size:12px; color:#605e5c; }
+  @media (max-width:900px){ main{ grid-template-columns:1fr; } }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header>
+  <h1>Excel-Pro app icon: 2D to 3D <span class="chip">THREE.JS r160</span></h1>
+  <p>Source: <code>make_icon.py</code> (green rounded tile + faint grid + bold white X,
+  <code>build/icon.ico</code>). The tile is extruded 0.44 deep, grid lines become thin ribs,
+  and the X becomes taller bars so the diagonals stay continuous - the same paint order as
+  the 2D renderer. Drag to orbit, scroll to zoom, right-drag to pan.
+  Regenerate with <code>python make_icon_3d.py</code>.</p>
+</header>
+<main>
+  <div id="stage"><div id="fallback">Loading Three.js from CDN...</div></div>
+  <aside>
+    <div class="card"><h2>View</h2>
+      <div class="row"><label for="spin">Auto-rotate</label><input id="spin" type="checkbox" checked></div>
+      <div class="row"><label for="speed">Spin speed</label><input id="speed" type="range" min="0" max="100" value="35"></div>
+      <div class="row"><label for="grid">Grid ribs</label><input id="grid" type="checkbox" checked></div>
+      <div class="row"><label for="wire">Wireframe</label><input id="wire" type="checkbox"></div>
+      <div class="btns"><button id="front" type="button" class="ghost">Front</button><button id="angle" type="button" class="ghost">3/4 view</button><button id="top" type="button" class="ghost">Top</button></div>
+    </div>
+    <div class="card"><h2>Layers (2D paint order to Z height)</h2>
+      <div class="row"><span><span class="swatch" style="background:#217346"></span>Tile body</span><span>z 0 to 0.44</span></div>
+      <div class="row"><span><span class="swatch" style="background:#2f5118"></span>Grid ribs</span><span>+0.036 above face</span></div>
+      <div class="row"><span><span class="swatch" style="background:#ffffff"></span>X bars</span><span>+0.10 above face</span></div>
+    </div>
+    <div class="card"><h2>Download models</h2>
+      <div class="btns">
+        <a class="btn" href="build/icon-3d.glb" download>GLB (web / 3D Viewer)</a>
+        <a class="btn ghost" href="build/icon-3d.obj" download>OBJ (+MTL)</a>
+        <a class="btn ghost" href="build/icon-3d.stl" download>STL (print)</a>
+      </div>
+      <p style="margin:8px 0 0;color:#605e5c">OBJ needs its .mtl sibling next to it for colour.</p>
+    </div>
+    <div id="err"></div>
+  </aside>
+</main>
+<footer>Offline note: the viewer pulls Three.js r160 from jsDelivr. The build/icon-3d.* models
+need no network - open the GLB in Windows 3D Viewer / Blender, the STL in any slicer.</footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const stage = document.getElementById('stage');
+const errBox = document.getElementById('err');
+const showErr = (m) => { errBox.style.display = 'block'; errBox.textContent = m; };
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 100);
+const HOME = new THREE.Vector3(2.4, -2.9, 2.6);
+camera.position.copy(HOME);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.target.set(0, 0, 0.22);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d2cc, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 2.0);
+key.position.set(3, -2, 5);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xcfe6d8, 0.7);
+rim.position.set(-4, 3, -2);
+scene.add(rim);
+let model = null;
+const gridMeshes = [];
+function fit() {
+  const w = stage.clientWidth || 600, h = stage.clientHeight || 480;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(fit).observe(stage);
+fit();
+new GLTFLoader().load('build/icon-3d.glb', (gltf) => {
+  model = gltf.scene;
+  model.rotation.x = Math.PI / 2;
+  model.position.z = 0.22;
+  model.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      const nm = (o.material && o.material.name) || '';
+      if (/brand_dark/i.test(nm)) gridMeshes.push(o);
+    }
+  });
+  scene.add(model);
+  const fb = document.getElementById('fallback');
+  if (fb) fb.style.display = 'none';
+  animate();
+}, undefined, (e) => showErr('Could not load build/icon-3d.glb: ' + ((e && e.message) || e)));
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  if (model && document.getElementById('spin').checked) {
+    const s = document.getElementById('speed').value / 100;
+    model.rotation.z += clock.getDelta() * s * 1.2;
+  } else { clock.getDelta(); }
+  controls.update();
+  renderer.render(scene, camera);
+}
+document.getElementById('grid').onchange = (e) => {
+  gridMeshes.forEach((m) => { m.visible = e.target.checked; });
+};
+document.getElementById('wire').onchange = (e) => {
+  if (model) model.traverse((o) => { if (o.isMesh) o.material.wireframe = e.target.checked; });
+};
+const look = (x, y, z) => { camera.position.set(x, y, z); controls.target.set(0, 0, 0.22); };
+document.getElementById('front').onclick = () => look(0, 0, 4.4);
+document.getElementById('angle').onclick = () => look(HOME.x, HOME.y, HOME.z);
+document.getElementById('top').onclick = () => look(0, 0.01, 4.4);
+</script>
+</body>
+</html>
+

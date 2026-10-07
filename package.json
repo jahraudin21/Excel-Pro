@@ -8,6 +8,7 @@
     "build": "electron-builder --win --x64",
     "build:win": "electron-builder --win --x64",
     "make:icon": "python make_icon.py",
+    "make:icon-3d": "python make_icon_3d.py",
     "find:exe": "node find_exe.js",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
