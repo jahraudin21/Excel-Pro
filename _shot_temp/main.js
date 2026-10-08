@@ -44,34 +44,68 @@ app.whenReady().then(function () {
   log('LOADING ' + url);
   win.loadURL(url);
 
-  /* Wait up to ~8s for the grid to be populated (defer scripts + template). */
+  /* Wait for the page + defer scripts to settle (8s timeout). */
   setTimeout(function () {
+    log('AFTER_LOAD_TIMEOUT');
+
+    /* Apply the dashboard template from the REAL app (installWorkbook /
+     * renderAll driven by applyTemplate, defined at top level of
+     * start-screen.js). In a classic script, function declarations become
+     * globals, but 'const StartScreen' does not - so call the global. */
     win.webContents.executeJavaScript(`(() => {
-      const w = document.getElementById('gridwrap');
-      const g = w ? w.querySelector('table#grid') : null;
-      const dl = document.getElementById('drawLayer');
-      const canvases = dl ? dl.querySelectorAll('canvas').length : 0;
-      const a1 = document.querySelector('td[data-ref="A1"]');
-      const kpi = document.querySelector('td[data-ref="A5"]');
-      return {
-        gridwrap: !!w, grid: !!g, canvases: canvases,
-        a1Text: a1 ? a1.textContent : null,
-        kpiText: kpi ? kpi.textContent : null,
-        nogrid: w && w.classList.contains('nogrid') ? 'yes' : 'no',
-      };
+      try {
+        applyTemplate('dashboard');
+        return true;
+      } catch (e) {
+        return { error: String(e) };
+      }
     })()`).then(function (r) {
-      log('DOM_AFTER_LOAD ' + JSON.stringify(r));
+      log('TEMPLATE_APPLIED ' + JSON.stringify(r));
       return gridRect(win);
     }).then(function (r1) {
       log('GRID_RECT ' + JSON.stringify(r1));
+      return win.webContents.executeJavaScript(`(() => {
+        const dl = document.getElementById('drawLayer');
+        const canvases = dl ? dl.querySelectorAll('canvas').length : 0;
+        const a1 = document.querySelector('td[data-ref="A1"]');
+        const kpi = document.querySelector('td[data-ref="A5"]');
+        const w = document.getElementById('gridwrap');
+        return {
+          canvases: canvases,
+          mergedA1: a1 ? a1.colSpan + 'x' + a1.rowSpan : null,
+          kpi: kpi ? kpi.textContent : null,
+          nogrid: w ? w.classList.contains('nogrid') : null,
+        };
+      })()`);
+    }).then(function (diag) {
+      log('TEMPLATE_DIAG ' + JSON.stringify(diag));
       return win.webContents.capturePage();
     }).then(function (img) {
       fs.writeFileSync(path.join(__dirname, '_full.png'), img.toPNG());
       log('wrote _full.png');
-      return app.quit();
-    }).catch(function (e) {
-      log('HARNESS_ERR ' + e);
-      return app.quit();
+
+      /* Scroll to the source table and capture lower. */
+      return win.webContents.executeJavaScript(`(() => {
+        const w = document.getElementById('gridwrap');
+        w.scrollTop = 22 * 23; w.scrollLeft = 0;
+        return w.scrollTop;
+      })()`);
+    }).then(function () {
+      return new Promise(function (resolve) { setTimeout(resolve, 300); });
+    }).then(function () {
+      return gridRect(win);
+    }).then(function (r2) {
+      log('GRID_RECT_LOWER ' + JSON.stringify(r2));
+      if (r2) {
+        return win.webContents.capturePage(r2).then(function (img) {
+          fs.writeFileSync(path.join(__dirname, '_lower.png'), img.toPNG());
+          log('wrote _lower.png');
+        });
+      }
+    }).then(function () {
+      if (errors.length) log('page errors: ' + errors.join(', '));
+      else log('no page errors');
+      app.quit();
     });
   }, 8000);
 });
