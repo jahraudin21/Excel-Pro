@@ -565,7 +565,9 @@ const FN={
  MROUND:(v,m)=>{const g=num(m);if(g===0)return 0;return Math.round(num(v)/g)*g;},
  QUOTIENT:(a,b)=>{const d=num(b);if(d===0)return'#DIV/0!';return Math.trunc(num(a)/d);},
  IFS:(...a)=>{for(let i=0;i+1<a.length;i+=2)if(truthy(a[i]))return a[i+1];return'#N/A';},
- AVERAGEIF:(rng,crit)=>{const f=flat([rng]).filter(v=>matchCrit(v,typeof crit==='string'?crit:toStr(crit)));const n=f.map(num).filter(x=>!isNaN(x));return n.length?n.reduce((x,y)=>x+y,0)/n.length:'#DIV/0!';},
+ AVERAGEIF:(...a)=>{const rng=flat([a[0]]),sr=a[2]!==undefined?flat([a[2]]):rng;const f=[];
+  rng.forEach((v,i)=>{if(matchCrit(v,typeof a[1]==='string'?a[1]:toStr(a[1])))f.push(sr[i]);});
+  const n=f.map(num).filter(x=>!isNaN(x));return n.length?n.reduce((x,y)=>x+y,0)/n.length:'#DIV/0!';},
  SUMIFS:(sr,...rest)=>{const s=flat([sr]);const groups=[];
   for(let i=0;i+1<rest.length;i+=2)groups.push([flat([rest[i]]),rest[i+1]]);
   if(!groups.length)return 0;let tot=0;
@@ -765,6 +767,11 @@ function renderAll(){
  recalc();
  const tds=grid.tBodies[0].getElementsByTagName('td');
  for(const td of tds)paint(td);
+ /* Merges are stored per sheet but nothing ever rendered them (Merge &
+    Center was a silent no-op). Applying here, right after paint, keeps the
+    colSpan/display state in sync with sheet().merges on every render --
+    template installs, sheet switches and the Merge button included. */
+ applyMerges();
  refbox.textContent=active;
  if(!editing)fbar.value=rawOf(active);
  updateStats();applyFreeze();saveLS();positionFillHandle();positionFillPrev();renderDrawings();applySheetOpts();applyBreaks();}
@@ -1421,13 +1428,31 @@ function chartData(){const q=rect();const labels=[],arr=[];
   if(typeof v==='number'&&isFinite(v)){labels.push(refOf(r,q.c1));arr.push(v);}}}
  return arr.length?{labels:labels.slice(0,50),vals:arr.slice(0,50)}:null;}
 
-function drawChart(){const d=chartData();const cv=$('#chartCv');
- if(!d){$('#chartTitle').textContent=T('noData');return;}
- $('#chartTitle').textContent='📊 '+T('chartTitle');
- const ctx=cv.getContext('2d');if(!ctx)return;
- const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+function chartSeriesFor(rangeStr){
+ /* Series for an on-sheet chart drawing: same label/value rule as chartData
+    (first column supplies labels, last column the values) but over an
+    explicit A1 range instead of the live selection. */
+ try{
+  const q=rangeFromStr(String(rangeStr).replace(/\$/g,'').toUpperCase());
+  const labels=[],arr=[];
+  for(let r=q.r1;r<=q.r2;r++){const v=vals[refOf(r,q.c2)];
+   if(typeof v==='number'&&isFinite(v)){
+    labels.push(dispVal(refOf(r,q.c1))||refOf(r,q.c1));arr.push(v);}}
+  return arr.length?{labels:labels.slice(0,50),vals:arr.slice(0,50)}:null;
+ }catch(e){return null;}}
+
+/* Shared chart painter: the chart dialog (drawChart) and the on-sheet chart
+   drawings both render through here, so an embedded chart can never drift
+   from what Insert > Chart previews. `title` is an optional in-canvas
+   caption drawn above the plot; the dialog passes null because it owns an
+   HTML title already, which keeps its pixels exactly as they were. */
+function paintChart(ctx,W,H,type,d,title){
+ if(title){
+  ctx.save();ctx.fillStyle='#323130';ctx.font='bold 12px "Segoe UI",sans-serif';
+  ctx.textAlign='center';ctx.fillText(String(title).slice(0,40),W/2,14);
+  ctx.restore();H=Math.max(H-18,60);ctx.save();ctx.translate(0,18);}
  const pad=44,max=Math.max(...d.vals,0.000001);
- if(chartType==='pie'){
+ if(type==='pie'){
   let ang=-Math.PI/2;const cx=W/2-60,cy=H/2,r=Math.min(W,H)/2-30;
   const tot=d.vals.reduce((a,b)=>a+b,0)||1;
   d.vals.forEach((v,i)=>{const a2=ang+(v/tot)*Math.PI*2;
@@ -1439,24 +1464,31 @@ function drawChart(){const d=chartData();const cv=$('#chartCv');
  }else{
   const iw=(W-pad*2)/d.vals.length;
   ctx.strokeStyle='#bbb';ctx.beginPath();ctx.moveTo(pad,H-pad);ctx.lineTo(W-pad,H-pad);ctx.stroke();
-  if(chartType==='line'){ctx.beginPath();ctx.strokeStyle='#217346';ctx.lineWidth=2;}
-  if(chartType==='area'){ctx.beginPath();ctx.moveTo(pad+iw/2,H-pad);}
+  if(type==='line'){ctx.beginPath();ctx.strokeStyle='#217346';ctx.lineWidth=2;}
+  if(type==='area'){ctx.beginPath();ctx.moveTo(pad+iw/2,H-pad);}
   d.vals.forEach((v,i)=>{const h2=(v/max)*(H-pad*2);const x=pad+i*iw;
-   if(chartType==='bar'){ctx.fillStyle=PAL[i%PAL.length];ctx.fillRect(x+2,H-pad-h2,Math.max(iw-4,2),h2);}
-   else if(chartType==='scatter'){ctx.beginPath();ctx.fillStyle='#217346';
+   if(type==='bar'){ctx.fillStyle=PAL[i%PAL.length];ctx.fillRect(x+2,H-pad-h2,Math.max(iw-4,2),h2);}
+   else if(type==='scatter'){ctx.beginPath();ctx.fillStyle='#217346';
     ctx.arc(x+iw/2,H-pad-h2,3,0,Math.PI*2);ctx.fill();}
    else{const px=x+iw/2,py=H-pad-h2;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
    const step=Math.max(1,Math.ceil(d.vals.length/10));
    if(i%step===0){ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';
     ctx.fillText(String(d.labels[i]).slice(0,8),x+iw/2,H-10);}});
-  if(chartType==='area'){ctx.lineTo(W-pad-iw/2,H-pad);ctx.closePath();
+  if(type==='area'){ctx.lineTo(W-pad-iw/2,H-pad);ctx.closePath();
    ctx.fillStyle='rgba(33,115,70,.18)';ctx.fill();
    ctx.beginPath();ctx.strokeStyle='#217346';ctx.lineWidth=2;
    d.vals.forEach((v,i)=>{const px=pad+i*iw+iw/2,py=H-pad-(v/max)*(H-pad*2);
     if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);});ctx.stroke();}
-  if(chartType==='line')ctx.stroke();
+  if(type==='line')ctx.stroke();
   ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='right';
-  ctx.fillText(String(+max.toFixed(2)),pad-4,pad+4);}}
+  ctx.fillText(String(+max.toFixed(2)),pad-4,pad+4);}
+ if(title)ctx.restore();}
+function drawChart(){const d=chartData();const cv=$('#chartCv');
+ if(!d){$('#chartTitle').textContent=T('noData');return;}
+ $('#chartTitle').textContent='📊 '+T('chartTitle');
+ const ctx=cv.getContext('2d');if(!ctx)return;
+ const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+ paintChart(ctx,W,H,chartType,d,null);}
 function initExtras(){
  $('#bChart').onclick=()=>{$('#chartDlg').classList.toggle('open');drawChart();};
  $('#chartClose').onclick=()=>$('#chartDlg').classList.remove('open');
@@ -2690,6 +2722,24 @@ function drawEl(d){const el=document.createElement('div');el.className='draw';el
   el.style.whiteSpace='pre-wrap';el.style.overflow='hidden';el.textContent=d.text||' ';}
  else if(d.kind==='image'){const im=document.createElement('img');im.src=d.src;
   im.style.width='100%';im.style.height='100%';im.style.objectFit='contain';im.draggable=false;el.appendChild(im);}
+ else if(d.kind==='chart'){
+  /* On-sheet chart drawing: a canvas painted from the sheet's own values
+     through the shared paintChart, so it always mirrors live formula
+     results. renderDrawings runs after recalc in renderAll, so `vals` is
+     current by the time this is built. */
+  el.style.background='#fff';el.style.border='1px solid #d2d0ce';
+  el.style.overflow='hidden';
+  const cv=document.createElement('canvas');
+  cv.width=Math.max(d.w,2)|0;cv.height=Math.max(d.h,2)|0;
+  cv.style.width='100%';cv.style.height='100%';cv.style.display='block';
+  const cc=cv.getContext('2d');
+  if(cc){
+   cc.clearRect(0,0,cv.width,cv.height);
+   const series=chartSeriesFor(d.range);
+   if(series)paintChart(cc,cv.width,cv.height,d.chartType||'bar',series,d.title||null);
+   else{cc.fillStyle='#909090';cc.font='12px sans-serif';cc.textAlign='center';
+    cc.fillText(T('noData'),cv.width/2,cv.height/2);}}
+  el.appendChild(cv);}
  else{const NS='http://www.w3.org/2000/svg';
   const svg=document.createElementNS(NS,'svg');
   svg.setAttribute('width','100%');svg.setAttribute('height','100%');
