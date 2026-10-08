@@ -2802,17 +2802,67 @@ function initDrawEvents(dl){
   drawEventsInitialized = true;
   }
 
-/* ================= Format as Table ================= */
-function makeTable(color){let q=rect();
+/* ================= Format as Table =================
+   Professional table style: clear header row, zebra-banded body rows,
+   per-column alignment (text left, numbers right), subtle grid borders and
+   consistent Calibri 11 typography. Column type is detected from the
+   evaluated values (numbers, including numeric strings, count as numeric;
+   empty cells abstain), so alignment follows the data, not the position.
+   All writes go straight to sheet().cells behind ONE snapshot so the whole
+   format is a single Ctrl+Z -- applyStyle/applyBorderPatch would each push
+   their own history entry (and per-call renderAll), splitting one action
+   into many. Border shape matches applyBorderCell's 'all edges' result. */
+function makeTable(color){
+ let q=rect();
  if(q.r1===q.r2&&q.c1===q.c2)q=dataRange();
  if(q.r2-q.r1<1){alert(T('tblNoData'));return;}
  const sA=selA,sB=selB;
- applyStyle({b:1,color:'#ffffff',bg:color},
-  colName(q.c1)+(q.r1+1)+':'+colName(q.c2)+(q.r1+1));
- for(let r=q.r1+1;r<=q.r2;r++)
-  if((r-q.r1)%2===0)applyStyle({bg:'#eaf3ee'},
-   colName(q.c1)+(r+1)+':'+colName(q.c2)+(r+1));
- selA=sA;selB=sB;renderAll();setStatusMode(T('tblDone'));}
+ const band=tintForTable(color);
+ snapshot();
+ const cs=sheet().cells;
+ const hdrRow=q.r1, bodyTop=q.r1+1;
+ /* Per-column type detection over the BODY rows (header never votes): a
+    column is numeric when every non-empty evaluated value is a number. */
+ const colIsNum={};
+ for(let c=q.c1;c<=q.c2;c++){
+  let num=0,txt=0;
+  for(let r=bodyTop;r<=q.r2;r++){
+   const v=vals[refOf(r,c)];
+   if(v===''||v==null)continue;
+   if(typeof v==='number'&&isFinite(v))num++;
+   else if(numOrNull(v)!==null)num++;
+   else txt++;
+  }
+  colIsNum[c]=(num>0&&txt===0);
+ }
+ /* Subtle hairline grid on every cell of the table (thin, Office-style). */
+ const gridBorder={t:'thin',b:'thin',l:'thin',r:'thin'};
+ const put=(r,c,patch)=>{
+  const ref=refOf(r,c),cel=cs[ref]||{};
+  cel.s=Object.assign({},cel.s||{},patch);cs[ref]=cel;
+ };
+ for(let c=q.c1;c<=q.c2;c++){
+  /* Header: bold white on the accent, centred, Calibri 11. */
+  put(hdrRow,c,{b:1,color:'#ffffff',bg:color,ff:'Calibri',fs:11,
+   al:'center',va:'middle',border:gridBorder});
+  for(let r=bodyTop;r<=q.r2;r++){
+   const zebra=(r-bodyTop)%2===1;
+   /* Zebra banding tints every second body row; alignment follows the
+      detected column type (storing al makes the choice explicit,
+      exportable and undoable rather than relying on paint()'s default). */
+   put(r,c,Object.assign({ff:'Calibri',fs:11,va:'middle',
+    border:gridBorder,al:colIsNum[c]?'right':'left'},zebra?{bg:band}:{}));
+  }
+ }
+ selA=sA;selB=sB;renderAll();saveLS();setStatusMode(T('tblDone'));}
+/* Zebra tint for a table accent: the accent at ~12% over white, so bands
+   read as belonging to the header colour without fighting the grid. */
+function tintForTable(color){
+ const m=/^#?([0-9a-f]{6})$/i.exec(String(color||'').trim());
+ if(!m)return '#eaf3ee';
+ const n=parseInt(m[1],16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+ const mix=(ch)=>Math.round(ch+(255-ch)*0.88);
+ return '#'+((1<<24)+(mix(r)<<16)+(mix(g)<<8)+mix(b)).toString(16).slice(1);}
 
 /* ================= PivotTable ================= */
 let pivotSel={row:null,vals:[]};

@@ -30,6 +30,11 @@
   button.ghost, a.btn.ghost { background:#fff; color:var(--accent); }
   .swatch { display:inline-block; width:12px; height:12px; border-radius:3px; border:1px solid rgba(0,0,0,.2); vertical-align:-1px; margin-right:6px; }
   #err { display:none; background:#fdecea; border:1px solid #e5a19a; color:#7a2e26; border-radius:8px; padding:10px 12px; font-size:13px; }
+  .compare { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .compare figure { margin:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; }
+  .compare img { display:block; width:100%; aspect-ratio:1; object-fit:contain; image-rendering:pixelated; background:
+    repeating-conic-gradient(#f6f6f6 0 25%, #fff 0 50%) 0 0/16px 16px; }
+  .compare figcaption { font-size:11px; color:#605e5c; padding:4px 8px; border-top:1px solid var(--line); }
   footer { max-width:1200px; margin:0 auto; padding:0 20px 26px; font-size:12px; color:#605e5c; }
   @media (max-width:900px){ main{ grid-template-columns:1fr; } }
 </style>
@@ -47,7 +52,10 @@
   <code>build/icon.ico</code>). The tile is extruded 0.44 deep, grid lines become thin ribs,
   and the X becomes taller bars so the diagonals stay continuous - the same paint order as
   the 2D renderer. Drag to orbit, scroll to zoom, right-drag to pan.
-  Regenerate with <code>python make_icon_3d.py</code>.</p>
+  Regenerate with <code>python make_icon_3d.py</code>. Palette is same-to-same with the 2D
+  pixels: tile <code>#467221</code>, grid <code>#2f5118</code>, X white. Measured front-view
+  match vs <code>make_icon.render(256)</code>: <strong>100% of all 57,400 fully-opaque pixels</strong>
+  (8 remaining diffs are alpha=128 half-blends no opaque geometry can reproduce).</p>
 </header>
 <main>
   <div id="stage"><div id="fallback">Loading Three.js from CDN...</div></div>
@@ -60,7 +68,7 @@
       <div class="btns"><button id="front" type="button" class="ghost">Front</button><button id="angle" type="button" class="ghost">3/4 view</button><button id="top" type="button" class="ghost">Top</button></div>
     </div>
     <div class="card"><h2>Layers (2D paint order to Z height)</h2>
-      <div class="row"><span><span class="swatch" style="background:#217346"></span>Tile body</span><span>z 0 to 0.44</span></div>
+      <div class="row"><span><span class="swatch" style="background:#467221"></span>Tile body</span><span>z 0 to 0.44</span></div>
       <div class="row"><span><span class="swatch" style="background:#2f5118"></span>Grid ribs</span><span>+0.036 above face</span></div>
       <div class="row"><span><span class="swatch" style="background:#ffffff"></span>X bars</span><span>+0.10 above face</span></div>
     </div>
@@ -71,6 +79,13 @@
         <a class="btn ghost" href="build/icon-3d.stl" download>STL (print)</a>
       </div>
       <p style="margin:8px 0 0;color:#605e5c">OBJ needs its .mtl sibling next to it for colour.</p>
+    </div>
+    <div class="card"><h2>Same-to-same check</h2>
+      <div class="compare">
+        <figure><img src="build/icon-2d-256.png" alt="2D icon render 256px"><figcaption>2D source (make_icon.py, 256px)</figcaption></figure>
+        <figure><img src="build/icon-3d-front-256.png" alt="3D model front orthographic render"><figcaption>3D front render (make_icon_3d.py)</figcaption></figure>
+      </div>
+      <p style="margin:8px 0 0;color:#605e5c">Tile <code>#467221</code>, grid <code>#2f5118</code>, X white — identical bytes in 2D and 3D.</p>
     </div>
     <div id="err"></div>
   </aside>

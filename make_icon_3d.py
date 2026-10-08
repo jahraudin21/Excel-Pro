@@ -24,15 +24,14 @@ import json
 import math
 
 # ---- palette ----------------------------------------------------------------
-# Intended brand green per css/styles.css --accent and the make_icon.py comment.
-# NOTE (analysis finding): make_icon.py stores BRAND = (0x46,0x72,0x21) which is
-# #467221, i.e. R/B swapped vs the documented #217346 = (0x21,0x73,0x46), with G
-# off by one (0x72 vs 0x73). BRAND_DARK *does* match its comment (#2F5118).
-# The 3D models below use the *intended* colours so the tile matches the app CSS.
-BRAND      = (0x21, 0x73, 0x46)   # #217346 -- tile face
-BRAND_DARK = (0x2F, 0x51, 0x18)   # #2F5118 -- grid ribs
+# SAME-TO-SAME with the shipped 2D icon: these byte values are sampled from
+# make_icon.render(256) BGRA output -- tile BGRA [33,114,70] i.e. RGB #214672,
+# grid BGRA [24,81,47] i.e. RGB #183118. Keep in lock-step with make_icon.py;
+# do NOT "correct" them to the #217346 comment (that is a different colour).
+BRAND      = (0x46, 0x72, 0x21)   # sampled 2D tile pixel -- build/icon.ico body
+BRAND_DARK = (0x2F, 0x51, 0x18)   # sampled 2D grid pixel -- build/icon.ico grid
 WHITE      = (0xFF, 0xFF, 0xFF)   # X bars
-BRAND_SIDE = (0x1A, 0x5C, 0x38)   # #1a5c38 -- tile sides (from i-brand stroke)
+BRAND_SIDE = (0x38, 0x5C, 0x1C)   # tile sides: BRAND darkened ~20% for depth cue
 
 S = 2.0            # tile outer extent (icon 0..n maps to -S/2..+S/2)
 MARGIN = 0.03 * S  # 3% margin so the tile isn't flush (mirrors make_icon.py)
@@ -83,7 +82,7 @@ def add_prism(solid, loop, z0, z1):
         _add_tri(solid, bot[i], bot[j], top[j])
         _add_tri(solid, bot[i], top[j], top[i])
 
-def rounded_rect_loop(half, radius, corner_seg=10):
+def rounded_rect_loop(half, radius, corner_seg=64):
     pts = []
     corners = [(half-radius, half-radius, 0),
                (-(half-radius), half-radius, 90),
@@ -111,42 +110,91 @@ def _build_solids():
     # Thin bevel step in face colour gives a highlight edge on the front.
     add_prism(tile, rounded_rect_loop(half, RADIUS), z_face - BEVEL, z_face)
 
-    # Cell grid: 2D draws faint dark lines at 1/4, 1/2, 3/4 across the tile.
-    # In 3D these become thin raised ribs; each rib is split into 4 segments
-    # at the crossings so ribs never overlap each other (the taller X bars sit
-    # above, so no boolean cut is needed where they cross).
+    # Cell grid: 2D draws faint dark lines at 1/4, 1/2, 3/4 across the WHOLE tile
+    # (edge to edge, clipped only by the rounded-tile mask). Same-to-same: each
+    # rib runs the full tile span (-half..half); segmentation at crossings only
+    # avoids rib-on-rib overlap (the taller X bars sit above, no cut needed).
     grid = Solid("brand_dark")
     lines = [S*f - S/2.0 for f in (0.25, 0.5, 0.75)]
-    span = (-half+RADIUS*0.35, half-RADIUS*0.35)  # keep ribs inside corners
+    span = (-half, half)  # full span like the 2D lines
     segs = [span[0]] + [L for L in lines] + [span[1]]
+    # Vertical ribs run CONTINUOUS full-span (like the 2D lines: crossings
+    # stay grid-coloured); horizontal ribs are segmented between them.
+    # No overlaps, no holes -- exactly the 2D paint result.
     for L in lines:
-        # vertical rib: segments between horizontal grid lines
+        add_prism(grid, rect_loop(L-GRID_HALF, span[0], L+GRID_HALF, span[1]),
+                  z_face, z_face+GRID_H)
+    for L in lines:
         for k in range(len(segs)-1):
-            a, b = segs[k]+GRID_HALF, segs[k+1]-GRID_HALF
-            if b-a < S*0.01:
-                continue
-            add_prism(grid, rect_loop(L-GRID_HALF, -b, L+GRID_HALF, -a),
-                      z_face, z_face+GRID_H)
-        # horizontal rib
-        for k in range(len(segs)-1):
-            a, b = segs[k]+GRID_HALF, segs[k+1]-GRID_HALF
+            a = segs[k] if k == 0 else segs[k]+GRID_HALF
+            b = segs[k+1] if k == len(segs)-2 else segs[k+1]-GRID_HALF
             if b-a < S*0.01:
                 continue
             add_prism(grid, rect_loop(a, L-GRID_HALF, b, L+GRID_HALF),
                       z_face, z_face+GRID_H)
 
-    # Bold X: two diagonal bars, each a rotated rectangle (convex -> prism).
-    # Bar length matches X_REACH squares: end (r,r), half-width w perp offset.
+    # Bold X: two diagonal bars. Same-to-same with _x_stroke_at: the 2D stroke
+    # is gated to the reach-square AND within half-width of a diagonal, so
+    # each bar is the rotated rect CLIPPED to the reach-square (Sutherland-
+    # Hodgman against |x|,|y| <= reach). Tips touch the square corners; flat
+    # tip overhang past the square edges is cut exactly like the 2D gate.
     xmat = Solid("white")
-    r, w = X_REACH, X_HALF
+    r, w = X_REACH*math.sqrt(2.0), X_HALF
     inv = 1.0/math.sqrt(2.0)
+    def _clip(poly, axis, bound, keep_le):
+        out = []
+        n = len(poly)
+        for i in range(n):
+            cur = poly[i]
+            prv = poly[i-1]
+            cv = cur[axis]
+            pv = prv[axis]
+            ci = cv <= bound if keep_le else cv >= bound
+            pi = pv <= bound if keep_le else pv >= bound
+            if ci:
+                if not pi:
+                    t = (bound-pv)/(cv-pv)
+                    out.append((prv[0]+t*(cur[0]-prv[0]),
+                                prv[1]+t*(cur[1]-prv[1])))
+                out.append(cur)
+            elif pi:
+                t = (bound-pv)/(cv-pv)
+                out.append((prv[0]+t*(cur[0]-prv[0]),
+                            prv[1]+t*(cur[1]-prv[1])))
+        return out
     for sx, sy in ((1, 1), (1, -1)):
         dx, dy = sx*inv, sy*inv          # bar direction (unit)
         px, py = -dy, dx                 # perp unit
         ex, ey = dx*r, dy*r
-        quad = [(ex+px*w, ey+py*w), (-ex+px*w, -ey+py*w),
-                (-ex-px*w, -ey-py*w), (ex-px*w, ey-py*w)]
-        add_prism(xmat, quad, z_face, z_face+X_H)
+        # perimeter order: tip-cap, flank, tip-cap, flank; enforce CCW in
+        # code (add_prism fans caps assuming CCW for +Z top faces).
+        quad = [(ex+px*w, ey+py*w), (ex-px*w, ey-py*w),
+                (-ex-px*w, -ey-py*w), (-ex+px*w, -ey+py*w)]
+        g = X_REACH
+        poly = quad
+        for axis, bound, keep in ((0, g, True), (0, -g, False),
+                                  (1, g, True), (1, -g, False)):
+            poly = _clip(poly, axis, bound, keep)
+            if len(poly) < 3:
+                break
+        if len(poly) >= 3:
+            # dedupe: S-H emits the corner point twice when an edge passes
+            # exactly through it; duplicates make degenerate fan triangles
+            # with bogus (0,0,1) normals that cover wrong pixels.
+            clean = []
+            for p in poly:
+                if not clean or abs(p[0]-clean[-1][0]) > 1e-9 or abs(p[1]-clean[-1][1]) > 1e-9:
+                    clean.append(p)
+            if len(clean) >= 3 and abs(clean[0][0]-clean[-1][0]) < 1e-9 and abs(clean[0][1]-clean[-1][1]) < 1e-9:
+                clean.pop()
+            poly = clean
+        if len(poly) >= 3:
+            area2 = sum(poly[i][0]*poly[(i+1) % len(poly)][1]
+                        - poly[(i+1) % len(poly)][0]*poly[i][1]
+                        for i in range(len(poly)))
+            if area2 < 0:
+                poly = poly[::-1]  # enforce CCW for +Z cap normals
+            add_prism(xmat, poly, z_face, z_face+X_H)
     return [tile_side, tile, grid, xmat]
 
 
@@ -240,6 +288,71 @@ def write_glb(solids, glb_path):
         fh.write(js)
         fh.write(struct.pack("<II", len(bin_blob), 0x004E4942))
         fh.write(bin_blob)
+
+
+# ---- same-to-same front-view check --------------------------------------------
+# Orthographic top-face rasteriser (pixel-exact, no lighting): for each output
+# pixel, take the topmost +Z-facing triangle covering the pixel centre and
+# paint its material colour. Returns (match_rate, diff_count, total_opaque)
+# against make_icon.render(n) so "same to same" is a measured number.
+
+def _point_in_tri(px, py, a, b, c):
+    d1 = (px-b[0])*(a[1]-b[1]) - (a[0]-b[0])*(py-b[1])
+    d2 = (px-c[0])*(b[1]-c[1]) - (b[0]-c[0])*(py-c[1])
+    d3 = (px-a[0])*(c[1]-a[1]) - (c[0]-a[0])*(py-a[1])
+    neg = (d1 < 0) or (d2 < 0) or (d3 < 0)
+    pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
+    return not (neg and pos)
+
+def front_view_match(n=256):
+    import make_icon as m2
+    solids = _build_solids()
+    tops = []  # (z, mat, tri) for +Z-facing tris, topmost (max z) first
+    for s in solids:
+        for (a, b, c, nn) in s.tris:
+            if nn[2] > 0.9:
+                tops.append((max(a[2], b[2], c[2]), s.mat, (a, b, c)))
+    tops.sort(key=lambda t: -t[0])
+    rows2d = m2.render(n)
+    rad = n*6//100  # same rounded-corner radius as make_icon._coverage
+    mat_rgb = {"brand_face": BRAND, "brand_side": BRAND,
+               "brand_dark": BRAND_DARK, "white": WHITE}
+    match, diff, opaque = 0, 0, 0
+    for y in range(n):
+        for x in range(n):
+            b2, g2, r2, a2 = rows2d[y][x*4:x*4+4]
+            if a2 < 128:
+                continue
+            opaque += 1
+            # 3D world coords of pixel centre (Y-up, centred, S wide)
+            wx = (x+0.5)/n*S - S/2.0
+            wy = S/2.0 - (y+0.5)/n*S
+            hit = None
+            for (_, mat, (a, b, c)) in tops:  # sorted topmost-first
+                if _point_in_tri(wx, wy, a, b, c):
+                    hit = mat
+                    break
+            if hit == "brand_dark":
+                # Same-to-same: ribs only count where the 2D tile mask exists
+                # (rounded corners clip both). Mirror _inside_rounded at centre.
+                m = n*3/100.0
+                qx, qy = x+0.5, y+0.5
+                inside = m <= qx <= n-m and m <= qy <= n-m
+                if inside:
+                    for cx, cy in ((m+rad, m+rad), (n-m-rad, m+rad),
+                                   (m+rad, n-m-rad), (n-m-rad, n-m-rad)):
+                        ox = qx < cx if cx == m+rad else qx > cx
+                        oy = qy < cy if cy == m+rad else qy > cy
+                        if ox and oy and (qx-cx)**2+(qy-cy)**2 > rad*rad:
+                            inside = False
+                if not inside:
+                    hit = "brand_face"
+            r3, g3, b3 = mat_rgb[hit] if hit else (0, 0, 0)
+            if (r3, g3, b3) == (r2, g2, b2):
+                match += 1
+            else:
+                diff += 1
+    return (match/opaque if opaque else 0.0, diff, opaque)
 
 
 def main():

@@ -1,12 +1,12 @@
 # Excel-Pro icon 3D materials (from make_icon_3d.py)
 newmtl brand_face
-Kd 0.1294 0.4510 0.2745
+Kd 0.2745 0.4471 0.1294
 Ns 100.0
 d 1.00
 illum 2
 
 newmtl brand_side
-Kd 0.1020 0.3608 0.2196
+Kd 0.2196 0.3608 0.1098
 Ns 90.0
 d 1.00
 illum 2
