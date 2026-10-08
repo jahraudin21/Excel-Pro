@@ -55,113 +55,123 @@ function ssWrite(key,val){try{localStorage.setItem(key,JSON.stringify(val));}cat
 function ssKey(id){return 'ss'+id.charAt(0).toUpperCase()+id.slice(1);}
 
 /* ---------- Sales Dashboard template ----------
-   Recreates the reference layout (Monthly Sales Data: title in A1, headers
-   on row 2, twelve records in rows 3-14 across Item / Date / Sales /
-   Region) and extends it into a professional dashboard panel in columns
-   F:M: banner, four KPI cards, four summary tables (SUMIF / AVERAGEIF /
-   COUNTIF over the data) and two embedded chart drawings.
+   Full-page professional dashboard built from the reference layout
+   (Monthly Sales Data: Item / Date / Sales / Region, 12 January orders).
 
-   Geometry contract: installWorkbook() installs the colW returned here and
-   renderDrawings runs on the first render, so drawing x/y are computed from
-   exactly these widths. Rows are a uniform 22px, the row-header strip is
-   34px and the column-header strip is 22px (see applyFreeze's HDR). */
+   Row map (1-based; uniform 96px columns, 22px rows, 34px row header):
+     1-2 split hero banner      4-6  four KPI cards (label + 2-row value)
+     8-11 four summary tables   13-24 three charts (bar / pie / line)
+     26-28 insights cards       30-43 the recreated source table
+   showGrid:false switches the workbook's gridlines off; every table cell
+   keeps its own thin border, so the sheet reads as a dashboard canvas.
+
+   Geometry contract: installWorkbook() installs the colW returned here, so
+   chart x/y are computed from exactly these widths (X(c)=34+96c). */
 function makeSalesDashboard(){
- const ACC='#217346',BAND=tintForTable('#217346'),TITLE_C='#1a5c38',
-       HDR_BG='#e2efda',CARD_BG='#f4f9f6',GRID={t:'thin',b:'thin',l:'thin',r:'thin'};
- const colW=new Array(26).fill(88);
- colW[0]=112;colW[1]=100;colW[2]=100;colW[3]=90;colW[4]=24;   /* data + gutter */
- for(let c=5;c<=12;c++)colW[c]=96;                             /* F..M panel */
- const X=c=>{let p=34;for(let k=0;k<c;k++)p+=colW[k];return p;};
- const Y=r=>22+22*r;                                           /* 0-based row */
- const ci=ch=>ch.charCodeAt(0)-65;
+ const ACC='#217346',DARK='#1a5c38',TXT='#323130',HDR_BG='#e2efda',
+       CARD_BG='#f4f9f6',BAND=tintForTable('#217346'),
+       GRID={t:'thin',b:'thin',l:'thin',r:'thin'};
+ const colW=new Array(26).fill(96);
+ const X=c=>34+96*c,Y=r=>22+22*r,ci=ch=>ch.charCodeAt(0)-65;
  const cells={},merges=[],drawings=[];
  const put=(ref,raw,s)=>{const o=cells[ref]||{};if(raw!=null)o.raw=raw;
   if(s)o.s=Object.assign({},o.s,s);cells[ref]=o;};
  const style=(r1,c1,r2,c2,s)=>{for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)
   put(String.fromCharCode(65+c)+(r+1),null,s);};
+ const LBL={bg:ACC,color:'#ffffff',b:true,fs:11,al:'center',va:'middle',
+       ff:'Calibri',border:GRID},
+  CARD={bg:CARD_BG,color:DARK,b:true,fs:20,al:'center',va:'middle',
+       ff:'Calibri',border:GRID},
+  BODY={ff:'Calibri',fs:11,va:'middle',border:GRID},
+  BAN ={bg:ACC,color:'#ffffff',ff:'Calibri',va:'middle',border:GRID};
 
- /* ---- source data, exactly as the reference layout ---- */
- put('A1','Monthly Sales Data',{b:true,fs:14,color:ACC,ff:'Calibri'});
+ /* ---- hero banner (rows 1-2): title left, period right ---- */
+ style(0,0,1,7,Object.assign({fs:18,al:'center'},BAN));
+ style(0,8,1,11,Object.assign({fs:12,al:'right'},BAN));
+ put('A1','Monthly Sales Dashboard');
+ put('I1','January 2024  ·  12 orders  ·  2 regions');
+ merges.push('A1:H2','I1:L2');
+
+ /* ---- KPI cards: label strip (row 4) over a 2-row value (rows 5-6) ---- */
+ [['A','C','Total Sales','=SUM(C32:C43)','usd'],
+  ['D','F','Average Sale','=AVERAGE(C32:C43)','usd'],
+  ['G','I','Orders','=COUNT(C32:C43)',''],
+  ['J','L','Highest Sale','=MAX(C32:C43)','usd']].forEach(k=>{
+  const a=ci(k[0]),b=ci(k[1]);
+  style(3,a,3,b,LBL);put(k[0]+'4',k[2]);
+  style(4,a,5,b,CARD);put(k[0]+'5',k[3],k[4]?{numfmt:k[4]}:null);
+  merges.push(k[0]+'4:'+k[1]+'4',k[0]+'5:'+k[1]+'6');});
+
+ /* ---- summary tables (rows 8-11): header, two rows, bold total ---- */
+ const TOT={b:true,bg:HDR_BG,ff:'Calibri',fs:11,va:'middle',border:GRID};
+ const BAR={color:ACC,b:true,fs:11,al:'left',va:'middle',ff:'Calibri',border:GRID};
+ [{l:'A',v:'B',b:'C',title:'Sales by Region',money:true,
+   rows:[['East','=SUMIF(D32:D43,A9,C32:C43)'],['South','=SUMIF(D32:D43,A10,C32:C43)'],
+         ['Total','=SUM(B9:B10)']]},
+  {l:'D',v:'E',b:'F',title:'Sales by Item',money:true,
+   rows:[['Widgets','=SUMIF(A32:A43,D9,C32:C43)'],['Items','=SUMIF(A32:A43,D10,C32:C43)'],
+         ['Total','=SUM(E9:E10)']]},
+  {l:'G',v:'H',b:'I',title:'Avg Sale by Region',money:true,
+   rows:[['East','=AVERAGEIF(D32:D43,G9,C32:C43)'],['South','=AVERAGEIF(D32:D43,G10,C32:C43)'],
+         ['All','=AVERAGE(C32:C43)']]},
+  {l:'J',v:'K',b:'L',title:'Orders by Region',money:false,
+   rows:[['East','=COUNTIF(D32:D43,J9)'],['South','=COUNTIF(D32:D43,J10)'],
+         ['Total','=SUM(K9:K10)']]}].forEach(t=>{
+  const a=ci(t.l),b=ci(t.b);
+  style(7,a,7,b,LBL);put(t.l+'8',t.title);
+  merges.push(t.l+'8:'+t.b+'8');
+  t.rows.forEach((row,i)=>{
+   const n=9+i,last=i===2;
+   put(t.l+n,row[0],Object.assign({},last?TOT:BODY,{al:'left'}));
+   put(t.v+n,row[1],Object.assign({},last?TOT:BODY,{al:'right',
+    numfmt:t.money?'usd':undefined}));
+   if(last)put(t.b+n,null,TOT);
+   else put(t.b+n,'=REPT("█",ROUND('+t.v+n+'/MAX('+t.v+'9:'+t.v+'10)*8,0))',BAR);});});
+
+ /* ---- embedded charts, painted on the sheet by drawEl -> paintChart ---- */
+ drawings.push(
+  {id:'dashRegion',kind:'chart',chartType:'bar',range:'A9:B10',
+   title:'Sales by Region',x:X(0)+4,y:Y(12),w:96*4-8,h:254},
+  {id:'dashItem',kind:'chart',chartType:'pie',range:'D9:E10',
+   title:'Sales by Item',x:X(4)+4,y:Y(12),w:96*4-8,h:254},
+  {id:'dashTrend',kind:'chart',chartType:'line',range:'B32:C43',
+   title:'Sales Trend',x:X(8)+4,y:Y(12),w:96*4-8,h:254});
+
+ /* ---- insights cards (rows 26-28) ---- */
+ [['A','D','East leads revenue at $14,750 — 71% of the $20,700 total.'],
+  ['E','H','Top order $2,750 (Widgets, East); South averages the most at $1,983.'],
+  ['I','L','12 orders averaging $1,725 across 2 regions.']].forEach(n2=>{
+  style(25,ci(n2[0]),27,ci(n2[1]),{bg:CARD_BG,color:TXT,fs:11,al:'left',
+   va:'middle',wrap:true,ff:'Calibri',border:GRID});
+  put(n2[0]+'26',n2[2]);
+  merges.push(n2[0]+'26:'+n2[1]+'28');});
+
+ /* ---- recreated source table (rows 30-43) ---- */
+ put('A30','Monthly Sales Data',{b:true,fs:14,color:ACC,ff:'Calibri'});
  ['Item','Date','Sales','Region'].forEach((h,i)=>
-  put(String.fromCharCode(65+i)+'2',h,{b:true,bg:HDR_BG,ff:'Calibri',fs:11,
+  put(String.fromCharCode(65+i)+'31',h,{b:true,bg:HDR_BG,ff:'Calibri',fs:11,
    va:'middle',border:GRID,al:i===2?'right':'left'}));
- const DATA=[['Widgets','01-Jan-24',1250,'East'],['Widgets','01-Jan-24',1200,'East'],
+ [['Widgets','01-Jan-24',1250,'East'],['Widgets','01-Jan-24',1200,'East'],
   ['Widgets','01-Jan-24',1450,'East'],['Widgets','01-Jan-24',1750,'East'],
   ['Items','01-Jan-24',1750,'South'],['Widgets','01-Jan-24',1900,'East'],
   ['Items','01-Jan-24',1700,'South'],['Widgets','01-Jan-24',1250,'East'],
   ['Widgets','10-Jan-24',1500,'East'],['Items','03-Jan-24',2500,'South'],
-  ['Widgets','01-Jan-24',1700,'East'],['Widgets','01-Jan-24',2750,'East']];
- DATA.forEach((row,i)=>{
-  const n=i+3,base={ff:'Calibri',fs:11,va:'middle',border:GRID};
-  const band=i%2===1?{bg:BAND}:null;                 /* zebra, 2nd record on */
-  put('A'+n,row[0],Object.assign({},base,band));
-  put('B'+n,row[1],Object.assign({},base,band));
-  put('C'+n,row[2],Object.assign({},base,band,{numfmt:'usd',al:'right'}));
-  put('D'+n,row[3],Object.assign({},base,band));});
+  ['Widgets','01-Jan-24',1700,'East'],['Widgets','01-Jan-24',2750,'East']]
+ .forEach((row,i)=>{
+  const n=i+32,band=i%2===1?{bg:BAND}:null;      /* zebra, 2nd record on */
+  put('A'+n,row[0],Object.assign({},BODY,band));
+  put('B'+n,row[1],Object.assign({},BODY,band));
+  put('C'+n,row[2],Object.assign({},BODY,band,{numfmt:'usd',al:'right'}));
+  put('D'+n,row[3],Object.assign({},BODY,band));});
 
- /* ---- banner (merged F1:M2) ---- */
- style(0,5,1,12,{bg:ACC,color:'#ffffff',b:true,fs:16,al:'center',va:'middle',
-  ff:'Calibri',border:GRID});
- put('F1','Sales Dashboard');
- merges.push('F1:M2');
-
- /* ---- KPI cards: label strip + big value ---- */
- const KP=[['F','G','Total Sales','=SUM(C3:C14)','usd'],
-           ['H','I','Average Sale','=AVERAGE(C3:C14)','usd'],
-           ['J','K','Orders','=COUNT(C3:C14)',''],
-           ['L','M','Highest Sale','=MAX(C3:C14)','usd']];
- KP.forEach(k=>{
-  const a=ci(k[0]),b=ci(k[1]);
-  style(3,a,3,b,{bg:ACC,color:'#ffffff',b:true,fs:11,al:'center',va:'middle',
-   ff:'Calibri',border:GRID});
-  style(4,a,4,b,{bg:CARD_BG,color:TITLE_C,b:true,fs:14,al:'center',va:'middle',
-   ff:'Calibri',border:GRID});
-  put(k[0]+'4',k[2]);
-  put(k[0]+'5',k[3],k[4]?{numfmt:k[4]}:null);
-  merges.push(k[0]+'4:'+k[1]+'4',k[0]+'5:'+k[1]+'5');});
-
- /* ---- summary tables: header strip, two data rows, bold total ---- */
- const SUMS=[
-  {c:['F','G'],title:'By Region',fmt:'usd',
-   rows:[['East','=SUMIF(D3:D14,F8,C3:C14)'],['South','=SUMIF(D3:D14,F9,C3:C14)']],
-   total:['Total','=SUM(G8:G9)']},
-  {c:['H','I'],title:'By Item',fmt:'usd',
-   rows:[['Widgets','=SUMIF(A3:A14,H8,C3:C14)'],['Items','=SUMIF(A3:A14,H9,C3:C14)']],
-   total:['Total','=SUM(I8:I9)']},
-  {c:['J','K'],title:'Avg by Region',fmt:'usd',
-   rows:[['East','=AVERAGEIF(D3:D14,J8,C3:C14)'],['South','=AVERAGEIF(D3:D14,J9,C3:C14)']],
-   total:['All','=AVERAGE(C3:C14)']},
-  {c:['L','M'],title:'Orders by Region',fmt:'',
-   rows:[['East','=COUNTIF(D3:D14,L8)'],['South','=COUNTIF(D3:D14,L9)']],
-   total:['Total','=SUM(M8:M9)']}];
- SUMS.forEach(s=>{
-  const a=ci(s.c[0]),b=ci(s.c[1]);
-  style(6,a,6,b,{bg:ACC,color:'#ffffff',b:true,fs:11,al:'center',va:'middle',
-   ff:'Calibri',border:GRID});
-  put(s.c[0]+'7',s.title);
-  merges.push(s.c[0]+'7:'+s.c[1]+'7');
-  s.rows.forEach((row,i)=>{
-   const n=8+i;
-   put(s.c[0]+n,row[0],{ff:'Calibri',fs:11,va:'middle',al:'left',border:GRID});
-   put(s.c[1]+n,row[1],{ff:'Calibri',fs:11,va:'middle',al:'right',border:GRID,
-    numfmt:s.fmt||undefined});});
-  put(s.c[0]+'10',s.total[0],{b:true,bg:HDR_BG,ff:'Calibri',fs:11,va:'middle',
-   al:'left',border:GRID});
-  put(s.c[1]+'10',s.total[1],{b:true,bg:HDR_BG,ff:'Calibri',fs:11,va:'middle',
-   al:'right',border:GRID,numfmt:s.fmt||undefined});});
-
- /* ---- embedded charts: painted on the sheet by drawEl -> paintChart ---- */
- drawings.push(
-  {id:'dashChart1',kind:'chart',chartType:'bar',range:'F8:G9',
-   title:'Sales by Region',x:X(5),y:Y(11),
-   w:colW[5]+colW[6]+colW[7]+colW[8],h:210},
-  {id:'dashChart2',kind:'chart',chartType:'line',range:'B3:C14',
-   title:'Sales Trend',x:X(9),y:Y(11),
-   w:colW[9]+colW[10]+colW[11]+colW[12],h:210});
+ /* ---- conditional formatting: flag the big and the small sales ---- */
+ const conds=[
+  {type:'gt',v1:2000,r1:31,c1:2,r2:42,c2:2,fmt:{b:true,color:'#0b6a2f'}},
+  {type:'lt',v1:1300,r1:31,c1:2,r2:42,c2:2,fmt:{color:'#9c0006'}}];
 
  return {sheets:[{name:'Sales Dashboard',cells:cells,merges:merges,
-   drawings:drawings,tabColor:ACC}],
-  colW:colW};
+   drawings:drawings,conds:conds,tabColor:ACC}],
+  colW:colW,showGrid:false};
 }
 
 const StartScreen=(function(){
@@ -261,16 +271,20 @@ const StartScreen=(function(){
 
   /* Shared reset for every path that swaps the whole workbook. Undo history is
      cleared too, otherwise Ctrl+Z could resurrect the previous workbook. */
-  function installWorkbook(sheets,cloudId,cloudName,colWIn){
+  function installWorkbook(sheets,cloudId,cloudName,opts){
     wb={cur:0,sheets:sheets};
     if(cloudId)wb.cloudId=cloudId;
     if(cloudName)wb.cloudName=cloudName;
     if(typeof COLS!=='undefined'){
-      colW=(Array.isArray(colWIn)&&colWIn.length===COLS)?colWIn.slice():new Array(COLS).fill(88);
+      colW=(opts&&Array.isArray(opts.colW)&&opts.colW.length===COLS)?opts.colW.slice():new Array(COLS).fill(88);
       wb.colW=colW;
+      /* Template-level workbook options: the Sales Dashboard switches the
+         gridlines off so its panels read as a canvas. showGrid==null (cloud
+         loads, older callers) leaves the current setting alone. */
+      if(opts&&opts.showGrid!=null)wb.showGrid=opts.showGrid;
       /* The <colgroup> is built once at init: push the new widths into it so
-         a template that ships its own layout (the Sales Dashboard) renders at
-         those widths instead of inheriting the previous workbook's. */
+         a template that ships its own layout renders at those widths instead
+         of inheriting the previous workbook's. */
       if(typeof applyColW==='function')applyColW();
     }
     if(typeof hist!=='undefined')hist.length=0;
@@ -289,7 +303,7 @@ const StartScreen=(function(){
     if(!tpl)return false;
     try{
       const made=tpl.make();
-      installWorkbook(made.sheets,null,null,made.colW);
+      installWorkbook(made.sheets,null,null,made);
       if(typeof setStatusMode==='function')setStatusMode(T('ssNewFromTemplate')+' — '+T(ssKey(id)));
       rememberCurrent();
       close();

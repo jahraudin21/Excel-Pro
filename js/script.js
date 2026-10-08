@@ -564,6 +564,7 @@ const FN={
  CODE:v=>toStr(v).charCodeAt(0)||0,
  MROUND:(v,m)=>{const g=num(m);if(g===0)return 0;return Math.round(num(v)/g)*g;},
  QUOTIENT:(a,b)=>{const d=num(b);if(d===0)return'#DIV/0!';return Math.trunc(num(a)/d);},
+ REPT:(s,n)=>{const k=Math.floor(num(n));return isFinite(k)&&k>0?String(s).repeat(Math.min(k,9999)):'';},
  IFS:(...a)=>{for(let i=0;i+1<a.length;i+=2)if(truthy(a[i]))return a[i+1];return'#N/A';},
  AVERAGEIF:(...a)=>{const rng=flat([a[0]]),sr=a[2]!==undefined?flat([a[2]]):rng;const f=[];
   rng.forEach((v,i)=>{if(matchCrit(v,typeof a[1]==='string'?a[1]:toStr(a[1])))f.push(sr[i]);});
