@@ -1,0 +1,34 @@
+/* Renders the Sales Dashboard template in the real app and captures it, so
+   the layout can be inspected instead of merely asserted.
+ * Usage:  npx electron _shot_dashboard.mjs  [outPrefix]
+ *
+ * Stages the markup into an ASCII temp folder first (the repo path contains
+ * non-ASCII characters, which Electron's file:// loader refuses), applies the
+ * dashboard template at runtime, then captures: the whole window, the grid
+ * area from the top, and the grid scrolled to the source table. It also
+ * reports structural diagnostics (canvas count, merged spans, KPI text).
+ */
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+
+const out = path.resolve(process.argv[2] || '_dash');
+const stage = path.join(os.tmpdir(), 'excelpro_dash_shot');
+fs.mkdirSync(stage, { recursive: true });
+fs.cpSync('index.html', path.join(stage, 'index.html'));
+fs.cpSync('css', path.join(stage, 'css'), { recursive: true });
+fs.cpSync('js', path.join(stage, 'js'), { recursive: true });
+const pageUrl = 'file://' + path.join(stage, 'index.html');
+
+const ELECTRON = path.join(__dirname, 'node_modules', 'electron', 'dist', 'electron.exe');
+
+const run = (args, extraEnv) => new Promise((resolve, reject) => {
+  const p = spawn(ELECTRON, args, { stdio: 'inherit', env: { ...process.env, ...extraEnv } });
+  p.on('close', code => code === 0 ? resolve() : reject(new Error('electron exited ' + code)));
+});
+
+run(['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage',
+     '--allow-file-access-from-files',
+     '--new-window', pageUrl,
+     `--out=${out}`]).catch(err => { console.error(err); process.exit(1); });

@@ -8,22 +8,39 @@
  * area from the top, and the grid scrolled to the source table. It also
  * reports structural diagnostics (canvas count, merged spans, KPI text).
  */
-import { app, BrowserWindow } from 'electron';
-import { pathToFileURL } from 'url';
+import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
 
-const out = path.resolve(process.argv[2] || '_dash');
+// ES module scope: __dirname is undefined, so resolve the repo root from the
+// module's own URL. The staged files and the electron binary live relative to
+// the repo root, so everything is computed from import.meta.url.
+const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+
+const out = path.resolve(repoRoot, process.argv[2] || '_dash');
 const stage = path.join(os.tmpdir(), 'excelpro_dash_shot');
 fs.mkdirSync(stage, { recursive: true });
 fs.cpSync('index.html', path.join(stage, 'index.html'));
 fs.cpSync('css', path.join(stage, 'css'), { recursive: true });
 fs.cpSync('js', path.join(stage, 'js'), { recursive: true });
-const pageUrl = pathToFileURL(path.join(stage, 'index.html')).href;
-app.disableHardwareAcceleration();
+const pageUrl = 'file://' + path.join(stage, 'index.html');
 
-const gridRect = async win => win.webContents.executeJavaScript(`(() => {
+const ELECTRON = path.join(repoRoot, 'node_modules', 'electron', 'dist', 'electron.exe');
+
+const run = (args, extraEnv) => new Promise((resolve, reject) => {
+  const p = spawn(ELECTRON, args, { stdio: 'inherit', env: { ...process.env, ...extraEnv } });
+  p.on('close', code => code === 0 ? resolve() : reject(new Error('electron exited ' + code)));
+});
+
+/* The electron.exe we spawn is a bare app. After it opens, re-enter the same
+ * process to drive the app: take overlays off, apply the dashboard template,
+ * and capture three screenshots. Report diagnostics so we can iterate on
+ * layout defects. */
+import { app, BrowserWindow } from 'electron';
+
+app.disableHardwareAcceleration();
+const gridRect = async (win) => win.webContents.executeJavaScript(`(() => {
   const w = document.getElementById('gridwrap');
   if (!w) return null;
   const b = w.getBoundingClientRect();

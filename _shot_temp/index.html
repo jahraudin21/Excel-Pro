@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini Excel — Spreadsheet</title>
+<link rel="stylesheet" href="css/styles.css">
+<!-- Google Sign-In: paste an OAuth 2.0 Web client ID into content below (see GOOGLE_SIGNIN.md).
+     Leave content empty to keep the "Sign in with Google" option hidden. -->
+<meta name="google-client-id" content="">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[Mini Excel] Service Worker registered:', reg.scope))
+      .catch(err => console.warn('[Mini Excel] Service Worker registration failed:', err));
+  });
+}
+</script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<!-- Clipboard, font, alignment and number icons: Office draws these as 16px line
+     art, so they are real vector paths rather than glyphs. -->
+<symbol id="i-paste" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="9" height="12" rx="1.2"/><path d="M6 2.5V2a.9.9 0 0 1 .9-.9h2.2A.9.9 0 0 1 10 2v.5"/><path d="M6 6.5h4M6 9.2h4M6 11.9h2.6"/></symbol>
+<symbol id="i-cut" viewBox="0 0 16 16"><circle cx="4.2" cy="12" r="1.7"/><circle cx="11.8" cy="12" r="1.7"/><path d="M5.3 10.7 12.2 2.6M10.7 10.7 3.8 2.6"/></symbol>
+<symbol id="i-copy" viewBox="0 0 16 16"><rect x="2.4" y="1.4" width="8" height="9.6" rx="1"/><path d="M5.6 14.6h6.8a1.2 1.2 0 0 0 1.2-1.2V6"/></symbol>
+<symbol id="i-paint" viewBox="0 0 16 16"><path d="M10.9 1.6 14.4 5 7 12.4l-3.6.7.7-3.6z"/><path d="M2.6 13.6h3.2"/></symbol>
+<symbol id="i-grow" viewBox="0 0 16 16"><path d="M1.8 12.2 4.4 4l2.6 8.2M2.7 9.8h3.4"/><path d="M12.4 10.2V4.4M10.4 6.4l2-2 2 2"/></symbol>
+<symbol id="i-shrink" viewBox="0 0 16 16"><path d="M1.8 12.2 4.4 4l2.6 8.2M2.7 9.8h3.4"/><path d="M12.4 4.4v5.8M10.4 8.2l2 2 2-2"/></symbol>
+<symbol id="i-bold" viewBox="0 0 16 16"><path d="M4.4 2.4h3.9a2.5 2.5 0 0 1 0 5H4.4zM4.4 7.4h4.5a2.7 2.7 0 0 1 0 5.4H4.4z"/></symbol>
+<symbol id="i-italic" viewBox="0 0 16 16"><path d="M10.6 2.4H6.9M9.1 13.6H5.4M9.6 2.4 6.4 13.6"/></symbol>
+<symbol id="i-underline" viewBox="0 0 16 16"><path d="M4.6 2.2v5.7a3.4 3.4 0 0 0 6.8 0V2.2"/><path d="M3.4 13.6h9.2"/></symbol>
+<symbol id="i-strike" viewBox="0 0 16 16"><path d="M4.4 6.2a2.6 2.6 0 0 1 2.5-1.7h1.4M11.6 9.6a2.6 2.6 0 0 1-2.5 1.7H7.6"/><path d="M2.4 8h11.2"/></symbol>
+<symbol id="i-border" viewBox="0 0 16 16"><rect x="1.7" y="1.7" width="12.6" height="12.6" rx="1" stroke-dasharray="2 1.7"/><rect x="4.5" y="4.5" width="7" height="7" rx=".7"/></symbol>
+    <!-- Formula Auditing: Evaluate, Error Check, Watch Window -->
+    <symbol id="i-eval" viewBox="0 0 16 16"><path d="M2.5 4h5M2.5 8h3M2.5 12h4" stroke-linecap="round"/><path d="M9 3.5l3.5 4.5L9 12.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-errchk" viewBox="0 0 16 16"><path d="M8 2.2l6 10.6H2z" stroke-linejoin="round"/><path d="M8 6v3.4M8 11.1v.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-watch" viewBox="0 0 16 16"><rect x="1.8" y="3" width="12.4" height="10" rx="1.4"/><path d="M1.8 6.2h12.4" stroke-linecap="round"/><circle cx="8" cy="9.6" r="2.1"/></symbol>
+    <!-- Dialog launcher: the small arrow into a corner, matching Excel's. -->
+    <symbol id="i-launcher" viewBox="0 0 16 16"><path d="M6 3h7v7" fill="none"/><path d="M13 3L6.5 9.5" fill="none"/><path d="M9.5 13H3V6.5" fill="none"/></symbol>
+<symbol id="i-wrap" viewBox="0 0 16 16"><path d="M2 3.6h12M2 6.6h8.4M2 9.6h6.4M2 12.6h9.4"/><path d="M10.4 8.2v3.4M8.6 10l1.8 1.8 1.8-1.8"/></symbol>
+<symbol id="i-merge" viewBox="0 0 16 16"><rect x="1.7" y="3" width="5" height="10" rx=".8"/><rect x="9.3" y="3" width="5" height="10" rx=".8"/><path d="M8 1.8v12.4" stroke-dasharray="1.5 1.5"/></symbol>
+<symbol id="i-percent" viewBox="0 0 16 16"><circle cx="4.7" cy="4.7" r="1.9"/><circle cx="11.3" cy="11.3" r="1.9"/><path d="M12.8 3.2 3.2 12.8"/></symbol>
+<symbol id="i-comma" viewBox="0 0 16 16"><path d="M7.4 2.8h3.6v3.9c0 2.5-1.4 4.4-3.1 5.6L6.8 11c1.3-1 2.1-2.4 2.1-4.1H7.4z"/></symbol>
+<symbol id="i-accounting" viewBox="0 0 16 16"><rect x="1.4" y="4.4" width="13.2" height="7.2" rx="1"/><circle cx="8" cy="8" r="1.9"/><path d="M8 6.1v-.9M8 10.9v.9"/></symbol>
+<symbol id="i-dec-inc" viewBox="0 0 16 16"><circle cx="3.4" cy="12.4" r=".85" fill="currentColor" stroke="none"/><circle cx="7.2" cy="12.4" r="1.7"/><circle cx="11.2" cy="12.4" r="1.7"/><path d="M9.4 4.2h4.8M12.3 2.5l1.9 1.7-1.9 1.7"/></symbol>
+<symbol id="i-dec-dec" viewBox="0 0 16 16"><circle cx="3.4" cy="12.4" r=".85" fill="currentColor" stroke="none"/><circle cx="7.2" cy="12.4" r="1.7"/><circle cx="11.2" cy="12.4" r="1.7"/><path d="M14.2 4.2H9.4M11.3 2.5 9.4 4.2l1.9 1.7"/></symbol>
+<symbol id="i-styles" viewBox="0 0 16 16"><rect x="2" y="2" width="8.6" height="11" rx="1"/><path d="M4 5h4.6M4 7.4h4.6M4 9.8h3"/><path d="M11.4 9.4l3 3-1.7 1.7-3-3z"/></symbol>
+<symbol id="i-rules" viewBox="0 0 16 16"><path d="M2 3.4h12M2 6.6h8.6M2 9.8h12M2 13h6"/><path d="M11.4 7.4h3.2l-1.2 1.7v2.3l-.8.5V9.1z"/></symbol>
+<symbol id="i-table" viewBox="0 0 16 16"><rect x="1.8" y="2.4" width="12.4" height="11.2" rx="1"/><path d="M1.8 5.8h12.4M1.8 9.2h12.4M6 5.8v7.8M10 5.8v7.8"/></symbol>
+<symbol id="i-insert-row" viewBox="0 0 16 16"><rect x="1.8" y="1.8" width="12.4" height="12.4" rx="1"/><path d="M1.8 8h12.4M8 1.8v4.4M6.3 4l1.7-1.8L9.7 4"/></symbol>
+<symbol id="i-insert-col" viewBox="0 0 16 16"><rect x="1.8" y="1.8" width="12.4" height="12.4" rx="1"/><path d="M8 1.8v12.4M8 8H3.6M4.6 6.3 2.8 8l1.8 1.7"/></symbol>
+<symbol id="i-delete" viewBox="0 0 16 16"><rect x="1.8" y="1.8" width="12.4" height="12.4" rx="1"/><path d="M5.4 5.4l5.2 5.2M10.6 5.4l-5.2 5.2"/></symbol>
+<symbol id="i-format" viewBox="0 0 16 16"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1"/><path d="M1.6 6.2h12.8M6 2.6v10.8"/><path d="M13 1.4h2.2v2.2" fill="none"/></symbol>
+<symbol id="i-autosum" viewBox="0 0 16 16"><path d="M3.2 2.8h9.6M8 2.8 4 8l4 5.2M8 8l4 5.2"/></symbol>
+<symbol id="i-fill" viewBox="0 0 16 16"><path d="M8 1.8v7.4M5.4 6.8 8 9.4l2.6-2.6"/><path d="M2.6 12.4h10.8"/></symbol>
+<symbol id="i-clear" viewBox="0 0 16 16"><path d="M7.4 12.4h6.4"/><path d="M10.6 2.4 3.4 9.6l2.6 2.6 7.2-7.2z"/><path d="M5.6 7.4l2.6 2.6"/></symbol>
+<symbol id="i-sort" viewBox="0 0 16 16"><path d="M3.4 12.6V3.4M1.4 5.4l2-2 2 2"/><path d="M12.6 3.4v9.2M10.6 10.6l2 2 2-2"/></symbol>
+<symbol id="i-find" viewBox="0 0 16 16"><circle cx="6.9" cy="6.9" r="4.2"/><path d="M10 10l3.6 3.6"/></symbol>
+<!-- Insert and Draw. -->
+<symbol id="i-pivot" viewBox="0 0 16 16"><path d="M2 13.6V2.4M2 13.6h12"/><rect x="4.2" y="9.4" width="2.4" height="4.2"/><rect x="8" y="6.6" width="2.4" height="7"/><rect x="11.8" y="3.8" width="2.4" height="9.8"/></symbol>
+<symbol id="i-recommend" viewBox="0 0 16 16"><path d="M8 1.6 9.5 5.6 13.6 6 9.4 8.8l.9 4.1L8 10.8l-3.3 2.1.9-4.1L2.4 6l4.1-.4z"/></symbol>
+<symbol id="i-shapes" viewBox="0 0 16 16"><rect x="1.8" y="1.8" width="6" height="6" rx=".6"/><circle cx="11" cy="11" r="3.2"/><path d="M9 1.8h5.2V7"/></symbol>
+<symbol id="i-smartart" viewBox="0 0 16 16"><rect x="5.4" y="1.6" width="5.2" height="3" rx=".6"/><rect x="1.4" y="11" width="4.6" height="3" rx=".6"/><rect x="10" y="11" width="4.6" height="3" rx=".6"/><path d="M8 4.6v3M3.7 11V7.6h8.6V11"/></symbol>
+<symbol id="i-screenshot" viewBox="0 0 16 16"><rect x="1.4" y="3.6" width="13.2" height="9.4" rx="1.2"/><circle cx="8" cy="8.2" r="2.6"/><path d="M5.6 3.6 6.4 2h3.2l.8 1.6"/></symbol>
+<symbol id="i-addin" viewBox="0 0 16 16"><rect x="1.4" y="1.4" width="5.6" height="5.6" rx="1"/><rect x="9" y="1.4" width="5.6" height="5.6" rx="1"/><rect x="1.4" y="9" width="5.6" height="5.6" rx="1"/><path d="M9 11.8h5.6M11.8 9v5.6"/></symbol>
+<symbol id="i-chart" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><path d="M4.2 11.4V8M6.6 11.4V5.6M9 11.4V9.4M11.4 11.4V6.8"/></symbol>
+    <!-- Insert ▸ Charts: one icon per chart family, so the group reads like the
+         reference instead of repeating a single generic chart glyph. -->
+<symbol id="i-chart-col" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><path d="M4.4 11.6V7.2M7.2 11.6V4.6M10 11.6V8.6M12.8 11.6V6"/></symbol>
+<symbol id="i-chart-line" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><path d="M3.4 10.6 6 7l2.4 2.2L12 5"/></symbol>
+<symbol id="i-chart-pie" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><circle cx="8" cy="8.6" r="3.4"/><path d="M8 5.2v3.4l3 1.6"/></symbol>
+<symbol id="i-chart-bar" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><path d="M3.6 4.6h8.8M3.6 8h8.8M3.6 11.4h8.8"/></symbol>
+<symbol id="i-chart-area" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><path d="M3.4 12V8.6L6 5.6l2.4 3 3.2-3.6V12z"/></symbol>
+<symbol id="i-chart-scatter" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><circle cx="4.6" cy="10.6" r="1"/><circle cx="7.4" cy="6.6" r="1"/><circle cx="10.2" cy="9" r="1"/><circle cx="12.2" cy="5.4" r="1"/></symbol>
+    <!-- Insert ▸ Tours / Sparklines / Filters / Symbols additions -->
+<symbol id="i-maps" viewBox="0 0 16 16"><circle cx="6.6" cy="6.6" r="4.6"/><path d="M2 6.6h9.2M6.6 2c1.8 1.8 1.8 7.2 0 9.2-1.8-2-1.8-7.4 0-9.2"/><rect x="8.4" y="9" width="6" height="4.6" rx="1"/><circle cx="11.4" cy="11.3" r="1.3"/></symbol>
+<symbol id="i-slicer" viewBox="0 0 16 16"><rect x="1.6" y="2.4" width="5.4" height="11.2" rx="1"/><path d="M1.6 6h5.4M1.6 9.6h5.4M4.3 4.2l1 1.4M4.3 11.4l1 1.4"/><rect x="9" y="5.4" width="5.4" height="5.4" rx="1"/><path d="M9 8.1h5.4M11.7 5.4v5.4"/></symbol>
+<symbol id="i-timeline" viewBox="0 0 16 16"><rect x="1.6" y="5" width="12.8" height="6" rx="1"/><path d="M4 8h8M4.4 6.6v2.8M7.6 6.6v2.8M10.8 6.6v2.8M13 6.6v2.8"/></symbol>
+<symbol id="i-equation" viewBox="0 0 16 16"><path d="M5.4 3.2h4.4M7.6 3.2v9.6M5.4 12.8h4.4"/><path d="M12.4 3.2c-1.5 0-2.2 1.3-2.2 2.6v4.4c0 1.3-.7 2.6-2.2 2.6"/></symbol>
+<symbol id="i-icons" viewBox="0 0 16 16"><circle cx="5" cy="5" r="2.6"/><path d="M10.4 2.4h3.2v3.2"/><rect x="9.4" y="9.4" width="4.2" height="4.2" rx=".8"/><path d="M1.6 13.4h4"/></symbol>
+<symbol id="i-3dmodel" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5z"/><path d="M2 5l6 3.2L14 5M8 8.2v6"/></symbol>
+<symbol id="i-spark-line" viewBox="0 0 16 16"><path d="M2 12.4V3.6M2 12.4h12M4 10.2 6.4 5.6l2.4 2.6L11.6 4"/></symbol>
+<symbol id="i-spark-col" viewBox="0 0 16 16"><path d="M2 12.4V3.6M2 12.4h12M4.4 10.4V7.6M7 10.4V5.2M9.6 10.4V8.4M12.2 10.4V6.4"/></symbol>
+<symbol id="i-spark-win" viewBox="0 0 16 16"><path d="M2 12.4V3.6M2 12.4h12M4 4v6.4M7 4v6.4M10 10.4V4"/></symbol>
+<symbol id="i-sparkline" viewBox="0 0 16 16"><rect x="1.6" y="2" width="12.8" height="12" rx="1"/><path d="M3.4 10.4 6 6.6l2.2 2.8 2-4.4 2.4 3.6"/></symbol>
+<symbol id="i-link" viewBox="0 0 16 16"><path d="M6.6 9.4a2.8 2.8 0 0 0 4 0l2.4-2.4a2.8 2.8 0 0 0-4-4l-1 1"/><path d="M9.4 6.6a2.8 2.8 0 0 0-4 0L3 9a2.8 2.8 0 0 0 4 4l1-1"/></symbol>
+<symbol id="i-symbol" viewBox="0 0 16 16"><path d="M11.6 2.2A3.2 3.2 0 0 0 8 5.4c0 2 1.3 2.9 1.3 4.4a1.9 1.9 0 0 1-1.9 1.9 2 2 0 0 1-2-2"/><path d="M3 12.4h10"/></symbol>
+<symbol id="i-note" viewBox="0 0 16 16"><path d="M14.4 8.6c0 2.7-2.2 4.9-4.9 4.9H6.2L2.4 15.4V4.2c0-1.4 1.1-2.5 2.5-2.5h4.6c2.7 0 4.9 2.2 4.9 4.9z"/></symbol>
+<symbol id="i-filter" viewBox="0 0 16 16"><path d="M1.6 2.4h12.8l-5 5.8v5.4l-2.8-1.8V8.2z"/></symbol>
+<symbol id="i-newsheet" viewBox="0 0 16 16"><path d="M3.4 1.6h6L13 5.2v9.2H3.4z"/><path d="M9.2 1.6v3.8H13"/><path d="M8 7.4v4.2M5.9 9.5h4.2"/></symbol>
+<symbol id="i-pen" viewBox="0 0 16 16"><path d="M11.2 1.8 14.2 4.8 6.4 12.6l-3.6.8.8-3.6z"/><path d="M9.6 3.4 12.6 6.4"/></symbol>
+<symbol id="i-cursor" viewBox="0 0 16 16"><path d="M3.4 1.8 12.6 8 8.6 9.2 6.8 13z"/></symbol>
+<symbol id="i-eraser" viewBox="0 0 16 16"><path d="M2.4 12.6h11.2"/><path d="M11.4 2.6 5 9l3 3 6.4-6.4z"/><path d="M7.2 7.8 10.2 4.8"/></symbol>
+<symbol id="i-rect" viewBox="0 0 16 16"><rect x="2" y="3.4" width="12" height="9.2" rx=".8"/></symbol>
+<symbol id="i-oval" viewBox="0 0 16 16"><ellipse cx="8" cy="8" rx="6" ry="4.6"/></symbol>
+<symbol id="i-line" viewBox="0 0 16 16"><path d="M2.6 13.4 13.4 2.6"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 16 16"><path d="M2 8h11.2M9.2 4.2 13.4 8l-4.2 3.8"/></symbol>
+<symbol id="i-triangle" viewBox="0 0 16 16"><path d="M8 2.4 14.4 13H1.6z"/></symbol>
+<symbol id="i-textbox" viewBox="0 0 16 16"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1"/><path d="M5.6 6h4.8M8 6v5.2"/></symbol>
+<symbol id="i-picture" viewBox="0 0 16 16"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1"/><circle cx="5.6" cy="6.4" r="1.4"/><path d="M2.2 11.6 6 8.4l2.6 2.4 2.4-2.2 2.8 2.6"/></symbol>
+<!-- Page Layout and Formulas. -->
+<symbol id="i-theme" viewBox="0 0 16 16"><path d="M8 1.6a6.4 6.4 0 0 0 0 12.8c1 0 1.6-.7 1.6-1.5 0-.9-.7-1.4-.7-2.2 0-.7.6-1.3 1.4-1.3h1.3a2.8 2.8 0 0 0 2.8-2.8A5 5 0 0 0 8 1.6z"/><circle cx="5.2" cy="6" r=".9" fill="currentColor" stroke="none"/><circle cx="8" cy="4.4" r=".9" fill="currentColor" stroke="none"/><circle cx="10.9" cy="6" r=".9" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-colors" viewBox="0 0 16 16"><path d="M8 13.4A5.4 5.4 0 1 1 13.4 8c0 1.4-1 2-2 2h-1.2a1.6 1.6 0 0 0-1.2 2.6c.2.5 0 1.4-1 1.4z"/><path d="M8 13.4c1.8-2.6 1.4-5.6-1.2-7.2"/></symbol>
+<symbol id="i-fonts" viewBox="0 0 16 16"><path d="M2.4 13.2 6 2.8h1.2l3.6 10.4M3.9 9.6h5.4"/><path d="M10.6 13.2 12.4 7.4M14.2 13.2 12.4 7.4"/></symbol>
+<symbol id="i-effects" viewBox="0 0 16 16"><path d="M7 1.6 8.3 4.9 11.6 6.2 8.3 7.5 7 10.8 5.7 7.5 2.4 6.2 5.7 4.9z"/><path d="M12 9.6l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4L10 11.6l1.4-.6z"/></symbol>
+<symbol id="i-margins" viewBox="0 0 16 16"><rect x="2.2" y="1.6" width="11.6" height="12.8" rx="1"/><path d="M4.8 1.6v12.8M11.2 1.6v12.8" stroke-dasharray="1.6 1.6"/></symbol>
+<symbol id="i-orientation" viewBox="0 0 16 16"><rect x="4.6" y="1.6" width="7.8" height="12.8" rx="1"/><path d="M2 4.4A3 3 0 0 1 4.6 2M2 11.6A3 3 0 0 0 4.6 14"/></symbol>
+<symbol id="i-size" viewBox="0 0 16 16"><rect x="1.8" y="2.4" width="12.4" height="11.2" rx="1"/><path d="M4.4 5.4h7.2M4.4 8h7.2M4.4 10.6h4.4"/></symbol>
+<symbol id="i-printarea" viewBox="0 0 16 16"><rect x="1.8" y="2" width="12.4" height="12" rx="1" stroke-dasharray="2 1.6"/><rect x="5" y="5" width="6" height="6" rx=".6"/></symbol>
+<symbol id="i-background" viewBox="0 0 16 16"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1"/><path d="M2.2 11.6 6 8.4l2.6 2.4 2.4-2.2 2.8 2.6"/><circle cx="5.6" cy="6" r="1.3"/></symbol>
+<symbol id="i-printtitles" viewBox="0 0 16 16"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1"/><path d="M1.6 6h12.8" stroke-width="1.6"/><path d="M1.6 10h12.8M1.6 13.4H6"/></symbol>
+<symbol id="i-pageview" viewBox="0 0 16 16"><rect x="3.4" y="1.6" width="9.2" height="12.8" rx="1"/><path d="M5.6 4.4h4.8M5.6 7h4.8M5.6 9.6h4.8M5.6 12.2h3"/></symbol>
+<symbol id="i-print" viewBox="0 0 16 16"><path d="M4.4 6V1.8h7.2V6"/><rect x="1.6" y="6" width="12.8" height="5" rx="1"/><path d="M4.4 9.4h7.2v4.8H4.4z"/></symbol>
+<symbol id="i-breaks" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1"/><path d="M1.6 8h12.8" stroke-dasharray="2 1.6"/><path d="M4.6 5.2v5.6M11.4 5.2v5.6"/></symbol>
+<symbol id="i-fx" viewBox="0 0 16 16"><path d="M2.4 5.2c.4-1.2 1.4-1.8 2.5-1.8 1.2 0 2 .7 2 1.8 0 2-3.4 2.4-3.4 5.6h3.6"/><path d="M11.4 3.4H9.2L7.6 8.6h2.2l-1.4 4h3.4"/></symbol>
+<symbol id="i-library" viewBox="0 0 16 16"><rect x="2.2" y="1.6" width="3" height="12.8" rx=".6"/><rect x="6.5" y="1.6" width="3" height="12.8" rx=".6"/><path d="M11.4 2.6 14 3.6l-2.2 10-2.6-1z"/></symbol>
+<symbol id="i-recent" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.4V8l2.6 1.6"/></symbol>
+<symbol id="i-all" viewBox="0 0 16 16"><rect x="1.6" y="2.4" width="12.8" height="11.2" rx="1"/><path d="M4.6 6h6.8M4.6 8.8h6.8M4.6 11.6h4"/></symbol>
+<symbol id="i-explain" viewBox="0 0 16 16"><path d="M6 5.6a2 2 0 0 1 3.9.5c0 1.3-1.9 1.9-1.9 3.1"/><circle cx="8" cy="11.8" r=".9" fill="currentColor" stroke="none"/><path d="M13.4 2.6a5.4 5.4 0 0 1 0 10.8"/></symbol>
+<symbol id="i-calc" viewBox="0 0 16 16"><path d="M13.4 8a5.4 5.4 0 1 1-1.6-3.8"/><path d="M13.8 1.8v2.8H11"/></symbol>
+<symbol id="i-gear" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.6v1.8M8 12.6v1.8M1.6 8h1.8M12.6 8h1.8M3.5 3.5l1.3 1.3M11.2 11.2l1.3 1.3M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3"/></symbol>
+<symbol id="i-names" viewBox="0 0 16 16"><path d="M8.4 2.2H13a1 1 0 0 1 1 1v4.6L6.4 15.4 1 10z"/><circle cx="10.4" cy="5.6" r="1.1"/></symbol>
+<symbol id="i-goto" viewBox="0 0 16 16"><circle cx="11.6" cy="4.4" r="2.2"/><path d="M2 8h5.4M5.2 5.8 7.4 8l-2.2 2.2"/></symbol>
+<!-- Data, Review, View, Help, and the two side rails. -->
+<symbol id="i-getdata" viewBox="0 0 16 16"><path d="M8 1.6v7.2M5.4 6.4 8 9l2.6-2.6"/><path d="M2.4 11.4v2.4h11.2v-2.4"/></symbol>
+<symbol id="i-sortaz" viewBox="0 0 16 16"><path d="M2 2.6h12M2 6.2h8.6M2 9.8h5.6"/><path d="M11.6 13.4V8M9.6 10.4l2-2 2 2"/></symbol>
+<symbol id="i-sortza" viewBox="0 0 16 16"><path d="M2 9.8h5.6M2 13.4h12M2 6.2h8.6"/><path d="M11.6 2.6v5.4M9.6 5.6l2 2 2-2"/></symbol>
+<symbol id="i-filterclear" viewBox="0 0 16 16"><path d="M1.6 2.4h12.8l-4.4 5.2v4.4l-2.2-1.4V7.6z"/><path d="M11.6 11.2l3 3M14.6 11.2l-3 3"/></symbol>
+<symbol id="i-dedupe" viewBox="0 0 16 16"><rect x="1.4" y="1.6" width="6" height="8" rx=".8"/><rect x="8.6" y="6.4" width="6" height="8" rx=".8"/><path d="M4.4 4.2h3.2M4.4 6.4h2"/></symbol>
+<symbol id="i-texttocol" viewBox="0 0 16 16"><rect x="1.6" y="3.4" width="12.8" height="9.2" rx="1"/><path d="M6 3.4v9.2M10 3.4v9.2M2.4 6h11.2" stroke-dasharray="1.5 1.5"/></symbol>
+<symbol id="i-extractnum" viewBox="0 0 16 16"><path d="M4.6 3.4 3 8l3.2 1.4M12.2 3.4 13.4 8l-3.2 1.4M3.2 12.4h9.6"/></symbol>
+<symbol id="i-extracttext" viewBox="0 0 16 16"><path d="M3 13 7.2 2.6h1.2L12.6 13M4.4 9.4h6.8"/></symbol>
+<symbol id="i-subtotal" viewBox="0 0 16 16"><path d="M2.4 3.4h2.2M2.4 8h2.2M2.4 12.6h2.2"/><path d="M6.6 3.4h7M6.6 8h7M6.6 12.6h7"/></symbol>
+<symbol id="i-count" viewBox="0 0 16 16"><path d="M6.6 3.6 5 6 2.8 5.4M2.6 11.4 4 8.4l1.6 3"/><path d="M9 3.4v9.2M12.2 3.4h2.2M12.2 8h1.8M12.2 12.6h2.2"/></symbol>
+<symbol id="i-spell" viewBox="0 0 16 16"><path d="M1.4 12.4 4 4l2.6 8.4M2.3 9.6h3.4"/><path d="M7.4 11.6 9.4 4l2 7.6M8.1 9.2h2.6"/><path d="M13.4 3.4 12.2 6l1.2.4-.8 5.6"/></symbol>
+<symbol id="i-a11y" viewBox="0 0 16 16"><circle cx="8" cy="3.4" r="1.7"/><path d="M8 5.4v4.2M4.6 7.2h6.8M8 9.6l-2 4.4M8 9.6l2 4.4"/></symbol>
+<symbol id="i-smartlookup" viewBox="0 0 16 16"><circle cx="6.6" cy="6.6" r="3.8"/><path d="M9.4 9.4 13 13"/><path d="M12.6 1.6l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></symbol>
+<symbol id="i-lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7.4" rx="1.2"/><path d="M5.4 7V5a2.6 2.6 0 0 1 5.2 0v2"/></symbol>
+<symbol id="i-globe" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c1.8 2 2.6 4 2.6 6.2S9.8 12.2 8 14.2C6.2 12.2 5.4 10.2 5.4 8S6.2 3.8 8 1.8z"/></symbol>
+<symbol id="i-help" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M6.2 6.2a1.9 1.9 0 0 1 3.7.6c0 1.3-1.9 1.6-1.9 3"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-feedback" viewBox="0 0 16 16"><path d="M14.4 8.6c0 2.7-2.2 4.9-4.9 4.9H6.2L2.4 15.4V4.2c0-1.4 1.1-2.5 2.5-2.5h4.6c2.7 0 4.9 2.2 4.9 4.9z"/><path d="M6 6.6h4M6 9.4h2.6"/></symbol>
+<symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 7.4v4"/><circle cx="8" cy="4.9" r=".9" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-viewnormal" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1"/><path d="M1.6 5.4h12.8M5.4 5.4v9M5.4 8.4h9M5.4 11.4h9"/></symbol>
+<symbol id="i-viewpage" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1"/><rect x="5" y="3.4" width="6" height="9" rx=".6"/><path d="M6.6 6h2.8M6.6 8.4h2.8"/></symbol>
+<symbol id="i-viewbreak" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1"/><path d="M1.6 6.4h12.8M1.6 9.6h12.8" stroke-dasharray="2 1.6"/><path d="M6.4 1.6v12.8" stroke-dasharray="2 1.6"/></symbol>
+<symbol id="i-gridlines" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1"/><path d="M1.6 5.8h12.8M1.6 10.2h12.8M5.8 1.6v12.8M10.2 1.6v12.8"/></symbol>
+<symbol id="i-headings" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1"/><path d="M1.6 5.8h12.8M5.8 1.6v12.8"/></symbol>
+<symbol id="i-zoomin" viewBox="0 0 16 16"><circle cx="6.9" cy="6.9" r="4.2"/><path d="M10 10l3.6 3.6M6.9 4.9v4M4.9 6.9h4"/></symbol>
+<symbol id="i-zoomout" viewBox="0 0 16 16"><circle cx="6.9" cy="6.9" r="4.2"/><path d="M10 10l3.6 3.6M4.9 6.9h4"/></symbol>
+<symbol id="i-freeze" viewBox="0 0 16 16"><path d="M8 1.6v12.8M2.4 4.8l11.2 6.4M13.6 4.8 2.4 11.2"/><path d="M6.2 2.8 8 4.6l1.8-1.8M6.2 13.2 8 11.4l1.8 1.8"/></symbol>
+<!-- Side rails: the backstage and start-screen menus. -->
+<symbol id="i-home" viewBox="0 0 16 16"><path d="M2 7.2 8 2l6 5.2V14H2z"/><path d="M6.4 14V9.4h3.2V14"/></symbol>
+<symbol id="i-new" viewBox="0 0 16 16"><rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1"/><path d="M8 5.2v5.6M5.2 8h5.6"/></symbol>
+<symbol id="i-open" viewBox="0 0 16 16"><path d="M1.6 12.6V4.4a1 1 0 0 1 1-1h3.6l1.6 1.8h4.6a1 1 0 0 1 1 1v6.4z"/><path d="M1.6 12.6 3.4 7.4h12.4l-1.8 5.2z"/></symbol>
+<symbol id="i-save" viewBox="0 0 16 16"><path d="M2 2.6h9.4L14 5.2v8.2H2z"/><path d="M4.6 2.6v4h6.2v-4M4.6 13.4V9.6h6.8v3.8"/></symbol>
+<symbol id="i-download" viewBox="0 0 16 16"><path d="M8 2v7.6M5.4 7 8 9.6 10.6 7"/><path d="M2.6 11.4v2h10.8v-2"/></symbol>
+<symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.2V8l2.6 1.6"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 16 16"><path d="M4.4 12.6a3 3 0 0 1-.4-6A4 4 0 0 1 11.6 6a2.9 2.9 0 0 1-.4 6.6z"/></symbol>
+<symbol id="i-user" viewBox="0 0 16 16"><circle cx="8" cy="5" r="2.8"/><path d="M2.6 14a5.4 5.4 0 0 1 10.8 0"/></symbol>
+<symbol id="i-templates" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1"/><path d="M1.6 5.6h12.8M1.6 9.4h12.8M5.6 1.6v12.8"/></symbol>
+<symbol id="i-star" viewBox="0 0 16 16"><path d="M8 1.8 9.9 5.6l4.1.6-3 2.9.7 4.1L8 11.3l-3.7 1.9.7-4.1-3-2.9 4.1-.6z"/></symbol>
+<symbol id="i-keyboard" viewBox="0 0 16 16"><rect x="1.2" y="3.4" width="13.6" height="9.2" rx="1.2"/><path d="M4 6.2h.9M6.6 6.2h.9M9.2 6.2h.9M11.8 6.2h.9M4 8.8h.9M6.6 8.8h.9M9.2 8.8h.9M11.8 8.8h.9M5 11.2h6"/></symbol>
+<symbol id="i-email" viewBox="0 0 16 16"><rect x="1.4" y="3.2" width="13.2" height="9.6" rx="1.2"/><path d="M1.8 4 8 8.6 14.2 4"/></symbol>
+<symbol id="i-dialog" viewBox="0 0 16 16"><path d="M8 9.6V2.2h6.4v6.4z"/><path d="M6.4 9.6H1.2V14h12.8V9.6H6.4z"/></symbol>
+<symbol id="i-undo" viewBox="0 0 16 16"><path d="M6.2 3.4 2.6 7l3.6 3.6"/><path d="M2.6 7h6.6a4.2 4.2 0 0 1 0 8.4H6"/></symbol>
+<!-- Brand mark. Deliberately not Microsoft's "X": a rounded tile in this app's
+     own green, holding an ascending bar set over a baseline. It reads as
+     "spreadsheet" rather than as a spreadsheet suite, and it is legible down to
+     16px. Drawn with its own fills, so it does not use the .ic line-art rules. -->
+<symbol id="i-brand" viewBox="0 0 32 32">
+  <rect x="1.25" y="1.25" width="29.5" height="29.5" rx="7" fill="#217346"/>
+  <rect x="1.25" y="1.25" width="29.5" height="29.5" rx="7" fill="none" stroke="#1a5c38" stroke-width="1"/>
+  <path d="M7.5 22.25h17" stroke="#ffffff" stroke-width="1.75" stroke-linecap="round" opacity=".95"/>
+  <rect x="8" y="15.5" width="4" height="6.75" rx="1.1" fill="#ffffff"/>
+  <rect x="14" y="11" width="4" height="11.25" rx="1.1" fill="#ffffff" opacity=".92"/>
+  <rect x="20" y="7" width="4" height="15.25" rx="1.1" fill="#ffffff" opacity=".8"/>
+</symbol>
+<symbol id="i-redo" viewBox="0 0 16 16"><path d="M9.8 3.4 13.4 7l-3.6 3.6"/><path d="M13.4 7H6.8a4.2 4.2 0 0 0 0 8.4H10"/></symbol>
+<symbol id="i-align-top" viewBox="0 0 16 16"><path d="M1.8 2.2h12.4"/><rect x="3" y="4.4" width="10" height="2.2" rx=".6"/><rect x="3" y="8.2" width="6.4" height="2.2" rx=".6"/><rect x="3" y="12" width="8.6" height="2.2" rx=".6"/></symbol>
+<symbol id="i-align-middle" viewBox="0 0 16 16"><path d="M1.8 2.2h12.4M1.8 13.8h12.4"/><rect x="3" y="5.2" width="10" height="2.2" rx=".6"/><rect x="3" y="8.6" width="6.4" height="2.2" rx=".6"/></symbol>
+<symbol id="i-align-bottom" viewBox="0 0 16 16"><path d="M1.8 13.8h12.4"/><rect x="3" y="1.8" width="8.6" height="2.2" rx=".6"/><rect x="3" y="5.6" width="6.4" height="2.2" rx=".6"/><rect x="3" y="9.4" width="10" height="2.2" rx=".6"/></symbol>
+<symbol id="i-align-left" viewBox="0 0 16 16"><path d="M2.2 1.8v12.4"/><rect x="4.4" y="3" width="9" height="2.4" rx=".7"/><rect x="4.4" y="6.8" width="5.6" height="2.4" rx=".7"/><rect x="4.4" y="10.6" width="7.6" height="2.4" rx=".7"/></symbol>
+<symbol id="i-align-center" viewBox="0 0 16 16"><path d="M8 1.8v12.4"/><rect x="3.2" y="3" width="9.6" height="2.4" rx=".7"/><rect x="5.2" y="6.8" width="5.6" height="2.4" rx=".7"/><rect x="4.2" y="10.6" width="7.6" height="2.4" rx=".7"/></symbol>
+<symbol id="i-align-right" viewBox="0 0 16 16"><path d="M13.8 1.8v12.4"/><rect x="2.6" y="3" width="9" height="2.4" rx=".7"/><rect x="5.8" y="6.8" width="5.6" height="2.4" rx=".7"/><rect x="4" y="10.6" width="7.6" height="2.4" rx=".7"/></symbol>
+<symbol id="i-indent-dec" viewBox="0 0 16 16"><path d="M9.4 2.6 5.8 6l3.6 3.4"/><path d="M5.8 6h7.4"/><path d="M5.8 13.4h7.4"/></symbol>
+<symbol id="i-indent-inc" viewBox="0 0 16 16"><path d="M6.6 2.6 10.2 6 6.6 9.4"/><path d="M10.2 6H2.8"/><path d="M2.8 13.4h7.4"/></symbol>
+<symbol id="i-orient" viewBox="0 0 16 16"><path d="M2.6 13.4h10.8"/><path d="M4 13.4V6.6"/><path d="M4 6.6 9.6 2.4v8.4z"/></symbol>
+<symbol id="i-trace-pre" viewBox="0 0 16 16"><rect x="9.6" y="8.6" width="5" height="5" rx=".6"/><rect x="1.6" y="1.6" width="4.4" height="4.4" rx=".6"/><path d="M6 3.8h2.2a2 2 0 0 1 2 2v2.8"/><path d="M8.4 7.4l1.8 1.2-1.8 1.2"/></symbol>
+<symbol id="i-trace-dep" viewBox="0 0 16 16"><rect x="1.6" y="8.6" width="5" height="5" rx=".6"/><rect x="10" y="1.6" width="4.4" height="4.4" rx=".6"/><path d="M10 3.8H7.8a2 2 0 0 0-2 2v2.8"/><path d="M7.6 7.4 5.8 8.6l1.8 1.2"/></symbol>
+<symbol id="i-trace-clear" viewBox="0 0 16 16"><rect x="1.6" y="1.6" width="4.6" height="4.6" rx=".6"/><rect x="9.8" y="9.8" width="4.6" height="4.6" rx=".6"/><path d="M6.2 6.2 3.8 3.8M9.8 9.8l2.4 2.4"/><path d="M4.6 4.6 3.4 3.4M11.4 11.4l1.2 1.2" opacity=".5"/></symbol>
+<symbol id="i-show-formulas" viewBox="0 0 16 16"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1"/><path d="M5 6.4 3.4 8 5 9.6"/><path d="M8.2 10.4h4.4"/></symbol>
+<!--HOME-->
+</svg>
+
+<div id="app">
+<div class="titlebar">
+  <span class="appTitle brand"><svg class="brandMark" aria-hidden="true"><use href="#i-brand"></use></svg>मिनी Excel</span><span class="bookName" id="bookName">Book1</span>
+  <button class="qbtn" id="bUndo" title="Undo (Ctrl+Z)"><svg class="ic" aria-hidden="true"><use href="#i-undo"></use></svg></button>
+  <button class="qbtn" id="bRedo" title="Redo (Ctrl+Y)"><svg class="ic" aria-hidden="true"><use href="#i-redo"></use></svg></button>
+  <button class="qbtn" id="bSave" title="Save (Ctrl+S)"><svg class="ic" aria-hidden="true"><use href="#i-save"></use></svg></button>
+  <button class="qbtn" id="ssOpen" title="Start screen"><svg class="ic" aria-hidden="true"><use href="#i-home"></use></svg></button>
+  <span class="tsep"></span>
+  <button class="qbtn" id="bExport" title="Export CSV"><svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg><span data-i18n="exp"></span></button>
+  <button class="qbtn" id="bXlsx" title="All sheets as Excel (.xlsx)"><svg class="ic" aria-hidden="true"><use href="#i-table"></use></svg><span data-i18n="bXlsx"></span></button>
+  <button class="qbtn" id="bAllCsv" title="All sheets as CSV (zip)"><svg class="ic" aria-hidden="true"><use href="#i-open"></use></svg><span data-i18n="bAllCsv"></span></button>
+  <span class="tsep"></span>
+  <button class="qbtn" id="bAI" title="AI Assistant"><svg class="ic" aria-hidden="true"><use href="#i-recommend"></use></svg> AI</button>
+  <button class="qbtn userChip" id="userChip" title="Account" aria-haspopup="dialog" aria-label="Account">
+   <span class="userAvatar" id="userAvatar"><svg class="ic" aria-hidden="true"><use href="#i-user"></use></svg></span><span class="userMeta">
+    <span class="userName" id="userName" data-i18n="signIn">Sign in</span>
+    <span class="userMail" id="userMail"></span>
+   </span><span class="userChev" aria-hidden="true">▾</span>
+  </button>
+  <span class="tbFlex"></span>
+  <select id="lang" title="भाषा / Language">
+   <option value="en" selected>English</option><option value="hi">हिन्दी</option>
+   <option value="np">नेपाली</option>
+   
+  </select>
+  <input type="file" id="fileIn" accept=".csv,.txt" style="display:none">
+ </div>
+ <div class="ribbon">
+  <div class="rtabs">
+   <button class="rtfile" id="rFile" data-i18n="rFile">File</button>
+    <button class="rtab on" data-tab="home" data-i18n="rHome">Home</button>
+   <button class="rtab" data-tab="insert" data-i18n="rInsert">Insert</button>
+   <button class="rtab" data-tab="pagelayout" data-i18n="rPageLayout">Page Layout</button>
+    <button class="rtab" data-tab="formulas" data-i18n="rFormulas">Formulas</button>
+   <button class="rtab" data-tab="data" data-i18n="rData">Data</button>
+   <button class="rtab" data-tab="review" data-i18n="rReview">Review</button>
+    <button class="rtab" data-tab="view" data-i18n="rView">View</button>
+    <button class="rtab" data-tab="help" data-i18n="rHelp">Help</button>
+
+    <span class="rtell"><svg class="ic" aria-hidden="true"><use href="#i-find"></use></svg> <input id="rtTellMe" data-i18n-ph="rTellMe" placeholder="Tell me what you want to do"></span>
+  </div>
+  <div class="rbody">
+   <div class="rpage on" data-page="home">
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bPaste"><svg class="ic" aria-hidden="true"><use href="#i-paste"></use></svg>Paste<span class="rcaret"> ▾</span></button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bCut" title="Cut (Ctrl+X)"><svg class="ic" aria-hidden="true"><use href="#i-cut"></use></svg></button>
+      <button class="rbtn" id="bCopy" title="Copy (Ctrl+C)"><svg class="ic" aria-hidden="true"><use href="#i-copy"></use></svg></button>
+      <button class="rbtn" id="bFPainter" title="Format Painter"><svg class="ic" aria-hidden="true"><use href="#i-paint"></use></svg></button>
+    </div><div class="rlabel" data-i18n="gClip">Clipboard</div></div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <select class="rsel" id="fontFam" title="Font"></select>
+      <select class="rsel" id="fontSize" title="Font size"></select>
+      <button class="rbtn" id="bGrowFont" title="Grow font"><svg class="ic" aria-hidden="true"><use href="#i-grow"></use></svg></button>
+      <button class="rbtn" id="bShrinkFont" title="Shrink font"><svg class="ic" aria-hidden="true"><use href="#i-shrink"></use></svg></button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bB" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button class="rbtn" id="bI" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button class="rbtn" id="bU" title="Underline (Ctrl+U)"><u>U</u><span class="rcaret"> ▾</span></button>
+      <button class="rbtn" id="bBorder" title="Borders"><svg class="ic" aria-hidden="true"><use href="#i-border"></use></svg><span class="rcaret"> ▾</span></button>
+      <input type="color" id="colBg" value="#ffffff" title="Fill color">
+      <input type="color" id="colFont" value="#000000" title="Font color">
+    </div><div class="rlabel" data-i18n="gFont">Font</div>
+      <button class="rlauncher" id="bFmtCells" type="button" title="Format Cells (Ctrl+1)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <button class="rbtn" id="bVaTop" data-va="top" title="Top align"><svg class="ic" aria-hidden="true"><use href="#i-align-top"></use></svg></button>
+      <button class="rbtn" id="bVaMid" data-va="mid" title="Middle align"><svg class="ic" aria-hidden="true"><use href="#i-align-middle"></use></svg></button>
+      <button class="rbtn" id="bVaBot" data-va="bot" title="Bottom align"><svg class="ic" aria-hidden="true"><use href="#i-align-bottom"></use></svg></button>
+      <span class="rsep"></span>
+      <button class="rbtn" id="bWrap" title="Wrap text"><svg class="ic" aria-hidden="true"><use href="#i-wrap"></use></svg></button>
+      <button class="rbtn" id="bMerge" title="Merge &amp; Center"><svg class="ic" aria-hidden="true"><use href="#i-merge"></use></svg><span class="rcaret"> ▾</span></button>
+      <button class="rbtn" id="bOrientCell" title="Text orientation"><svg class="ic" aria-hidden="true"><use href="#i-orient"></use></svg><span class="rcaret"> ▾</span></button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bAlLeft" data-al="left" title="Align left"><svg class="ic" aria-hidden="true"><use href="#i-align-left"></use></svg></button>
+      <button class="rbtn" id="bAlCenter" data-al="center" title="Center"><svg class="ic" aria-hidden="true"><use href="#i-align-center"></use></svg></button>
+      <button class="rbtn" id="bAlRight" data-al="right" title="Align right"><svg class="ic" aria-hidden="true"><use href="#i-align-right"></use></svg></button>
+      <span class="rsep"></span>
+      <button class="rbtn" id="bIndentDec" title="Decrease indent"><svg class="ic" aria-hidden="true"><use href="#i-indent-dec"></use></svg></button>
+      <button class="rbtn" id="bIndentInc" title="Increase indent"><svg class="ic" aria-hidden="true"><use href="#i-indent-inc"></use></svg></button>
+    </div><div class="rlabel" data-i18n="gAlign">Alignment</div>
+      <button class="rlauncher" id="bFmtAlign" type="button" title="Format Cells (Alignment)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <select class="rsel wide" id="numfmt" title="Number format">
+       <option value="gen" data-i18n="nf_gen">सामान्य</option>
+       <option value="dec2" data-i18n="nf_dec2">123.45</option>
+       <option value="inr" data-i18n="nf_inr">₹ (INR)</option>
+       <option value="npr" data-i18n="nf_npr">रु (NPR)</option>
+       <option value="usd" data-i18n="nf_usd">$ (USD)</option>
+       <option value="pct" data-i18n="nf_pct">% प्रतिशत</option>
+       <option value="comma" data-i18n="nf_comma">1,234</option>
+      </select>
+    </div><div class="rrow">
+      <button class="rbtn" id="bAcct" title="Accounting number format"><svg class="ic" aria-hidden="true"><use href="#i-accounting"></use></svg><span class="rcaret"> ▾</span></button>
+      <button class="rbtn" id="bPct" title="Percent style"><svg class="ic" aria-hidden="true"><use href="#i-percent"></use></svg></button>
+      <button class="rbtn" id="bComma" title="Comma style"><svg class="ic" aria-hidden="true"><use href="#i-comma"></use></svg></button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bDecInc" title="Increase decimal"><svg class="ic" aria-hidden="true"><use href="#i-dec-inc"></use></svg></button>
+      <button class="rbtn" id="bDecDec" title="Decrease decimal"><svg class="ic" aria-hidden="true"><use href="#i-dec-dec"></use></svg></button>
+    </div><div class="rlabel" data-i18n="gNumber">Number</div>
+      <button class="rlauncher" id="bFmtNum" type="button" title="Format Cells (Number)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <button class="rbtn big" id="bStyles" title="Cell styles"><svg class="ic" aria-hidden="true"><use href="#i-styles"></use></svg>Cell Styles<span class="rcaret"> ▾</span></button>
+      <span class="rstack">
+       <button class="rbtn" id="bCond" title="Conditional formatting"><svg class="ic" aria-hidden="true"><use href="#i-rules"></use></svg>Conditional Formatting<span class="rcaret"> ▾</span></button>
+       <button class="rbtn" id="bFmtTable" title="Format as Table"><svg class="ic" aria-hidden="true"><use href="#i-table"></use></svg>Format as Table<span class="rcaret"> ▾</span></button>
+      </span>
+    </div><div class="rlabel" data-i18n="gStyles">Styles</div>
+      <button class="rlauncher" id="bFmtStyles" type="button" title="Format Cells (Styles)" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <button class="rbtn" id="bInsRow" title="Insert row"><svg class="ic" aria-hidden="true"><use href="#i-insert-row"></use></svg>Insert<span class="rcaret"> ▾</span></button>
+      <button class="rbtn" id="bDel" title="Delete row / column"><svg class="ic" aria-hidden="true"><use href="#i-delete"></use></svg>Delete<span class="rcaret"> ▾</span></button>
+      <button class="rbtn" id="bFormat" title="Format"><svg class="ic" aria-hidden="true"><use href="#i-format"></use></svg>Format<span class="rcaret"> ▾</span></button>
+    </div><div class="rlabel" data-i18n="gCells">Cells</div>
+      <button class="rlauncher" id="bFmtCellsGroup" type="button" title="Format Cells" data-i18n-t="tipFmtCells" aria-label="Format Cells"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+    <!-- Editing: AutoSum is the one large command, the rest are stacked pairs, so
+         every stack's two 22px buttons line up with the tile's icon exactly as
+         Excel draws them. -->
+    <div class="rgrp hasLauncher"><div class="rrow">
+      <button class="rbtn big" id="bAutoSum"><svg class="ic" aria-hidden="true"><use href="#i-autosum"></use></svg>AutoSum<span class="rcaret"> ▾</span></button>
+      <span class="rstack">
+       <button class="rbtn" id="bFill" title="Fill down"><svg class="ic" aria-hidden="true"><use href="#i-fill"></use></svg>Fill<span class="rcaret"> ▾</span></button>
+       <button class="rbtn" id="bClear" title="Clear contents"><svg class="ic" aria-hidden="true"><use href="#i-clear"></use></svg>Clear<span class="rcaret"> ▾</span></button>
+      </span>
+      <span class="rstack">
+       <button class="rbtn" id="bSort" title="Sort &amp; Filter"><svg class="ic" aria-hidden="true"><use href="#i-sort"></use></svg>Sort &amp; Filter<span class="rcaret"> ▾</span></button>
+       <button class="rbtn" id="bFind" title="Find &amp; Select (Ctrl+F)"><svg class="ic" aria-hidden="true"><use href="#i-find"></use></svg><span data-i18n="bFind"></span><span class="rcaret"> ▾</span></button>
+      </span>
+    </div><div class="rlabel" data-i18n="gEditing">Editing</div>
+      <button class="rlauncher" id="bFindSelectDlg" type="button" title="Find &amp; Select" data-i18n-t="tipFmtCells" aria-label="Find and Select"><svg class="ic" aria-hidden="true"><use href="#i-launcher"></use></svg></button>
+    </div>
+   </div>
+<div class="rpage" data-page="insert">
+     <!-- Tables -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bTable"><svg class="ic" aria-hidden="true"><use href="#i-table"></use></svg><span data-i18n="bTable">Table</span></button>
+      <button class="rbtn" id="bRecTbl" data-i18n-t="bRecPivot"><svg class="ic" aria-hidden="true"><use href="#i-recommend"></use></svg><span data-i18n="bRecPivot">Recommended PivotTables</span></button>
+      <button class="rbtn big" id="bPivot"><svg class="ic" aria-hidden="true"><use href="#i-pivot"></use></svg><span data-i18n="bPivot">PivotTable</span></button>
+    </div><div class="rlabel" data-i18n="gTables">Tables</div></div>
+     <!-- Illustrations -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bDTPic" data-i18n-t="bDTPic"><svg class="ic" aria-hidden="true"><use href="#i-picture"></use></svg><span data-i18n="bDTPic">Pictures</span></button>
+      <button class="rbtn big" id="bShape"><svg class="ic" aria-hidden="true"><use href="#i-shapes"></use></svg><span data-i18n="bShape">Shapes</span></button>
+     </div><div class="rrow">
+      <button class="rbtn" id="bIIcons" data-i18n-t="bIIcons"><svg class="ic" aria-hidden="true"><use href="#i-icons"></use></svg> <span data-i18n="bIIcons">Icons</span></button>
+      <button class="rbtn" id="bI3D" data-i18n-t="bI3D"><svg class="ic" aria-hidden="true"><use href="#i-3dmodel"></use></svg> <span data-i18n="bI3D">3D Models</span></button>
+      <button class="rbtn" id="bSShot"><svg class="ic" aria-hidden="true"><use href="#i-screenshot"></use></svg> <span data-i18n="bSShot">Screenshot</span></button>
+    </div><div class="rlabel" data-i18n="gIllus">Illustrations</div></div>
+     <!-- Charts: one button per family the renderer can actually draw. -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bChart"><svg class="ic" aria-hidden="true"><use href="#i-chart"></use></svg><span data-i18n="bRecChart">Recommended Charts</span></button>
+     </div><div class="rrow">
+      <button class="rbtn" id="bChartCol" data-i18n-t="bChartCol"><svg class="ic" aria-hidden="true"><use href="#i-chart-col"></use></svg></button>
+      <button class="rbtn" id="bChartLine" data-i18n-t="bChartLine"><svg class="ic" aria-hidden="true"><use href="#i-chart-line"></use></svg></button>
+      <button class="rbtn" id="bChartPie" data-i18n-t="bChartPie"><svg class="ic" aria-hidden="true"><use href="#i-chart-pie"></use></svg></button>
+      <button class="rbtn" id="bChartBar" data-i18n-t="bChartBar"><svg class="ic" aria-hidden="true"><use href="#i-chart-bar"></use></svg></button>
+      <button class="rbtn" id="bChartArea" data-i18n-t="bChartArea"><svg class="ic" aria-hidden="true"><use href="#i-chart-area"></use></svg></button>
+      <button class="rbtn" id="bChartScatter" data-i18n-t="bChartScatter"><svg class="ic" aria-hidden="true"><use href="#i-chart-scatter"></use></svg></button>
+      <button class="rbtn" id="bChartType" data-i18n-t="bChartType"><svg class="ic" aria-hidden="true"><use href="#i-chart"></use></svg></button>
+    </div><div class="rlabel" data-i18n="gCharts">Charts</div></div>
+     <!-- Tours -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bMaps" data-i18n-t="bMaps"><svg class="ic" aria-hidden="true"><use href="#i-maps"></use></svg><span data-i18n="bMaps">3D Maps</span></button>
+    </div><div class="rlabel" data-i18n="gTours">Tours</div></div>
+     <!-- Sparklines -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bSparkLine" data-i18n-t="bSparkLine"><svg class="ic" aria-hidden="true"><use href="#i-spark-line"></use></svg> <span data-i18n="bSparkLine">Line</span></button>
+      <button class="rbtn" id="bSparkCol" data-i18n-t="bSparkCol"><svg class="ic" aria-hidden="true"><use href="#i-spark-col"></use></svg> <span data-i18n="bSparkCol">Column</span></button>
+      <button class="rbtn" id="bSparkWin" data-i18n-t="bSparkWin"><svg class="ic" aria-hidden="true"><use href="#i-spark-win"></use></svg> <span data-i18n="bSparkWin">Win/Loss</span></button>
+    </div><div class="rlabel" data-i18n="gSpark">Sparklines</div></div>
+     <!-- Filters -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bSlicer" data-i18n-t="bSlicer"><svg class="ic" aria-hidden="true"><use href="#i-slicer"></use></svg> <span data-i18n="bSlicer">Slicer</span></button>
+      <button class="rbtn" id="bTimeline" data-i18n-t="bTimeline"><svg class="ic" aria-hidden="true"><use href="#i-timeline"></use></svg> <span data-i18n="bTimeline">Timeline</span></button>
+    </div><div class="rlabel" data-i18n="gFilters">Filters</div></div>
+     <!-- Links -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bILink" title="Insert hyperlink"><svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg><span data-i18n="bHyperlink">Hyperlink</span></button>
+    </div><div class="rlabel" data-i18n="gLinks">Links</div></div>
+     <!-- Text -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bDTText" data-i18n-t="bDTText"><svg class="ic" aria-hidden="true"><use href="#i-textbox"></use></svg><span data-i18n="bDTText">Text Box</span></button>
+    </div><div class="rlabel" data-i18n="gText">Text</div></div>
+     <!-- Symbols -->
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bEquation" data-i18n-t="bEquation"><svg class="ic" aria-hidden="true"><use href="#i-equation"></use></svg><span data-i18n="bEquation">Equation</span></button>
+      <button class="rbtn big" id="bISymbol"><svg class="ic" aria-hidden="true"><use href="#i-symbol"></use></svg><span data-i18n="bSymbol">Symbol</span></button>
+    </div><div class="rlabel" data-i18n="gSymbols">Symbols</div></div>
+   </div>
+<div class="rpage" data-page="pagelayout">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bTheme" data-i18n-t="bTheme"><svg class="ic" aria-hidden="true"><use href="#i-theme"></use></svg><span data-i18n="bTheme">Themes</span></button>
+      <button class="rbtn big" id="bAccent" data-i18n-t="bAccent"><svg class="ic" aria-hidden="true"><use href="#i-colors"></use></svg><span data-i18n="bAccent">Colors</span></button>
+     </div><div class="rrow">
+      <button class="rbtn big" id="bThemeFonts" data-i18n-t="bThemeFonts"><svg class="ic" aria-hidden="true"><use href="#i-fonts"></use></svg><span data-i18n="bThemeFonts">Fonts</span></button>
+      <button class="rbtn big" id="bThemeFx" data-i18n-t="bThemeFx"><svg class="ic" aria-hidden="true"><use href="#i-effects"></use></svg><span data-i18n="bThemeFx">Effects</span></button>
+     </div><div class="rlabel" data-i18n="gThemes">Themes</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bMargins" data-i18n-t="bMargins"><svg class="ic" aria-hidden="true"><use href="#i-margins"></use></svg><span data-i18n="bMargins">Margins</span></button>
+      <button class="rbtn big" id="bOrient" title="Orientation"><svg class="ic" aria-hidden="true"><use href="#i-orientation"></use></svg><span id="bOrientTxt">Portrait</span></button>
+      <button class="rbtn big" id="bSize" title="Paper size"><svg class="ic" aria-hidden="true"><use href="#i-size"></use></svg><span data-i18n="bSize">Size</span></button>
+      <button class="rbtn big" id="bPrintArea" data-i18n-t="bPrintArea"><svg class="ic" aria-hidden="true"><use href="#i-printarea"></use></svg><span data-i18n="bPrintArea">Print Area</span></button>
+     </div><div class="rrow">
+      <button class="rbtn" id="bBgPic" data-i18n-t="bBgPic"><svg class="ic" aria-hidden="true"><use href="#i-background"></use></svg> <span data-i18n="bBgPic">Background</span><span class="rcaret"> ▾</span></button>
+      <button class="rbtn" id="bPrintTitles" data-i18n-t="bPrintTitles"><svg class="ic" aria-hidden="true"><use href="#i-printtitles"></use></svg> <span data-i18n="bPrintTitles">Print Titles</span><span class="rcaret"> ▾</span></button>
+      <span class="rsep"></span>
+      <button class="rbtn" id="bPlPage" data-i18n-t="bPlPage"><svg class="ic" aria-hidden="true"><use href="#i-viewpage"></use></svg> <span data-i18n="bPlPage">Page View</span></button>
+      <button class="rbtn" id="bPlPrint" data-i18n-t="bPrint"><svg class="ic" aria-hidden="true"><use href="#i-print"></use></svg> <span data-i18n="bPrint">Print</span></button>
+     </div>
+     <button type="button" class="rlaunch" id="bPgSetup" data-i18n-t="bPgSetupDlg" aria-label="Page Setup"><svg class="ic" aria-hidden="true"><use href="#i-dialog"></use></svg></button>
+     <div class="rlabel" data-i18n="gPageSetup">Page Setup</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bBreaks" data-i18n-t="bBreaks"><svg class="ic" aria-hidden="true"><use href="#i-breaks"></use></svg><span data-i18n="bBreaks">Breaks</span><span class="rcaret"> ▾</span></button>
+     </div><div class="rlabel" data-i18n="gPageBreaks">Page Breaks</div></div>
+     <div class="rgrp">
+      <div class="rrow2"><span class="rmini" data-i18n="lblWidth">Width:</span>
+       <select class="rsel" id="fitW" data-i18n-t="tipFitW"><option value="auto" data-i18n="fitAuto">Automatic</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option></select></div>
+      <div class="rrow2"><span class="rmini" data-i18n="lblHeight">Height:</span>
+       <select class="rsel" id="fitH" data-i18n-t="tipFitH"><option value="auto" data-i18n="fitAuto">Automatic</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option></select></div>
+      <div class="rrow2"><span class="rmini" data-i18n="lblScale">Scale:</span>
+       <select class="rsel" id="scScale" data-i18n-t="tipScale"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option><option value="400">400%</option></select></div>
+      <div class="rlabel" data-i18n="gScaleFit">Scale to Fit</div></div>
+     <div class="rgrp"><div class="ropts">
+      <span></span><span class="rmicro" data-i18n="lblView">View</span><span class="rmicro" data-i18n="lblPrint">Print</span>
+      <span class="rmini2" data-i18n="bPlGrid">Gridlines</span>
+      <label class="rchk" data-i18n-t="bPlGrid"><input type="checkbox" id="bPlGrid"><span class="sr" data-i18n="bPlGrid">Gridlines</span></label>
+      <label class="rchk" data-i18n-t="bPlGridPrint"><input type="checkbox" id="bPlGridP"><span class="sr" data-i18n="bPlGridPrint">Print gridlines</span></label>
+      <span class="rmini2" data-i18n="bPlHead">Headings</span>
+      <label class="rchk" data-i18n-t="bPlHead"><input type="checkbox" id="bPlHead"><span class="sr" data-i18n="bPlHead">Headings</span></label>
+      <label class="rchk" data-i18n-t="bPlHeadPrint"><input type="checkbox" id="bPlHeadP"><span class="sr" data-i18n="bPlHeadPrint">Print headings</span></label>
+     </div><div class="rlabel" data-i18n="gSheetOpt">Sheet Options</div></div>
+    </div>
+<div class="rpage" data-page="formulas">
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bAutoSum2"><svg class="ic" aria-hidden="true"><use href="#i-autosum"></use></svg>AutoSum</button>
+      <button class="rbtn" id="bFnRecent" title="Recent functions"><svg class="ic" aria-hidden="true"><use href="#i-recent"></use></svg> Recent</button>
+      <button class="rbtn" id="bFnAll" title="All functions"><svg class="ic" aria-hidden="true"><use href="#i-all"></use></svg> All</button>
+    </div><div class="rlabel" data-i18n="gFnLib">Function Library</div></div>
+    <div class="rgrp"><div class="rrow">
+      <select class="rsel" id="fnCat" title="Category"></select>
+      <button class="rbtn" id="bFnInsert" title="Insert function"><svg class="ic" aria-hidden="true"><use href="#i-fx"></use></svg>fx Insert</button>
+    </div><div class="rlabel" data-i18n="gFnCat">Category</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bTracePre" title="Trace precedents"><svg class="ic" aria-hidden="true"><use href="#i-trace-pre"></use></svg><span data-i18n="bTracePre">Precedents</span></button>
+      <button class="rbtn" id="bTraceDep" title="Trace dependents"><svg class="ic" aria-hidden="true"><use href="#i-trace-dep"></use></svg></button>
+      <button class="rbtn" id="bTraceClear" title="Remove arrow traces"><svg class="ic" aria-hidden="true"><use href="#i-trace-clear"></use></svg></button>
+    </div><div class="rrow">
+      <button class="rbtn big" id="bShowFormulas" title="Show formulas"><svg class="ic" aria-hidden="true"><use href="#i-show-formulas"></use></svg><span data-i18n="bShowFormulas">Formulas</span></button>
+      <button class="rbtn" id="bExplain" title="Explain this formula"><svg class="ic" aria-hidden="true"><use href="#i-explain"></use></svg></button>
+    </div><div class="rrow">
+      <button class="rbtn" id="bEvalFormula" data-i18n-t="tipEval" title="Evaluate Formula"><svg class="ic" aria-hidden="true"><use href="#i-eval"></use></svg><span data-i18n="bEval">Evaluate</span></button>
+      <button class="rbtn" id="bErrorCheck" data-i18n-t="tipErrChk" title="Error Checking"><svg class="ic" aria-hidden="true"><use href="#i-errchk"></use></svg><span data-i18n="bErrChk">Errors</span></button>
+      <button class="rbtn" id="bWatchWindow" data-i18n-t="tipWatch" title="Watch Window"><svg class="ic" aria-hidden="true"><use href="#i-watch"></use></svg><span data-i18n="bWatch">Watch</span></button>
+    </div><div class="rlabel" data-i18n="gFnHelp">Formula Auditing</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bCalcNow" title="Recalculate now"><svg class="ic" aria-hidden="true"><use href="#i-calc"></use></svg>Calc</button>
+      <button class="rbtn" id="bCalcMode" data-i18n-t="bCalcMode"><svg class="ic" aria-hidden="true"><use href="#i-gear"></use></svg> <span data-i18n="bCalcMode">Calc Options</span><span class="rcaret"> ▾</span></button>
+    </div><div class="rlabel" data-i18n="gCalcOpt">Calculation Options</div></div>
+    <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bNameMgr" title="Name Manager"><svg class="ic" aria-hidden="true"><use href="#i-names"></use></svg><span data-i18n="bNameMgr">Name Manager</span></button>
+      <button class="rbtn" id="bNameDef" data-i18n-t="bNameDef" title="Define Name"><svg class="ic" aria-hidden="true"><use href="#i-names"></use></svg><span data-i18n="bNameDef">Define Name</span></button>
+      <button class="rbtn" id="bNameGo" data-i18n-t="bNameGo"><svg class="ic" aria-hidden="true"><use href="#i-goto"></use></svg> <span data-i18n="bNameGo">Go To</span></button>
+    </div><div class="rlabel" data-i18n="gNames">Defined Names</div></div>
+   </div>
+   <div class="rpage" data-page="data">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bGetData"><svg class="ic" aria-hidden="true"><use href="#i-getdata"></use></svg>Get Data<span class="rcaret"> ▾</span></button>
+     </div><div class="rlabel" data-i18n="gGetData">Get &amp; Transform</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bSortAz"><svg class="ic" aria-hidden="true"><use href="#i-sortaz"></use></svg>Sort A→ →Z</button>
+      <button class="rbtn big" id="bSortZa"><svg class="ic" aria-hidden="true"><use href="#i-sortza"></use></svg>Sort Z→ →A</button>
+      <button class="rbtn" id="bSortMore" title="Sort by column"><svg class="ic" aria-hidden="true"><use href="#i-sort"></use></svg>Custom</button>
+     </div><div class="rrow">
+      <button class="rbtn big" id="bFilter"><svg class="ic" aria-hidden="true"><use href="#i-filter"></use></svg>Filter</button>
+      <button class="rbtn" id="bFilterClear" title="Clear all filters"><svg class="ic" aria-hidden="true"><use href="#i-filterclear"></use></svg> Clear</button>
+     </div><div class="rlabel" data-i18n="gSortF">Sort &amp; Filter</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bDup" title="Remove duplicate rows"><svg class="ic" aria-hidden="true"><use href="#i-dedupe"></use></svg>Remove Dup</button>
+      <button class="rbtn" id="bTxtCol" title="Text to columns (comma)"><svg class="ic" aria-hidden="true"><use href="#i-texttocol"></use></svg>Text→ →Cols</button>
+     </div><div class="rlabel" data-i18n="gDataTools">Data Tools</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bDtNum" data-i18n-t="bDtNum"><svg class="ic" aria-hidden="true"><use href="#i-extractnum"></use></svg> <span data-i18n="bDtNum">Extract Number</span></button>
+      <button class="rbtn" id="bDtText" data-i18n-t="bDtText"><svg class="ic" aria-hidden="true"><use href="#i-extracttext"></use></svg>a <span data-i18n="bDtText">Extract Text</span></button>
+     </div><div class="rlabel" data-i18n="gDataTypes">Data Types</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bSubtotal" title="Subtotal of selection"><svg class="ic" aria-hidden="true"><use href="#i-subtotal"></use></svg>Subtotal</button>
+      <button class="rbtn" id="bAutoTotal" title="Auto-calculating total row for the selected data columns"><svg class="ic" aria-hidden="true"><use href="#i-subtotal"></use></svg>Total Row</button>
+      <button class="rbtn" id="bCountA" title="Count non-empty cells"><svg class="ic" aria-hidden="true"><use href="#i-count"></use></svg>Count</button>
+     </div><div class="rlabel" data-i18n="gSubtotal">Outline</div></div>
+    </div>
+    <div class="rpage" data-page="review">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bSpell" title="Check spelling"><svg class="ic" aria-hidden="true"><use href="#i-spell"></use></svg>Spelling</button>
+     </div><div class="rlabel" data-i18n="gProofing">Proofing</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bA11yCheck" title="Check accessibility / formula errors"><svg class="ic" aria-hidden="true"><use href="#i-a11y"></use></svg><span data-i18n="bA11y">Accessibility</span></button>
+     </div><div class="rlabel" data-i18n="gA11y">Accessibility</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bSmart" title="Smart Lookup (AI)"><svg class="ic" aria-hidden="true"><use href="#i-smartlookup"></use></svg>Smart Lookup</button>
+     </div><div class="rlabel" data-i18n="gInsights">Insights</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bRComment" title="New comment"><svg class="ic" aria-hidden="true"><use href="#i-note"></use></svg>New</button>
+      <button class="rbtn" id="bRDelCmt" title="Delete comment"><svg class="ic" aria-hidden="true"><use href="#i-delete"></use></svg>Del</button>
+      <button class="rbtn" id="bShowNotes" title="Show / hide comments"><svg class="ic" aria-hidden="true"><use href="#i-note"></use></svg>Show</button>
+     </div><div class="rlabel" data-i18n="gComments">Comments</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bProtect" title="Protect / unprotect sheet"><svg class="ic" aria-hidden="true"><use href="#i-lock"></use></svg><span id="bProtTxt">Protect Sheet</span></button>
+     </div><div class="rlabel" data-i18n="gProtect">Protect</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bLang" data-i18n-t="bLang"><svg class="ic" aria-hidden="true"><use href="#i-globe"></use></svg> <span data-i18n="bLang">Language</span><span class="rcaret"> ▾</span></button>
+     </div><div class="rlabel" data-i18n="gLang">Languages</div></div>
+    </div>
+    <div class="rpage" data-page="view">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bVwN" title="Normal view"><svg class="ic" aria-hidden="true"><use href="#i-viewnormal"></use></svg>Normal</button>
+      <button class="rbtn" id="bVwP" title="Page Layout view"><svg class="ic" aria-hidden="true"><use href="#i-viewpage"></use></svg>Page Layout</button>
+      <button class="rbtn" id="bVwB" title="Page Break Preview"><svg class="ic" aria-hidden="true"><use href="#i-viewbreak"></use></svg>Break</button>
+     </div><div class="rlabel" data-i18n="gWbViews">Workbook Views</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bTglGrid" title="Show gridlines"><svg class="ic" aria-hidden="true"><use href="#i-gridlines"></use></svg>Gridlines</button>
+      <button class="rbtn" id="bTglHead" title="Show headings"><svg class="ic" aria-hidden="true"><use href="#i-headings"></use></svg>Headings</button>
+     </div><div class="rlabel" data-i18n="gShow">Show</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bZoomIn" title="Zoom in"><svg class="ic" aria-hidden="true"><use href="#i-zoomin"></use></svg></button>
+      <button class="rbtn" id="bZoomOut" title="Zoom out"><svg class="ic" aria-hidden="true"><use href="#i-zoomout"></use></svg></button>
+      <button class="rbtn" id="bZoom100" title="Zoom 100%">100%</button>
+     </div><div class="rlabel" data-i18n="gZoom">Zoom</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bFreeze"><svg class="ic" aria-hidden="true"><use href="#i-freeze"></use></svg>Freeze</button>
+      <button class="rbtn" id="bUnfreeze" title="Unfreeze panes"><svg class="ic" aria-hidden="true"><use href="#i-freeze"></use></svg> Off</button>
+     </div><div class="rlabel" data-i18n="gFreeze">Freeze Panes</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bPrint2" title="Print"><svg class="ic" aria-hidden="true"><use href="#i-print"></use></svg><span data-i18n="bPrint"></span></button>
+      <button class="rbtn" id="bPageView" title="Page break preview"><svg class="ic" aria-hidden="true"><use href="#i-viewbreak"></use></svg>Page</button>
+     </div><div class="rlabel" data-i18n="gPrint">Print</div></div>
+    </div>
+    <div class="rpage" data-page="help">
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bHelpOpen"><svg class="ic" aria-hidden="true"><use href="#i-help"></use></svg><span data-i18n="bHelpOpen">Help</span></button>
+      <button class="rbtn" id="bShortcuts"><svg class="ic" aria-hidden="true"><use href="#i-keyboard"></use></svg><span data-i18n="bShortcuts">Shortcuts</span></button>
+      <button class="rbtn" id="bFnRef"><svg class="ic" aria-hidden="true"><use href="#i-library"></use></svg> <span data-i18n="bFnRef">Functions</span></button>
+     </div><div class="rlabel" data-i18n="gHelpHelp">Support</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn" id="bShareCopy" data-i18n-t="bShareCopy"><svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg> <span data-i18n="bShareCopy">Copy Link</span></button>
+      <button class="rbtn" id="bShareMail" data-i18n-t="bShareMail"><svg class="ic" aria-hidden="true"><use href="#i-email"></use></svg><span data-i18n="bShareMail">Email</span></button>
+     </div><div class="rlabel" data-i18n="gShare">Share</div></div>
+     <div class="rgrp"><div class="rrow">
+      <button class="rbtn big" id="bFeedback"><svg class="ic" aria-hidden="true"><use href="#i-feedback"></use></svg><span data-i18n="bFeedback">Feedback</span></button>
+      <button class="rbtn" id="bAbout"><svg class="ic" aria-hidden="true"><use href="#i-info"></use></svg><span data-i18n="bAbout">About</span></button>
+     </div><div class="rlabel" data-i18n="gHelpTools">Community</div></div>
+    </div>
+
+   <button id="ribbonMin" data-i18n-t="ribbonMin" title="Collapse the Ribbon (Ctrl+F1)"></button>
+   <button id="ribbonDispBtn" title="Ribbon Display Options" aria-label="Ribbon Display Options" aria-haspopup="menu" aria-expanded="false">&#9662;</button>
+   <!-- Excel hides its scrollbar but still gives the hidden commands a way out:
+        the chevron pair only appears once the command area actually overflows. -->
+   <div class="rbOverflow">
+    <button type="button" class="rbOvBtn" id="rbPrev" title="Previous commands" tabindex="-1">&#8249;</button>
+    <button type="button" class="rbOvBtn" id="rbNext" title="Next commands" tabindex="-1">&#8250;</button>
+   </div>
+   <div id="ribbonDispMenu" class="rdMenu" role="menu" aria-label="Ribbon Display Options">
+    <div class="rdMenuTitle" data-i18n="ribbonDisplay">Ribbon Display Options</div>
+    <button type="button" class="rdItem" data-rd="auto" role="menuitemradio" aria-checked="false"><span class="rdCheck"></span><span data-i18n="rdAuto">Auto-hide the Ribbon</span></button>
+    <button type="button" class="rdItem" data-rd="tabs" role="menuitemradio" aria-checked="false"><span class="rdCheck"></span><span data-i18n="rdTabs">Show Tabs Only</span></button>
+    <button type="button" class="rdItem" data-rd="full" role="menuitemradio" aria-checked="false"><span class="rdCheck"></span><span data-i18n="rdFull">Show Tabs and Commands</span></button>
+   </div>
+  </div>
+ </div>
+ <div class="formula">
+  <div id="refbox" data-i18n-t="nameBox" title="Name Box">A1</div><button class="fbBtn" id="fbCancel" data-i18n-t="fbCancel" title="Cancel (Esc)"></button><button class="fbBtn" id="fbEnter" data-i18n-t="fbEnter" title="Enter"></button><button class="fx" id="fbFx" data-i18n-t="fbFx" title="Insert Function">fx</button>
+  <input id="fbar" placeholder="Enter a value or =formula (e.g. =SUM(B2:B6))">
+ </div>
+ <div id="gridwrap"><table id="grid"></table></div>
+ <div id="tabs"></div>
+ <div id="aiPanel">
+  <div id="aiHead"><span data-i18n="aiTitle">🤖 AI सहायक</span><button id="aiClose" data-close="close" aria-label="Close"></button></div>
+  <div id="aiLog"></div>
+  <div id="aiBar"><input id="aiInput" data-i18n-ph="aiPh" placeholder="कमांड लिखें⬦"><button id="aiMic" type="button" data-i18n-t="aiMic" title="Speak a command" aria-label="Speak a command" aria-pressed="false"></button><button id="aiSend" type="button" aria-label="Send command"></button></div>
+ </div>
+ <div id="findDlg">
+  <div class="frow"><input id="findTxt" data-i18n-ph="findPh"><button id="fNext" data-i18n="fNext"></button></div>
+  <div class="frow"><input id="replTxt" data-i18n-ph="replPh"><button id="fRepl" data-i18n="fRepl"></button></div>
+  <div class="frow"><button id="fAll" data-i18n="fAll">बदलें</button><span style="flex:1"></span><button id="fClose" data-close="close" aria-label="Close"></button></div>
+  <div id="fStat"></div>
+ </div>
+ <div id="chartDlg">
+  <div class="frow"><span id="chartTitle"></span><span style="flex:1"></span><button id="chartClose" data-close="close" aria-label="Close"></button></div>
+  <div id="chartTypes"><button data-ct="bar" class="on">Bar</button><button data-ct="line">Line</button><button data-ct="pie">Pie</button></div>
+  <canvas id="chartCv" width="600" height="340"></canvas>
+ </div>
+  <div id="pivotDlg">
+   <div class="frow"><span id="pivotTitle"></span><span style="flex:1"></span><button id="pivotClose" data-close="close" aria-label="Close"></button></div>
+   <div id="pivotDesc"></div>
+   <div class="frow"><span>Rows</span><span style="flex:1"></span><span id="pivotRowLbl"></span></div>
+   <div class="frow"><span>Values</span><span style="flex:1"></span><span id="pivotValLbl"></span></div>
+   <div id="pivotBody"><div id="pivotFields"></div><div id="pivotDrop"></div></div>
+   <div class="frow"><span style="flex:1"></span><button id="pivotGo"></button></div>
+  </div>
+  <div id="recDlg">
+   <div class="frow"><span id="recTitle"></span><span style="flex:1"></span><button id="recClose" data-close="close" aria-label="Close"></button></div>
+   <div id="pivotList" style="max-height:300px;overflow:auto"></div>
+  </div>
+  <div id="picDlg">
+   <div class="frow"><span id="picTitle"></span><span style="flex:1"></span><button id="picClose" data-close="close" aria-label="Close"></button></div>
+   <div class="frow"><span id="picLbl"></span></div>
+   <div class="frow"><span style="flex:1"></span><button id="picBrowse"></button><button id="picShot"></button></div>
+  </div>
+  <input type="file" id="picIn" accept="image/*" style="display:none">
+  <div id="helpDlg">
+   <div class="frow"><span data-i18n="helpTitle">Help &amp; Keyboard Shortcuts</span><span style="flex:1"></span><button id="helpClose" data-close="close" aria-label="Close"></button></div>
+   <div id="helpBody">
+    <h3 data-i18n="helpStart">Getting started</h3>
+    <p data-i18n="helpStartTxt">Type a value or an =formula (e.g. =SUM(B2:B6)) into a cell or the formula bar. Everything auto-saves in your browser.</p>
+    <h3 data-i18n="helpKeys">Keyboard shortcuts</h3>
+    <table>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>C / X / V</kbd></td><td data-i18n="helpKC">Copy / Cut / Paste</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>B / I / U</kbd></td><td data-i18n="helpKF">Bold / Italic / Underline</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>Z / Y</kbd></td><td data-i18n="helpKU">Undo / Redo</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td><td data-i18n="helpKR">Find &amp; Replace</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td data-i18n="helpKP">Print</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>F1</kbd></td><td data-i18n="helpKR2">Collapse the Ribbon</td></tr>
+     <tr><td><kbd>F2</kbd> · <kbd>Enter</kbd> · <kbd>Esc</kbd></td><td data-i18n="helpKE">Edit cell · Confirm · Cancel</td></tr>
+     <tr><td><kbd>Ctrl</kbd>+<kbd>→ → → → →</kbd></td><td data-i18n="helpKJ">Jump to the edge of the data block</td></tr>
+     <tr><td><kbd>Delete</kbd></td><td data-i18n="helpKD">Clear selected cells</td></tr>
+    </table>
+    <h3 data-i18n="helpFn">Formulas</h3>
+    <p data-i18n="helpFnTxt">Try SUM, AVERAGE, MIN, MAX, COUNT, IF, ROUND, UPPER, LEN, RANDBETWEEN, SUBTOTAL⬦ see the full list under Formulas<span class="rcaret"> ▾</span> Category.</p>
+   </div>
+  </div>
+
+   <div id="evalDlg" role="dialog" aria-labelledby="evalTitle">
+    <div class="frow"><span data-i18n="bEval" id="evalTitle">Evaluate Formula</span><span style="flex:1"></span><button type="button" id="evalClose" aria-label="Close"></button></div>
+    <p class="evalHint" data-i18n="evalHint">Values used by the active formula, then its result.</p>
+    <ul class="evalList" id="evalSteps"></ul>
+    <div class="frow"><span data-i18n="evalResultLbl">Result</span><b id="evalResult">—</b></div>
+   </div>
+   <div id="watchDlg" role="dialog" aria-labelledby="watchTitle">
+    <div class="frow"><span data-i18n="bWatch" id="watchTitle">Watch Window</span><span style="flex:1"></span><button type="button" id="watchClose" aria-label="Close"></button></div>
+    <p class="evalHint" data-i18n="watchHint">Cells you are tracking. Click one to jump to it.</p>
+    <ul class="evalList" id="watchList"></ul>
+    <div class="frow">
+     <button type="button" id="watchAdd" data-i18n="watchAdd">Add current cell</button>
+     <span style="flex:1"></span>
+     <button type="button" id="watchClear" data-i18n="watchClear">Clear all</button>
+    </div>
+   </div>
+   <!-- Insert Function (the fx dialog): Excel's function library behind the
+        formula-bar fx and the Formulas tab's fx Insert. Insertion goes through
+        insertFn(), so the cell gets the same text the old popMenu produced. -->
+   <div id="fnDlg" role="dialog" aria-labelledby="fnDlgTitle">
+    <div class="frow"><span data-i18n="fbFx" id="fnDlgTitle">Insert Function</span><span style="flex:1"></span><button type="button" id="fnDlgClose" data-close="close" aria-label="Close"></button></div>
+    <p class="evalHint" data-i18n="fnDlgHint">Search or pick a category, choose a function, then OK to insert it.</p>
+    <div class="frow"><input type="search" id="fnSearch" data-i18n-ph="fnSearchPh" placeholder="Search functions"><select id="fnDlgCat" class="rsel" data-i18n-t="gFnCat" title="Category"></select></div>
+    <ul class="evalList fnList" id="fnList"></ul>
+    <div class="fnMeta"><code id="fnSyn"></code><span id="fnDesc"></span></div>
+    <div class="frow"><span style="flex:1"></span><button type="button" id="fnDlgOk" data-i18n="fnOk">OK</button><button type="button" id="fnDlgCancel" data-i18n="fnCancel">Cancel</button></div>
+   </div>
+   <div id="fmtDlg" role="dialog" aria-labelledby="fmtTitle">
+    <div class="frow"><span data-i18n="fmtTitle" id="fmtTitle">Format Cells</span><span style="flex:1"></span><button type="button" id="fmtClose" aria-label="Close"></button></div>
+    <div class="fmtTabs" role="tablist">
+     <button type="button" class="on" data-fmt-tab="font" role="tab" aria-selected="true" data-i18n="fmtTabFont">Font</button>
+     <button type="button" data-fmt-tab="fill" role="tab" aria-selected="false" data-i18n="fmtTabFill">Fill</button>
+     <button type="button" data-fmt-tab="border" role="tab" aria-selected="false" data-i18n="fmtTabBorder">Border</button>
+     <button type="button" data-fmt-tab="align" role="tab" aria-selected="false" data-i18n="fmtTabAlign">Alignment</button>
+    </div>
+
+    <!-- Font: family, size, style, underline, strike, colour -->
+    <div class="fmtPane on" data-fmt-pane="font">
+     <div class="fmtGrid">
+      <label for="fmtFont" data-i18n="fmtFontName">Font</label>
+      <select id="fmtFont"></select>
+      <label for="fmtSize" data-i18n="fmtFontSize">Font size</label>
+      <select id="fmtSize"></select>
+      <label for="fmtStyle" data-i18n="fmtFontStyle">Font style</label>
+      <select id="fmtStyle">
+       <option value="normal" data-i18n="fmtStyleNormal">Normal</option>
+       <option value="italic" data-i18n="fmtStyleItalic">Italic</option>
+       <option value="bold" data-i18n="fmtStyleBold">Bold</option>
+       <option value="bold italic" data-i18n="fmtStyleBoldItalic">Bold Italic</option>
+      </select>
+      <label for="fmtUnderline" data-i18n="fmtUnderline">Underline</label>
+      <select id="fmtUnderline">
+       <option value="none" data-i18n="fmtNone">None</option>
+       <option value="single" data-i18n="fmtUSingle">Single</option>
+       <option value="double" data-i18n="fmtUDouble">Double</option>
+      </select>
+      <label for="fmtFontColor" data-i18n="fmtColor">Color</label>
+      <div class="fmtSwatch"><input type="color" id="fmtFontColor" value="#000000"><span data-i18n="fmtColorPick">Automatic</span></div>
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtStrike"><span data-i18n="fmtStrike">Strikethrough</span></label>
+      </div>
+      <div class="fmtSample" id="fmtSample" data-i18n="fmtSampleTxt">Sample</div>
+     </div>
+    </div>
+
+    <!-- Fill: background colour -->
+    <div class="fmtPane" data-fmt-pane="fill">
+     <div class="fmtGrid">
+      <label for="fmtBgColor" data-i18n="fmtBgColor">Background color</label>
+      <div class="fmtSwatch"><input type="color" id="fmtBgColor" value="#ffffff"><span data-i18n="fmtBgPick">Choose a color</span></div>
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtNoFill"><span data-i18n="fmtNoFill">No fill</span></label>
+      </div>
+      <div class="fmtSample" id="fmtFillSample" data-i18n="fmtSampleTxt">Sample</div>
+     </div>
+    </div>
+   <!-- Border: Excel's 3x3 edge grid plus line style and colour -->
+    <div class="fmtPane" data-fmt-pane="border">
+     <div class="fmtGrid">
+      <div class="fmtBorderWrap">
+       <div class="fmtBGrid" id="fmtBGrid">
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="t" aria-label="Top border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="l" aria-label="Left border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="r" aria-label="Right border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+        <button type="button" class="fmtBEdge" data-edge="b" aria-label="Bottom border"></button>
+        <button type="button" class="fmtBSpacer" tabindex="-1"></button>
+       </div>
+       <div class="fmtBorderOpts">
+        <label for="fmtBorderStyle" data-i18n="fmtLineStyle">Line style</label>
+        <select id="fmtBorderStyle">
+         <option value="" data-i18n="fmtLineNone">None</option>
+         <option value="thin" data-i18n="fmtLineThin">Thin</option>
+         <option value="medium" data-i18n="fmtLineMedium">Medium</option>
+         <option value="thick" data-i18n="fmtLineThick">Thick</option>
+        </select>
+        <label for="fmtBorderColor" data-i18n="fmtBorderColor">Color</label>
+        <div class="fmtSwatch"><input type="color" id="fmtBorderColor" value="#323130"></div>
+       </div>
+      </div>
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtBorderAll"><span data-i18n="fmtBorderAll">Apply to all four sides</span></label>
+      </div>
+     </div>
+    </div>
+
+    <!-- Alignment: horizontal / vertical / wrap / indent / rotation -->
+    <div class="fmtPane" data-fmt-pane="align">
+     <div class="fmtGrid">
+      <label for="fmtHAlign" data-i18n="fmtHAlign">Horizontal</label>
+      <select id="fmtHAlign">
+       <option value="" data-i18n="fmtHGeneral">General</option>
+       <option value="left" data-i18n="fmtHLeft">Left</option>
+       <option value="center" data-i18n="fmtHCenter">Center</option>
+       <option value="right" data-i18n="fmtHRight">Right</option>
+      </select>
+      <label for="fmtVAlign" data-i18n="fmtVAlign">Vertical</label>
+      <select id="fmtVAlign">
+       <option value="" data-i18n="fmtVBottom">Bottom</option>
+       <option value="top" data-i18n="fmtVTop">Top</option>
+       <option value="mid" data-i18n="fmtVMiddle">Middle</option>
+      </select>
+      <label for="fmtRotate" data-i18n="fmtRotate">Text rotation</label>
+      <select id="fmtRotate">
+       <option value="0" data-i18n="fmtRot0">0 degrees</option>
+       <option value="45" data-i18n="fmtRot45">45 degrees</option>
+       <option value="90" data-i18n="fmtRot90">90 degrees</option>
+       <option value="-45" data-i18n="fmtRotNeg45">-45 degrees</option>
+       <option value="-90" data-i18n="fmtRotNeg90">-90 degrees</option>
+      </select>
+      <label for="fmtIndent" data-i18n="fmtIndent">Indent</label>
+      <input type="number" id="fmtIndent" min="0" max="50" step="1">
+      <div class="fmtChecks">
+       <label><input type="checkbox" id="fmtWrap"><span data-i18n="fmtWrapText">Wrap text</span></label>
+      </div>
+     </div>
+    </div>
+
+    <div class="frow"><span style="flex:1"></span>
+     <button type="button" id="fmtReset" data-i18n="fmtReset">Reset</button>
+     <button type="button" id="fmtOk" class="btnPrimary" data-i18n="fmtOk">OK</button>
+     <button type="button" id="fmtCancel" data-i18n="fmtCancel">Cancel</button></div>
+   </div>
+
+   <div id="psDlg">
+    <div class="frow"><span data-i18n="psTitle">Page Setup</span><span style="flex:1"></span><button type="button" id="psClose" data-close="close" aria-label="Close"></button></div>
+   <div class="psGrid">
+    <label for="psOrient" data-i18n="pgOrient">Orientation</label>
+    <select id="psOrient"><option value="portrait" data-i18n="orientP">Portrait</option><option value="landscape" data-i18n="orientL">Landscape</option></select>
+    <label for="psSize" data-i18n="pgSize">Paper size</label>
+    <select id="psSize"></select>
+    <label for="psTop" data-i18n="margTop">Top (cm)</label><input type="number" id="psTop" min="0" max="10" step="0.1">
+    <label for="psBottom" data-i18n="margBottom">Bottom (cm)</label><input type="number" id="psBottom" min="0" max="10" step="0.1">
+    <label for="psLeft" data-i18n="margLeft">Left (cm)</label><input type="number" id="psLeft" min="0" max="10" step="0.1">
+    <label for="psRight" data-i18n="margRight">Right (cm)</label><input type="number" id="psRight" min="0" max="10" step="0.1">
+    <label data-i18n="margCenter">Center on page</label>
+    <div class="psChk">
+     <label><input type="checkbox" id="psCenterH"><span data-i18n="chkHoriz">Horizontally</span></label>
+     <label><input type="checkbox" id="psCenterV"><span data-i18n="chkVert">Vertically</span></label>
+    </div>
+    <label for="psScale" data-i18n="lblScale">Scale</label>
+    <div class="psChk"><input type="number" id="psScale" min="10" max="400" step="5" aria-label="Scale percent"><span>%</span></div>
+    <label data-i18n="lblFitTo">Fit to</label>
+    <div class="psChk"><input type="number" id="psFitW" min="1" max="9" aria-label="Pages wide"><span data-i18n="lblPagesWide">page(s) wide</span><input type="number" id="psFitH" min="1" max="9" aria-label="Pages tall"><span data-i18n="lblPagesTall">page(s) tall</span></div>
+    <label for="psTitleRows" data-i18n="ptRows">Rows to repeat at top</label><input type="text" id="psTitleRows" placeholder="$1:$1">
+    <label for="psTitleCols" data-i18n="ptCols">Columns to repeat at left</label><input type="text" id="psTitleCols" placeholder="$A:$A">
+   </div>
+   <div class="frow"><span style="flex:1"></span>
+    <button type="button" id="psReset" data-i18n="psReset">Reset</button>
+    <button type="button" id="psOk" data-i18n="psOk">OK</button>
+    <button type="button" id="psCancel" data-i18n="psCancel">Cancel</button></div>
+  </div>
+<div id="backstage" aria-hidden="true">
+  <aside class="bsRail">
+   <div class="bsHead">
+    <button type="button" class="bsBack" id="bsBack" title="Back" data-close="back" aria-label="Back"></button>
+    <span class="bsBrand" data-i18n="rFile">File</span>
+   </div>
+    <button type="button" class="bsItem on" data-bs-page="home"><svg class="ic" aria-hidden="true"><use href="#i-home"></use></svg><span data-i18n="bsHome">Home</span></button>
+    <button type="button" class="bsItem" data-bs-page="new"><svg class="ic" aria-hidden="true"><use href="#i-new"></use></svg><span data-i18n="bsNew">New</span></button>
+    <button type="button" class="bsItem" data-bs-page="open"><svg class="ic" aria-hidden="true"><use href="#i-open"></use></svg><span data-i18n="bsOpen">Open</span></button>
+    <button type="button" class="bsItem" data-bs-page="info"><svg class="ic" aria-hidden="true"><use href="#i-info"></use></svg><span data-i18n="bsInfo">Info</span></button>
+    <button type="button" class="bsItem" data-bs-page="save"><svg class="ic" aria-hidden="true"><use href="#i-save"></use></svg><span data-i18n="bsSave">Save</span></button>
+    <button type="button" class="bsItem" data-bs-page="print"><svg class="ic" aria-hidden="true"><use href="#i-print"></use></svg><span data-i18n="bsPrintPage">Print</span></button>
+    <button type="button" class="bsItem" data-bs-page="export"><svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg><span data-i18n="bsExport">Export</span></button>
+    <button type="button" class="bsItem" data-bs-page="recent"><svg class="ic" aria-hidden="true"><use href="#i-clock"></use></svg><span data-i18n="bsRecent">Recent</span></button>
+    <button type="button" class="bsItem" data-bs-page="onedrive"><svg class="ic" aria-hidden="true"><use href="#i-cloud"></use></svg><span data-i18n="bsOneDrive">OneDrive</span></button>
+    <button type="button" class="bsItem" data-bs-page="account"><svg class="ic" aria-hidden="true"><use href="#i-user"></use></svg><span data-i18n="signIn">Sign in</span></button>
+   </aside>
+  <section class="bsPane">
+    <div class="bsPage on" data-bspane="home">
+     <h1 data-i18n="bsStartNew">New</h1>
+     <div class="bsGrid">
+      <div class="bsCard" id="bsHomeBlank"><div class="bsIco">&#128196;</div><div class="bsT" data-i18n="bsBlank">Blank workbook</div><div class="bsD" data-i18n="bsBlankHint">Start fresh (Ctrl+N)</div></div>
+      <div class="bsCard" id="bsHomeOpen"><div class="bsIco">&#128193;</div><div class="bsT" data-i18n="fileOpen">Open (CSV)</div><div class="bsD" data-i18n="bsOpenHint">Browse for a .csv file (Ctrl+O)</div></div>
+      <div class="bsCard" id="bsHomeOneDrive"><div class="bsIco">&#9721;&#65039;</div><div class="bsT" data-i18n="bsOneDrive">OneDrive</div><div class="bsD" data-i18n="bsOneDriveHint">Open from the cloud</div></div>
+     </div>
+     <h1 data-i18n="bsRecentTitle">Recent</h1>
+     <div class="bsList" id="bsRecentList"></div>
+    </div>
+    <div class="bsPage" data-bspane="recent">
+     <h1 data-i18n="bsRecentTitle">Recent</h1>
+     <div class="bsList" id="bsRecentOnly"></div>
+    </div>
+    <div class="bsPage" data-bspane="onedrive">
+     <h1 data-i18n="bsOneDrive">OneDrive</h1>
+     <div class="bsGrid">
+      <div class="bsCard" id="bsCloudSignIn"><div class="bsIco">&#128274;</div><div class="bsT" data-i18n="signIn">Sign in</div><div class="bsD" data-i18n="backstageHint">Sync spreadsheets to the cloud</div></div>
+      <div class="bsCard" id="bsCloudBooks"><div class="bsIco">&#128218;</div><div class="bsT" data-i18n="cloudSaves">Cloud saves</div><div class="bsD" data-i18n="bsCloudHint">Workbooks saved to your account</div></div>
+      <div class="bsCard" id="bsCloudDrive"><div class="bsIco">&#128193;</div><div class="bsT" data-i18n="bsDrive">Google Drive</div><div class="bsD" data-i18n="bsDriveHint">Connect a Google account</div></div>
+     </div>
+     <div class="bsInfoBox">
+      <div class="bsRow"><span data-i18n="myAccount">Account</span><b id="bsCloudUser">&#8212;</b></div>
+      <div class="bsRow"><span data-i18n="bsStoragePref">Storage</span><b id="bsCloudPref">&#8212;</b></div>
+      <div class="bsRow"><span data-i18n="cloudSaves">Cloud saves</span><b id="bsCloudCount">0</b></div>
+     </div>
+    </div>
+    <div class="bsPage" data-bspane="info">
+    <h1 data-i18n="bsWorkbook">Workbook</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsCardSave"><div class="bsIco">💾</div><div class="bsT" data-i18n="bsSaveBrowser">Save in browser</div><div class="bsD" data-i18n="bsSavedHint">Auto-saves in your browser</div></div>
+     <div class="bsCard" id="bsCardCsv"><div class="bsIco">⬇</div><div class="bsT" data-i18n="exp">💾 CSV Export</div><div class="bsD" data-i18n="bsCsvHint">Current sheet as .csv</div></div>
+     <div class="bsCard" id="bsCardXlsx"><div class="bsIco">📗</div><div class="bsT" data-i18n="bXlsx">📥 Excel (.xlsx)</div><div class="bsD" data-i18n="bsXlsxHint">Whole workbook</div></div>
+     <div class="bsCard" id="bsCardZip"><div class="bsIco">📦</div><div class="bsT" data-i18n="bAllCsv">📦 All CSV (zip)</div><div class="bsD" data-i18n="bsZipHint">Every sheet, zipped</div></div>
+     <div class="bsCard" id="bsCardPrint"><div class="bsIco">🖨</div><div class="bsT" data-i18n="bPrint">🖨 Print</div><div class="bsD" data-i18n="bsPrintHint">Print or save as PDF</div></div>
+    </div>
+    <div class="bsInfoBox">
+     <div class="bsRow"><span data-i18n="bsSheets">Sheets</span><b id="bsNSheets"></b></div>
+     <div class="bsRow"><span data-i18n="bsActive">Active sheet</span><b id="bsSheetName"></b></div>
+     <div class="bsRow"><span data-i18n="bsCells">Used cells</span><b id="bsNCells"></b></div>
+     <div class="bsRow"><span data-i18n="bsLang">Language</span><b id="bsLang"></b></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="new">
+    <h1 data-i18n="bsNewTitle">New workbook</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsNewBlank"><div class="bsIco">📄</div><div class="bsT" data-i18n="bsBlank">Blank workbook</div><div class="bsD" data-i18n="bsBlankHint">Start fresh (Ctrl+N)</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="open">
+    <h1 data-i18n="bsOpenTitle">Open</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsOpenCsv"><div class="bsIco">📂</div><div class="bsT" data-i18n="fileOpen">📂 Open (CSV)</div><div class="bsD" data-i18n="bsOpenHint">Browse for a .csv file (Ctrl+O)</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="save">
+    <h1 data-i18n="bsSaveTitle">Save</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsSaveBrowser"><div class="bsIco">💾</div><div class="bsT" data-i18n="fileSaveBrowser">💾 Save (browser)</div><div class="bsD" data-i18n="bsSaveHint2">Stored locally in this browser</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="export">
+    <h1 data-i18n="bsExportTitle">Export</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsExpCsv"><div class="bsIco">⬇</div><div class="bsT" data-i18n="exp">💾 CSV Export</div><div class="bsD" data-i18n="bsCsvHint">Current sheet as .csv</div></div>
+     <div class="bsCard" id="bsExpXlsx"><div class="bsIco">📗</div><div class="bsT" data-i18n="bXlsx">📥 Excel (.xlsx)</div><div class="bsD" data-i18n="bsXlsxHint">Whole workbook</div></div>
+     <div class="bsCard" id="bsExpZip"><div class="bsIco">📦</div><div class="bsT" data-i18n="bAllCsv">📦 All CSV (zip)</div><div class="bsD" data-i18n="bsZipHint">Every sheet, zipped</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="print">
+    <h1 data-i18n="gPrint">Print</h1>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsPrintNow"><div class="bsIco">🖨</div><div class="bsT" data-i18n="bPrint">🖨 Print</div><div class="bsD" data-i18n="bsPrintHint">Print or save as PDF</div></div>
+     <div class="bsCard" id="bsPrintSetup"><div class="bsIco">⚙️</div><div class="bsT" data-i18n="bPgSetup">Page Setup</div><div class="bsD" data-i18n="bsSetupHint">Margins, paper size, scale</div></div>
+    </div>
+   </div>
+   <div class="bsPage" data-bspane="account">
+    <h1 data-i18n="myAccount" id="bsUserTitle">My account</h1>
+     <div class="bsProfile" id="bsUserProfile" style="display:none">
+      <span class="userAvatar big" id="bsUserAvatar">?</span>
+      <div class="bsProfileWho">
+       <div class="bsProfileName" id="bsUserProfileName"></div>
+       <div class="bsProfileEmail" id="bsUserProfileEmail"></div>
+       <div class="bsProfileAddr"><span class="bsProfileAddrLbl" data-i18n="addressLabel">Address</span><b id="bsUserProfileAddr">—</b></div>
+      </div>
+     </div>
+    <div class="bsGrid">
+     <div class="bsCard" id="bsUserOpen"><div class="bsIco">👤</div><div class="bsT" data-i18n="signIn">Sign in</div><div class="bsD" data-i18n="backstageHint">Sync spreadsheets to the cloud</div></div>
+     <div class="bsCard" id="bsUserCloudOpen"><div class="bsIco">☁️</div><div class="bsT" data-i18n="cloudSaves">Cloud saves</div><div class="bsD" data-i18n="bsCsvHint">Current sheet as .csv</div></div>
+    </div>
+    <div class="bsInfoBox" id="bsUserBox">
+     <div class="bsRow"><span data-i18n="userName">Name</span><b id="bsUserName"></b></div>
+     <div class="bsRow"><span data-i18n="emailLabel">Email</span><b id="bsUserEmail"></b></div>
+     <div class="bsRow"><span data-i18n="cloudSaves">Cloud saves</span><b id="bsUserBooks"></b></div>
+     <div class="bsRow"><span data-i18n="lastUpdated">Last updated</span><b id="bsUserUpdated"></b></div>
+    </div>
+    <div class="bsGrid" style="margin-top:12px">
+     <div class="bsCard" id="bsUserSave"><div class="bsIco">⬆</div><div class="bsT" data-i18n="saveToCloud">Save to cloud</div><div class="bsD" data-i18n="bsSaveHint2">Stored locally in this browser</div></div>
+     <div class="bsCard" id="bsUserSignOut"><div class="bsIco">⎋</div><div class="bsT" data-i18n="signOut">Sign out</div><div class="bsD" data-i18n="signedOutMsg">Signed out</div></div>
+    </div>
+    <div id="bsUserList" class="cloudList"></div>
+   </div>
+  </section>
+ </div>
+<div id="popMenu"></div>
+ <div id="startScreen" role="dialog" aria-modal="true" aria-labelledby="ssTitle">
+  <aside class="ssRail">
+   <div class="ssRailHead"><svg class="brandMark brandRail" role="img" aria-label="Mini Excel"><use href="#i-brand"></use></svg><span class="ssRailBrand">Mini Excel</span></div>
+<nav class="ssNav" aria-label="Start screen sections">
+    <button type="button" class="ssNavItem" data-ss-tab="templates"><svg class="ic" aria-hidden="true"><use href="#i-templates"></use></svg><span data-i18n="ssTemplates">Templates</span></button>
+    <button type="button" class="ssNavItem" data-ss-tab="recent"><svg class="ic" aria-hidden="true"><use href="#i-clock"></use></svg><span data-i18n="ssRecent">Recent</span></button>
+    <button type="button" class="ssNavItem" data-ss-tab="favorites"><svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg><span data-i18n="ssFavorites">Favorites</span></button>
+   </nav>
+   <div class="ssRailFoot">
+    <button type="button" class="ssAccount" id="ssAccount" title="Account">
+     <span class="userAvatar" id="ssUserAvatar">&#128100;</span>
+     <span class="ssAccountMeta">
+      <span class="ssAccountName" id="ssUserName" data-i18n="signIn">Sign in</span>
+      <span class="ssAccountMail" id="ssUserMail"></span>
+     </span>
+    </button>
+   </div>
+  </aside>
+  <div class="ssCard">
+   <div class="ssHead">
+    <div class="ssBrandRow">
+     <div>
+      <h1 class="ssTitle" id="ssTitle" data-i18n="ssTitle">Welcome to Mini Excel</h1>
+      <p class="ssSub" data-i18n="ssSubtitle">Open a recent file or start from a template.</p>
+     </div>
+    </div>
+    <input type="search" id="ssSearch" class="ssSearch" data-i18n-ph="ssSearchPh" placeholder="Search workbooks" aria-label="Search workbooks">
+    <button type="button" id="ssClose" class="qbtn ssClose" data-ss-close title="Close" data-close="close" aria-label="Close">&times;</button>
+   </div>
+   <div class="ssPane" id="ssPaneRecent"><div class="ssList" id="ssList"></div></div>
+   <div class="ssPane" id="ssPaneFavorites" hidden><div class="ssList" id="ssFavList"></div></div>
+   <div class="ssPane" id="ssPaneTemplates" hidden><div class="ssTplGrid" id="ssTemplates"></div></div>
+  </div>
+ </div>
+ <div id="authDialog" role="dialog" aria-modal="false" aria-labelledby="authTitle">
+  <form id="authForm" autocomplete="off">
+   <div class="authHead">
+    <div class="authHeadRow">
+     <span id="authTitle" class="authHeadTitle" data-i18n="signIn">Sign in</span>
+     <span style="flex:1"></span>
+     <button type="button" id="authClose" class="qbtn" title="Close" data-close="close" aria-label="Close">&times;</button>
+    </div>
+    <div class="authSub" data-i18n="authSub">Sync spreadsheets across devices</div>
+   </div>
+  <label class="fieldLabel" for="emailField" data-i18n="emailLabel">Email</label>
+  <input type="email" id="emailField" autocomplete="email" placeholder="you@example.com">
+  <label class="fieldLabel" for="nameField" data-i18n="userName">Name</label>
+  <input type="text" id="nameField" autocomplete="name">
+  <label class="fieldLabel" for="passwordField" data-i18n="passwordLabel">Password</label>
+  <input type="password" id="passwordField" autocomplete="current-password">
+  <label class="fieldLabel signupOnly" for="confirmPasswordField" data-i18n="newPasswordField">New password</label>
+  <input type="password" id="confirmPasswordField" class="signupOnly" autocomplete="new-password">
+  <div id="formError" class="formError" style="display:none"></div>
+  <div class="frow"><span style="flex:1"></span>
+   <button type="submit" id="authSubmit" class="btnPrimary" data-i18n="signIn">Sign in</button></div>
+  <div class="authMeta">
+   <button type="button" id="authSwitchMode" class="linkBtn" data-i18n="noAccount">No account? Sign up</button>
+  </div>
+  <!-- Google sign-in closes the card, below the "no account" link: it is the
+       alternative to the email form, so the form (and its "or" divider) comes
+       first and the Google affordance sits at the bottom. -->
+  <div class="googleDivider"><span data-i18n="orLabel">or</span></div>
+  <button type="button" class="gsignBtn" id="gsignBtn">
+   <span class="gsignLogo" aria-hidden="true">
+    <svg viewBox="0 0 48 48" width="18" height="18" focusable="false">
+     <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+     <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+     <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
+     <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+   </span>
+   <span class="gsignLabel" data-i18n="gsignLabel">Sign in with Google</span>
+  </button>
+  <div class="googleRow" id="googleRow" style="display:none">
+   <div class="googleBtn" id="googleBtn"></div>
+  </div>
+  </form>
+ </div>
+  <div id="authLock" role="dialog" aria-modal="true" aria-labelledby="authLockTitle">
+   <div class="lockCard">
+    <div class="lockIco" aria-hidden="true">🔒</div>
+    <h2 class="lockTitle" id="authLockTitle" data-i18n="lockTitle">Registration required</h2>
+    <p class="lockBody" data-i18n="lockBody">Create a free account to unlock editing, formulas, charts and cloud saves.</p>
+    <button type="button" class="lockCta" id="authLockCta" data-i18n="lockCta">Create account</button>
+    <button type="button" class="lockAlt" id="authLockSignIn" data-i18n="lockAlt">Already registered? Sign in</button>
+   </div>
+  </div>
+ <div id="profilePanel" role="dialog" aria-label="My account">
+  <div class="panelHead">
+   <span class="userAvatar big" id="profileAvatar">?</span>
+   <div class="whoBlock">
+    <div id="profileName" style="font-weight:600"></div>
+    <div id="profileEmail" class="emailText"></div>
+   </div>
+   <span style="flex:1"></span>
+   <button type="button" id="profileClose" class="qbtn" title="Close" data-close="close" aria-label="Close"></button>
+  </div>
+  <div class="panelBody">
+   <div class="panelSection">
+    <div class="sectionTitle" data-i18n="profileTitle">Profile</div>
+    <div class="frow"><input type="text" id="profileNameField" data-i18n-ph="userName" placeholder="Name"><button type="button" id="profileSave" class="btnPrimary" data-i18n="saveNow">Save now</button></div>
+    <div class="frow"><input type="text" id="profileAddressField" data-i18n-ph="addressLabel" placeholder="Address"><button type="button" id="profileAddressSave" class="btnPrimary" data-i18n="saveNow">Save now</button></div>
+    <form id="passwordForm" autocomplete="off">
+     <div class="frow"><input type="password" id="currentPasswordField" data-i18n-ph="currentPasswordLabel" placeholder="Current password" autocomplete="current-password">
+      <input type="password" id="newPasswordField" data-i18n-ph="newPasswordField" placeholder="New password" autocomplete="new-password">
+      <button type="submit" id="passwordSave" class="btnPrimary" data-i18n="changePassword">Change password</button></div>
+     <div class="googleNote" id="googlePasswordNote" style="display:none" data-i18n="googleNoPasswordNote">Google accounts sign in with their Google password</div>
+    </form>
+   </div>
+   <div class="panelSection">
+    <div class="sectionTitle" data-i18n="cloudSaves">Cloud saves</div>
+    <div class="frow storagePrefRow" role="radiogroup" aria-label="Storage preference">
+     <span class="storagePrefTitle" data-i18n="storagePref">Storage preference</span>
+     <label class="storageOpt"><input type="radio" name="storagePref" value="browser"><span data-i18n="storageBrowser">Browser (this device)</span></label>
+     <label class="storageOpt"><input type="radio" name="storagePref" value="cloud"><span data-i18n="storageCloud">App cloud</span></label>
+     <label class="storageOpt"><input type="radio" name="storagePref" value="drive"><span data-i18n="storageDrive">Google Drive</span></label>
+     <button type="button" id="driveConnectBtn" class="btnSecondary" data-i18n="connectDrive">Connect Drive</button>
+    </div>
+    <div class="frow"><span style="flex:1"></span>
+     <button type="button" id="saveCloudBtn" class="btnPrimary" data-i18n="saveToCloud">Save to cloud</button>
+     <button type="button" id="saveAsNewBtn" data-i18n="saveAsNewLabel">Save as new</button></div>
+    <div id="cloudList"></div>
+    <div class="panelSection">
+     <div class="sectionTitle" data-i18n="apiKeyTitle">API key</div>
+     <div class="frow">
+      <input type="text" id="apiKeyField" readonly class="apiKeyField" placeholder="Click regenerate...">
+      <button type="button" id="apiKeyShowBtn" class="btnSecondary" data-i18n="showLabel">Show</button>
+      <button type="button" id="apiKeyRegenBtn" class="btnPrimary" data-i18n="regenerateLabel">Regenerate</button>
+     </div>
+     <div class="apiKeyHint" data-i18n="apiKeyHint">Auto-rotates every month. Use for cloud API access.</div>
+    </div>
+   </div>
+   <div class="panelSection">
+    <button type="button" id="signOut" class="btnDanger" data-i18n="signOut">Sign out</button>
+   </div>
+  </div>
+ </div>
+ <div id="ctxMenu"></div>
+ <div id="statusbar">
+  <span id="sbMode">Ready</span><span class="sbA11y" id="sbA11y" data-i18n="sbA11y" title="Accessibility: Good to go">♿ Accessibility: Good to go</span><span id="sbInfo"></span>
+  <span class="sright">
+   <span id="stSum"></span><span id="stAvg"></span><span id="stCnt"></span>
+   <button class="sbView on" id="sbViewN" title="Normal view"></button>
+    <button class="sbView" id="sbViewP" title="Page Layout view"></button>
+    <button class="sbView" id="sbViewB" title="Page Break Preview"></button>
+    <span class="sbSep"></span>
+    <button class="sbBtn" id="sbGrid" title="Gridlines"></button>
+   <button class="sbBtn" id="sbHead" title="Headings"></button>
+   <button class="sbBtn" id="sbZoomOut" title="Zoom out"></button>
+   <input type="range" id="sbZoom" min="50" max="200" step="10" value="100">
+   <button class="sbBtn" id="sbZoomIn" title="Zoom in"></button>
+   <span id="sbZoomTxt">100%</span>
+  </span>
+ </div>
+</div>
+<textarea id="clip" spellcheck="false"></textarea>
+<script src="js/account.js" defer></script>
+<script src="js/drive.js" defer></script>
+<script src="js/script.js" defer></script>
+<script src="js/formatCells.js" defer></script>
+<script src="js/formulaAuditing.js" defer></script>
+<script src="js/insertFunction.js" defer></script>
+<script src="js/drawDesign.js" defer></script>
+<script src="js/start-screen.js" defer></script>
+<script src="js/ribbon-display.js" defer></script>
+<script src="js/account-ui.js" defer></script>
+<script src="js/auth-guard.js" defer></script>
+</body>
+</html>
