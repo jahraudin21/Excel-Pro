@@ -15,8 +15,10 @@ public class CreateAccountPanel extends JPanel {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JPasswordField confirmPasswordField;
+    private final Main mainApp;
 
-    public CreateAccountPanel() {
+    public CreateAccountPanel(Main mainApp) {
+        this.mainApp = mainApp;
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(0xF5F5F5));
 
@@ -107,8 +109,15 @@ public class CreateAccountPanel extends JPanel {
         gbc.gridx = 1;
         formPanel.add(confirmPasswordField, gbc);
 
-        add(titleLabel, BorderLayout.NORTH);
-        add(subtitleLabel, BorderLayout.CENTER);
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setBackground(new Color(0xF5F5F5));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        headerPanel.add(titleLabel);
+        headerPanel.add(subtitleLabel);
+
+        add(headerPanel, BorderLayout.NORTH);
         add(formPanel, BorderLayout.CENTER);
         setPreferredSize(new Dimension(400, 450));
 
@@ -143,8 +152,7 @@ public class CreateAccountPanel extends JPanel {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Switch back to login screen using CardLayout's show method
-                Main mainApp = (Main) SwingUtilities.getWindowAncestor(CreateAccountPanel.this);
+                // Seamless CardLayout switch back to the login screen
                 if (mainApp != null) {
                     mainApp.showLoginScreen();
                 }
@@ -158,7 +166,6 @@ public class CreateAccountPanel extends JPanel {
 
         add(buttonPanel, BorderLayout.SOUTH);
         setPreferredSize(new Dimension(400, 550));
-    }
     }
 
     public String getFirstName() { return firstNameField.getText(); }

@@ -28,9 +28,9 @@ public class Main {
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
-        // Create and add panels
-        LoginPanel loginPanel = new LoginPanel();
-        CreateAccountPanel createAccountPanel = new CreateAccountPanel();
+        // Create and add panels (pass Main for seamless CardLayout switching)
+        LoginPanel loginPanel = new LoginPanel(this);
+        CreateAccountPanel createAccountPanel = new CreateAccountPanel(this);
 
         cardPanel.add(loginPanel, "login");
         cardPanel.add(createAccountPanel, "create_account");
@@ -41,6 +41,9 @@ public class Main {
         // Set up window decoration
         frame.setUndecorated(false);
         frame.setMinimumSize(new Dimension(400, 450));
+        // Seamless CardLayout startup: show login first, then make visible
+        cardLayout.show(cardPanel, "login");
+        frame.setVisible(true);
     }
 
     /**

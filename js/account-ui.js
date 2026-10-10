@@ -265,15 +265,10 @@ function openAuthDialog(mode){const d=$('#authDialog');if(!d)return;
  authSwitchMode(mode||'signin');
  try{const em=$('#emailField');if(em)setTimeout(()=>{try{em.focus();}catch(e){}},0);}catch(e){}
  try{if(typeof googleRenderButton==='function')googleRenderButton();}catch(e){}}
-function closeAuthDialog(){
-    const d=$('#authDialog');
-    /* While the auth guard is locked the dialog is the only route into the app. */
-    if(typeof AuthGuard!=='undefined'&&AuthGuard.canCloseAuthDialog&&!AuthGuard.canCloseAuthDialog()){
-        /* Dialog is locked - show error feedback but don't close */
-        showAuthError(T('signInRequired'));
-        return;
-    }
-    if(d)d.classList.remove('open');showAuthError('');}
+function closeAuthDialog(){const d=$('#authDialog');
+ /* AuthGuard.canCloseAuthDialog&&!AuthGuard.canCloseAuthDialog())return; */
+ if(typeof AuthGuard!=='undefined'&&AuthGuard.canCloseAuthDialog&&!AuthGuard.canCloseAuthDialog()){showAuthError(T('signInRequired'));return;}
+ if(d)d.classList.remove('open');showAuthError('');}
 /* Post-login redirect: dismiss the auth dialog AND the start screen, then put
    focus on the spreadsheet grid so the user lands straight in the workbook. */
 function enterApp(){

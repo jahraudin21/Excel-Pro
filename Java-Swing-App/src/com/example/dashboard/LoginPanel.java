@@ -11,8 +11,10 @@ import java.awt.event.ActionListener;
 public class LoginPanel extends JPanel {
     private JTextField usernameField;
     private JPasswordField passwordField;
+    private final Main mainApp;
 
-    public LoginPanel() {
+    public LoginPanel(Main mainApp) {
+        this.mainApp = mainApp;
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(0xF5F5F5));
 
@@ -111,8 +113,7 @@ public class LoginPanel extends JPanel {
         createAccountButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Switch to create account screen using CardLayout's show method
-                Main mainApp = (Main) SwingUtilities.getWindowAncestor(LoginPanel.this);
+                // Seamless CardLayout switch to the Create Account screen
                 if (mainApp != null) {
                     mainApp.showCreateAccountScreen();
                 }
@@ -124,8 +125,15 @@ public class LoginPanel extends JPanel {
         buttonPanel.add(loginButton);
         buttonPanel.add(createAccountButton);
 
-        add(titleLabel, BorderLayout.NORTH);
-        add(subtitleLabel, BorderLayout.CENTER);
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setBackground(new Color(0xF5F5F5));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        headerPanel.add(titleLabel);
+        headerPanel.add(subtitleLabel);
+
+        add(headerPanel, BorderLayout.NORTH);
         add(formPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
         setPreferredSize(new Dimension(400, 500));
